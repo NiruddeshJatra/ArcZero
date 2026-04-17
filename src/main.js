@@ -1,6 +1,7 @@
 import { createState } from './state.js';
 import { initInput } from './input.js';
 import { startGameLoop } from './gameLoop.js';
+import { seed } from './rng.js';
 import {
   hideGameOver,
   showLevelIntro,
@@ -16,6 +17,7 @@ let canvas, ctx, keys, loop;
 function bootstrap() {
   canvas = document.getElementById('game-canvas');
   ctx = canvas.getContext('2d');
+  seed(Date.now() & 0xFFFFFFFF);
 
   // Pre-warm AudioContext on first keydown (browser autoplay policy)
   document.addEventListener('keydown', () => initAudio(), { once: true });

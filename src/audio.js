@@ -40,7 +40,7 @@ async function loadBuffer(ctx, name, url) {
     const res = await fetch(url);
     const arrayBuffer = await res.arrayBuffer();
     _buffers[name] = await ctx.decodeAudioData(arrayBuffer);
-  } catch (e) {
+  } catch {
     // Fail silently — playSound checks for null buffer
     _buffers[name] = null;
   }

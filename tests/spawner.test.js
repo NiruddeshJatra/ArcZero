@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { updateSpawner, randomBetween } from '../src/spawner.js';
+import { updateSpawner } from '../src/spawner.js';
+import { randomBetween } from '../src/rng.js';
 import { createState } from '../src/state.js';
 import { SPAWN_INTERVAL, DT, WORLD_HEIGHT } from '../src/constants.js';
 

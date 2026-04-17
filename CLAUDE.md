@@ -1,4 +1,4 @@
-# Missile Maniac — Project Brain
+# ArcZero — Project Brain
 
 ## What This Is
 2D physics-based missile interception game. Browser-based. Vanilla JS + HTML5 Canvas.

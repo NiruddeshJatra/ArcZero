@@ -4,6 +4,7 @@ import {
   POWER_START,
   BASE_HEALTH,
   WORLD_HEIGHT,
+  FACING_RIGHT,
 } from './constants.js';
 
 /**
@@ -26,6 +27,10 @@ export function createState(level = 1, carryHealth = BASE_HEALTH) {
       power: POWER_START,
       charging: false,
       fireCooldown: 0,
+      facing: FACING_RIGHT,   // -1 or +1; hooked up in Phase 1
+      recoilPx: 0,            // Phase 1 visual
+      recoilTimer: 0,         // Phase 1 visual
+      muzzleFlashTimer: 0,    // Phase 1 visual
     },
     missiles: [],
     interceptors: [],

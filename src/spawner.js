@@ -1,6 +1,7 @@
 import { SPAWN_X_MIN, SPAWN_X_MAX, DT } from './constants.js';
 import { LEVELS } from './levels.js';
 import { createMissile } from './state.js';
+import { randomBetween } from './rng.js';
 
 /**
  * Advance spawn timer and spawn enemy missiles when due.
@@ -22,11 +23,4 @@ export function updateSpawner(state) {
       : 0;
     state.missiles.push(createMissile(x, vy, vx));
   }
-}
-
-/**
- * Uniform random float in [min, max].
- */
-export function randomBetween(min, max) {
-  return min + Math.random() * (max - min);
 }
