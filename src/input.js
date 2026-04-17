@@ -10,6 +10,12 @@ import {
   POWER_CHARGE_RATE,
   FIRE_COOLDOWN,
   DT,
+  FLIP_KEY,
+  FACING_RIGHT,
+  FACING_LEFT,
+  MUZZLE_FLASH_DUR,
+  LAUNCHER_RECOIL_DUR,
+  LAUNCHER_RECOIL_PX,
 } from './constants.js';
 import { createInterceptor } from './state.js';
 import { playShoot } from './audio.js';
@@ -26,6 +32,7 @@ export function initInput() {
     down: false,
     space: false,
     spaceJustReleased: false,
+    flipJustPressed: false,
   };
 
   function onKeyDown(e) {
@@ -38,6 +45,8 @@ export function initInput() {
       case 'ArrowUp':    keys.up    = true; break;
       case 'ArrowDown':  keys.down  = true; break;
       case ' ':          keys.space = true; break;
+      default:
+        if (e.key.toLowerCase() === FLIP_KEY) keys.flipJustPressed = true;
     }
   }
 
@@ -64,6 +73,7 @@ export function initInput() {
     keys.down = false;
     keys.space = false;
     keys.spaceJustReleased = false;
+    keys.flipJustPressed = false;
   };
 
   return keys;
@@ -85,9 +95,21 @@ export function processInput(state, keys) {
   if (keys.down) launcher.angle -= ANGLE_SPEED * DT;
   launcher.angle = Math.max(ANGLE_MIN, Math.min(ANGLE_MAX, launcher.angle));
 
-  // Tick down fire cooldown
+  // Facing flip
+  if (keys.flipJustPressed) {
+    launcher.facing = launcher.facing === FACING_RIGHT ? FACING_LEFT : FACING_RIGHT;
+    keys.flipJustPressed = false;
+  }
+
+  // Tick down fire cooldown and visual timers
   if (launcher.fireCooldown > 0) {
     launcher.fireCooldown = Math.max(0, launcher.fireCooldown - DT);
+  }
+  if (launcher.recoilTimer > 0) {
+    launcher.recoilTimer = Math.max(0, launcher.recoilTimer - DT);
+  }
+  if (launcher.muzzleFlashTimer > 0) {
+    launcher.muzzleFlashTimer = Math.max(0, launcher.muzzleFlashTimer - DT);
   }
 
   // Power charging while space held (only when cooldown clear)
@@ -100,11 +122,15 @@ export function processInput(state, keys) {
   if (keys.spaceJustReleased) {
     if (launcher.fireCooldown === 0) {
       const rad = (launcher.angle * Math.PI) / 180;
-      const vx = launcher.power * Math.cos(rad);
+      const vx = launcher.facing * launcher.power * Math.cos(rad);
       const vy = launcher.power * Math.sin(rad);
       state.interceptors.push(createInterceptor(launcher.x, vx, vy));
       playShoot();
       launcher.fireCooldown = FIRE_COOLDOWN;
+      launcher.recoilPx = LAUNCHER_RECOIL_PX;
+      launcher.recoilTimer = LAUNCHER_RECOIL_DUR;
+      launcher.muzzleFlashTimer = MUZZLE_FLASH_DUR;
+      state.stats.shots += 1;
     }
     launcher.charging = false;
     launcher.power = POWER_START;

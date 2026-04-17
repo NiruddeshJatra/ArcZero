@@ -14,15 +14,15 @@
 export const LEVELS = [
   null, // index 0 unused
 
-  // Level 1 — pure free-fall, slow spawns, learning the controls
+  // Level 1 — slight downward velocity, faster spawn, lower threshold (Phase 1 retune)
   {
     label: 'LEVEL 1',
-    spawnInterval: 4,
-    missileVyMin: 0,
+    spawnInterval: 3.0,
+    missileVyMin: -5,
     missileVyMax: 0,
     missileVxRange: 0,
     maxMissiles: Infinity,
-    scoreThreshold: 100,
+    scoreThreshold: 60,
   },
 
   // Level 2 — missiles arrive pre-accelerated (faster impact)

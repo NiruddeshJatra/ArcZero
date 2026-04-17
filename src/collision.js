@@ -5,9 +5,17 @@ import {
   WORLD_HEIGHT,
   WORLD_WIDTH,
   MIN_INTERCEPT_ALTITUDE,
+  SHAKE_AMP_INTERCEPT,
+  SHAKE_DUR_INTERCEPT,
+  SHAKE_AMP_DAMAGE,
+  SHAKE_DUR_DAMAGE,
+  FLASH_INTERCEPT,
+  FLASH_DAMAGE,
+  HITSTOP_INTERCEPT,
 } from './constants.js';
 import { createExplosion } from './state.js';
 import { playIntercept, playDamage } from './audio.js';
+import { triggerShake, triggerFlash } from './renderer.js';
 
 /**
  * Euclidean distance between two physics objects.
@@ -41,6 +49,10 @@ export function checkCollisions(state) {
           )
         );
         playIntercept();
+        triggerShake(state, SHAKE_AMP_INTERCEPT, SHAKE_DUR_INTERCEPT);
+        triggerFlash(state, '#ffffff', FLASH_INTERCEPT);
+        state.hitstopRemainingS = HITSTOP_INTERCEPT;
+        state.stats.intercepts += 1;
       }
     }
   }
@@ -57,6 +69,8 @@ export function checkMissileGroundHit(state) {
       missile.alive = false;
       state.health -= MISSILE_DAMAGE;
       playDamage();
+      triggerShake(state, SHAKE_AMP_DAMAGE, SHAKE_DUR_DAMAGE);
+      triggerFlash(state, '#ff3535', FLASH_DAMAGE);
     }
   }
 }

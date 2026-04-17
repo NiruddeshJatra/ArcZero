@@ -36,20 +36,34 @@ export function createState(level = 1, carryHealth = BASE_HEALTH) {
     interceptors: [],
     spawnTimer: 0,
     explosions: [],
+    shake: { amp: 0, dur: 0, elapsed: 0 },
+    flash: { color: null, dur: 0, elapsed: 0 },
+    hitstopRemainingS: 0,
+    stats: { intercepts: 0, shots: 0, nearMisses: 0, closestMissM: Infinity, longestChain: 0, waveStats: [] },
+    settings: { reduceMotion: false, showTrajectoryPreview: true },
   };
 }
+
+let _missileIdCounter = 0;
 
 /**
  * Creates a new enemy missile at x, falling from top of world.
  * vy and vx default to 0 (pure free-fall) for Level 1 / backwards compat.
  */
-export function createMissile(x, vy = 0, vx = 0) {
+export function createMissile(x, vy = 0, vx = 0, kind = 'standard') {
   return {
+    id: ++_missileIdCounter,
     x,
     y: WORLD_HEIGHT,
     vx,
     vy,
+    kind,
     alive: true,
+    ageS: 0,
+    hasSplit: false,
+    trail: [],
+    // eslint-disable-next-line no-restricted-properties -- visual seed only
+    wobblePhase: Math.random() * Math.PI * 2,
   };
 }
 
@@ -63,6 +77,7 @@ export function createInterceptor(x, vx, vy) {
     vx,
     vy,
     alive: true,
+    trail: [],
   };
 }
 

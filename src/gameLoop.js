@@ -8,8 +8,12 @@ import {
   checkMissileGroundHit,
   checkInterceptorBounds,
 } from './collision.js';
-import { render, updateHUD, showGameOver } from './renderer.js';
+import { render, updateHUD, showGameOver, triggerShake } from './renderer.js';
 import { playGameOver } from './audio.js';
+import {
+  SHAKE_AMP_GAMEOVER,
+  SHAKE_DUR_GAMEOVER,
+} from './constants.js';
 
 /**
  * Start the game loop. Returns a handle with stop().
@@ -63,6 +67,23 @@ export function startGameLoop(ctx, state, keys, onLevelComplete = () => {}) {
  * One deterministic game tick. Strict order per spec.
  */
 function gameTick(state, keys, ctx) {
+  // Shake decay
+  if (state.shake.dur > 0) {
+    state.shake.elapsed += DT;
+    if (state.shake.elapsed >= state.shake.dur) state.shake = { amp: 0, dur: 0, elapsed: 0 };
+  }
+  // Flash decay
+  if (state.flash.dur > 0) {
+    state.flash.elapsed += DT;
+    if (state.flash.elapsed >= state.flash.dur) state.flash = { color: null, dur: 0, elapsed: 0 };
+  }
+  // Hitstop gate: skip simulation, render only
+  if (state.hitstopRemainingS > 0) {
+    state.hitstopRemainingS = Math.max(0, state.hitstopRemainingS - DT);
+    render(ctx, state);
+    return;
+  }
+
   // 1. Input
   processInput(state, keys);
 
@@ -103,6 +124,7 @@ function gameTick(state, keys, ctx) {
   if (state.health <= 0) {
     state.health = 0;
     state.running = false;
+    triggerShake(state, SHAKE_AMP_GAMEOVER, SHAKE_DUR_GAMEOVER);
     playGameOver();
   }
 
