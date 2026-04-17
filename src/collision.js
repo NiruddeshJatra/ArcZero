@@ -12,10 +12,22 @@ import {
   FLASH_INTERCEPT,
   FLASH_DAMAGE,
   HITSTOP_INTERCEPT,
+  COMBO_WINDOW_S,
+  COMBO_MULT_PER_HIT,
+  COMBO_MULT_CAP,
+  BASE_INTERCEPT_SCORE_V2,
+  BONUS_HIGH_ALT_M,
+  BONUS_HIGH_ALT_MULT,
+  BONUS_CLUTCH_M,
+  BONUS_CLUTCH_MULT,
+  BONUS_LONG_RANGE_M,
+  BONUS_LONG_RANGE_MULT,
+  COURIER_SCORE_MULT,
 } from './constants.js';
 import { createExplosion } from './state.js';
 import { playIntercept, playDamage } from './audio.js';
 import { triggerShake, triggerFlash } from './renderer.js';
+import { FLAGS } from './flags.js';
 
 /**
  * Euclidean distance between two physics objects.
@@ -41,18 +53,41 @@ export function checkCollisions(state) {
       ) {
         interceptor.alive = false;
         missile.alive = false;
-        state.score += INTERCEPT_SCORE;
-        state.explosions.push(
-          createExplosion(
-            (interceptor.x + missile.x) / 2,
-            (interceptor.y + missile.y) / 2
-          )
-        );
+        const midX = (interceptor.x + missile.x) / 2;
+        const midY = (interceptor.y + missile.y) / 2;
+        state.explosions.push(createExplosion(midX, midY));
         playIntercept();
         triggerShake(state, SHAKE_AMP_INTERCEPT, SHAKE_DUR_INTERCEPT);
         triggerFlash(state, '#ffffff', FLASH_INTERCEPT);
         state.hitstopRemainingS = HITSTOP_INTERCEPT;
         state.stats.intercepts += 1;
+
+        if (FLAGS.SCORE_REBALANCE) {
+          state.combo.count += 1;
+          state.combo.timerS = COMBO_WINDOW_S;
+          state.combo.decaying = false;
+          state.combo.multiplier = Math.min(1 + state.combo.count * COMBO_MULT_PER_HIT, COMBO_MULT_CAP);
+          if (state.combo.count > state.combo.best) state.combo.best = state.combo.count;
+
+          let skillMult = 1.0;
+          if (missile.y >= BONUS_HIGH_ALT_M) skillMult *= BONUS_HIGH_ALT_MULT;
+          if (missile.y <= BONUS_CLUTCH_M && missile.y >= MIN_INTERCEPT_ALTITUDE) skillMult *= BONUS_CLUTCH_MULT;
+          const horizDist = Math.abs(interceptor.x - state.launcher.x);
+          if (horizDist >= BONUS_LONG_RANGE_M) skillMult *= BONUS_LONG_RANGE_MULT;
+          if (missile.kind === 'courier') skillMult *= COURIER_SCORE_MULT;
+
+          const finalScore = Math.round(BASE_INTERCEPT_SCORE_V2 * state.combo.multiplier * skillMult);
+          state.score += finalScore;
+
+          state.floaters.push({
+            x: midX, y: midY,
+            text: `+${finalScore}`,
+            mult: state.combo.multiplier,
+            age: 0, maxAge: 0.8,
+          });
+        } else {
+          state.score += INTERCEPT_SCORE;
+        }
       }
     }
   }

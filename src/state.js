@@ -6,6 +6,7 @@ import {
   WORLD_HEIGHT,
   FACING_RIGHT,
 } from './constants.js';
+import { LEVELS } from './levels.js';
 
 /**
  * Creates a fresh game state for the given level.
@@ -41,6 +42,14 @@ export function createState(level = 1, carryHealth = BASE_HEALTH) {
     hitstopRemainingS: 0,
     stats: { intercepts: 0, shots: 0, nearMisses: 0, closestMissM: Infinity, longestChain: 0, waveStats: [] },
     settings: { reduceMotion: false, showTrajectoryPreview: true },
+    combo: { count: 0, timerS: 0, multiplier: 1.0, best: 0, decaying: false },
+    floaters: [],
+    warnings: [],
+    wave: { phase: 'BUILD', elapsedS: 0, index: 0 },
+    currentSpawnInterval: LEVELS[level].spawnInterval,
+    totalElapsedS: 0,
+    mode: 'campaign',
+    seed: null,
   };
 }
 

@@ -6,7 +6,7 @@ import {
   checkInterceptorBounds,
 } from '../src/collision.js';
 import { createState, createMissile, createInterceptor } from '../src/state.js';
-import { COLLISION_RADIUS, MISSILE_DAMAGE, INTERCEPT_SCORE } from '../src/constants.js';
+import { COLLISION_RADIUS, MISSILE_DAMAGE, BASE_INTERCEPT_SCORE_V2, COMBO_MULT_PER_HIT } from '../src/constants.js';
 
 describe('distance', () => {
   it('computes 3-4-5 triangle correctly', () => {
@@ -32,7 +32,9 @@ describe('checkCollisions', () => {
 
     expect(missile.alive).toBe(false);
     expect(interceptor.alive).toBe(false);
-    expect(state.score).toBe(INTERCEPT_SCORE);
+    // SCORE_REBALANCE=true: first hit combo.count=1 → mult=1+1*COMBO_MULT_PER_HIT
+    const expectedMult = 1 + 1 * COMBO_MULT_PER_HIT;
+    expect(state.score).toBe(Math.round(BASE_INTERCEPT_SCORE_V2 * expectedMult));
   });
 
   it('does not destroy when outside COLLISION_RADIUS', () => {

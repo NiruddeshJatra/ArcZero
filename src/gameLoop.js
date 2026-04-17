@@ -1,4 +1,18 @@
-import { DT } from './constants.js';
+import {
+  DT,
+  SHAKE_AMP_GAMEOVER,
+  SHAKE_DUR_GAMEOVER,
+  COMBO_DECAY_DUR_S,
+  COMBO_MULT_CAP,
+  WAVE_BUILD_DUR_S,
+  WAVE_PEAK_DUR_S,
+  WAVE_RELEASE_DUR_S,
+  WAVE_BUILD_SPAWN_MULT,
+  WAVE_PEAK_SPAWN_MULT,
+  WAVE_RELEASE_SPAWN_MULT,
+  PASSIVE_SCORE_RATE_V2,
+  LEVEL_CLEAR_BONUS,
+} from './constants.js';
 import { LEVELS } from './levels.js';
 import { stepPhysics } from './physics.js';
 import { processInput } from './input.js';
@@ -10,10 +24,11 @@ import {
 } from './collision.js';
 import { render, updateHUD, showGameOver, triggerShake } from './renderer.js';
 import { playGameOver } from './audio.js';
-import {
-  SHAKE_AMP_GAMEOVER,
-  SHAKE_DUR_GAMEOVER,
-} from './constants.js';
+import { FLAGS } from './flags.js';
+
+const PHASE_DUR = { BUILD: WAVE_BUILD_DUR_S, PEAK: WAVE_PEAK_DUR_S, RELEASE: WAVE_RELEASE_DUR_S };
+const NEXT_PHASE = { BUILD: 'PEAK', PEAK: 'RELEASE', RELEASE: 'BUILD' };
+const SPAWN_MULT = { BUILD: WAVE_BUILD_SPAWN_MULT, PEAK: WAVE_PEAK_SPAWN_MULT, RELEASE: WAVE_RELEASE_SPAWN_MULT };
 
 /**
  * Start the game loop. Returns a handle with stop().
@@ -84,6 +99,45 @@ function gameTick(state, keys, ctx) {
     return;
   }
 
+  // Combo decay
+  if (state.combo.timerS > 0) {
+    state.combo.timerS -= DT;
+    if (state.combo.timerS <= 0) {
+      state.combo.decaying = true;
+      state.combo.timerS = 0;
+    }
+  } else if (state.combo.decaying) {
+    const step = (COMBO_MULT_CAP - 1) / (COMBO_DECAY_DUR_S / DT);
+    state.combo.multiplier = Math.max(1.0, state.combo.multiplier - step);
+    if (state.combo.multiplier <= 1.0) {
+      state.combo.count = 0;
+      state.combo.decaying = false;
+    }
+  }
+
+  // Floater aging
+  for (const f of state.floaters) f.age += DT;
+  state.floaters = state.floaters.filter(f => f.age < f.maxAge);
+
+  // Wave tick
+  state.wave.elapsedS += DT;
+  const phaseDur = PHASE_DUR[state.wave.phase];
+  if (state.wave.elapsedS >= phaseDur) {
+    state.wave.elapsedS = 0;
+    state.wave.phase = NEXT_PHASE[state.wave.phase];
+    if (state.wave.phase === 'BUILD') {
+      state.wave.index += 1;
+      // L10 endless ramp: each completed wave escalates difficulty
+      const lvlCfg = LEVELS[state.level];
+      if (lvlCfg.escalatesPeak) {
+        lvlCfg.missileVyMin = Math.max(-60, lvlCfg.missileVyMin - 1);
+        lvlCfg.spawnInterval = Math.max(1.2, lvlCfg.spawnInterval - 0.02);
+      }
+    }
+  }
+  const baseInt = LEVELS[state.level].spawnInterval;
+  state.currentSpawnInterval = baseInt * SPAWN_MULT[state.wave.phase];
+
   // 1. Input
   processInput(state, keys);
 
@@ -108,13 +162,20 @@ function gameTick(state, keys, ctx) {
   for (const exp of state.explosions) exp.age += DT;
   state.explosions = state.explosions.filter((e) => e.age < e.maxAge);
 
-  // 8. Survival scoring
-  state.score += DT;
+  // 8. Survival scoring (passive)
+  const passiveRate = FLAGS.SCORE_REBALANCE ? PASSIVE_SCORE_RATE_V2 : 1.0;
+  state.score += passiveRate * DT;
+  state.totalElapsedS += DT;
 
-  // 9. Level advancement check
+  // 9. Level advancement — only during RELEASE wave phase
   const levelScore = state.score - state.levelStartScore;
   const config = LEVELS[state.level];
-  if (levelScore >= config.scoreThreshold) {
+  if (levelScore >= config.scoreThreshold && state.wave.phase === 'RELEASE') {
+    if (FLAGS.SCORE_REBALANCE) {
+      const bonus = LEVEL_CLEAR_BONUS * state.level;
+      state.score += bonus;
+      state.floaters.push({ x: 100, y: 75, text: `+${bonus} LEVEL CLEAR`, mult: 1, age: 0, maxAge: 1.5 });
+    }
     state.levelComplete = true;
     state.running = false;
     return;

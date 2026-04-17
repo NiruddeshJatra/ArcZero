@@ -40,8 +40,9 @@ export function triggerFlash(state, color, durS) {
  * Render a complete frame.
  */
 export function render(ctx, state) {
-  // Clear
-  ctx.fillStyle = COLOR_BG;
+  // Per-level background tint
+  const levelCfg = LEVELS[state.level];
+  ctx.fillStyle = (levelCfg && levelCfg.tint) ? levelCfg.tint : COLOR_BG;
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
   // Screen shake
@@ -55,7 +56,12 @@ export function render(ctx, state) {
 
   drawGround(ctx);
   drawDangerZone(ctx);
-  drawTrajectory(ctx, state.launcher, state.settings);
+
+  // L8 forceTrajectoryOff overrides settings
+  const showTraj = !(levelCfg && levelCfg.forceTrajectoryOff);
+  drawTrajectory(ctx, state.launcher, showTraj ? state.settings : { showTrajectoryPreview: false });
+
+  drawWarnings(ctx, state);
   drawLauncher(ctx, state);
 
   for (const missile of state.missiles) {
@@ -69,6 +75,9 @@ export function render(ctx, state) {
   }
 
   drawReloadMeter(ctx, state.launcher);
+  drawFloaters(ctx, state);
+  drawComboBadge(ctx, state);
+  drawWaveIndicator(ctx, state);
 
   ctx.restore();
 
@@ -389,6 +398,66 @@ function drawExplosion(ctx, explosion) {
   ctx.stroke();
 }
 
+function drawWarnings(ctx, state) {
+  for (const w of state.warnings ?? []) {
+    const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 80);
+    ctx.save();
+    ctx.fillStyle = `rgba(255, 80, 80, ${0.4 + 0.4 * pulse})`;
+    const cx = toCanvasX(w.x);
+    ctx.beginPath();
+    ctx.moveTo(cx, 12);
+    ctx.lineTo(cx - 8, 2);
+    ctx.lineTo(cx + 8, 2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function drawFloaters(ctx, state) {
+  for (const f of state.floaters ?? []) {
+    const frac = f.age / f.maxAge;
+    const alpha = 1 - frac;
+    const cy = toCanvasY(f.y) - frac * 30;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.font = `bold ${f.mult > 2 ? 18 : 14}px monospace`;
+    ctx.fillStyle = f.mult >= 2 ? '#ffcc44' : '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.fillText(f.text, toCanvasX(f.x), cy);
+    ctx.restore();
+  }
+}
+
+function drawComboBadge(ctx, state) {
+  if (!state.combo || state.combo.count < 2) return;
+  const txt = `×${state.combo.multiplier.toFixed(2)}  ${state.combo.count} CHAIN`;
+  ctx.save();
+  ctx.font = 'bold 20px monospace';
+  ctx.fillStyle = state.combo.decaying ? 'rgba(255,180,80,0.8)' : '#ff9944';
+  ctx.textAlign = 'right';
+  ctx.fillText(txt, CANVAS_WIDTH - 16, 28);
+  ctx.restore();
+}
+
+function drawWaveIndicator(ctx, state) {
+  if (!state.wave) return;
+  const phases = ['BUILD', 'PEAK', 'RELEASE'];
+  const idx = phases.indexOf(state.wave.phase);
+  ctx.save();
+  ctx.font = '11px monospace';
+  ctx.fillStyle = '#aaa';
+  ctx.textAlign = 'left';
+  ctx.fillText(`WAVE ${state.wave.index + 1}`, 16, 48);
+  for (let i = 0; i < 3; i++) {
+    ctx.fillStyle = i === idx ? '#ff9944' : 'rgba(255,255,255,0.2)';
+    ctx.beginPath();
+    ctx.arc(24 + i * 12, 60, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
 /**
  * Update HUD DOM elements.
  */
@@ -419,8 +488,11 @@ export function hideGameOver() {
  * Show level intro overlay with the level label and countdown starting at 3.
  */
 export function showLevelIntro(level) {
-  document.getElementById('level-intro-title').textContent = LEVELS[level].label;
+  const cfg = LEVELS[level];
+  document.getElementById('level-intro-title').textContent = cfg.label;
   document.getElementById('level-intro-countdown').textContent = '3';
+  const introEl = document.getElementById('level-intro-text');
+  if (introEl) introEl.textContent = cfg.intro ?? '';
   document.getElementById('level-intro-overlay').classList.add('visible');
 }
 
