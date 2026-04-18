@@ -23,7 +23,7 @@ import {
   checkInterceptorBounds,
 } from './collision.js';
 import { render, updateHUD, triggerShake } from './renderer.js';
-import { playGameOver, playWaveWarning } from './audio.js';
+import { playGameOver, playWaveWarning, playWaveStart, playLevelClear, startPeakBed, stopPeakBed } from './audio.js';
 import { FLAGS } from './flags.js';
 import { loadSave, updateBest } from './persistence.js';
 
@@ -160,7 +160,8 @@ function gameTick(state, keys, ctx) {
   if (state.wave.elapsedS >= phaseDur) {
     state.wave.elapsedS = 0;
     state.wave.phase = NEXT_PHASE[state.wave.phase];
-    if (state.wave.phase === 'PEAK') playWaveWarning();
+    if (state.wave.phase === 'PEAK') { playWaveWarning(); playWaveStart(); startPeakBed(); }
+    if (state.wave.phase === 'RELEASE') stopPeakBed();
     if (state.wave.phase === 'BUILD') {
       state.wave.index += 1;
       // L10 endless ramp: each completed wave escalates difficulty
@@ -213,6 +214,7 @@ function gameTick(state, keys, ctx) {
       state.score += bonus;
       state.floaters.push({ x: 100, y: 75, text: `+${bonus} LEVEL CLEAR`, mult: 1, age: 0, maxAge: 1.5 });
     }
+    playLevelClear();
     state.levelComplete = true;
     state.running = false;
     return;

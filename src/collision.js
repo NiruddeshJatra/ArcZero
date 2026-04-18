@@ -25,7 +25,7 @@ import {
   COURIER_SCORE_MULT,
 } from './constants.js';
 import { createExplosion } from './state.js';
-import { playIntercept, playDamage, playGraze } from './audio.js';
+import { playIntercept, playDamage, playGraze, playComboUp, playComboPeak } from './audio.js';
 import { NEAR_MISS_THRESHOLD } from './constants.js';
 import { triggerShake, triggerFlash } from './renderer.js';
 import { FLAGS } from './flags.js';
@@ -69,6 +69,8 @@ export function checkCollisions(state) {
           state.combo.decaying = false;
           state.combo.multiplier = Math.min(1 + state.combo.count * COMBO_MULT_PER_HIT, COMBO_MULT_CAP);
           if (state.combo.count > state.combo.best) state.combo.best = state.combo.count;
+          if (state.combo.multiplier >= COMBO_MULT_CAP) playComboPeak();
+          else if (state.combo.count > 1) playComboUp();
 
           let skillMult = 1.0;
           if (missile.y >= BONUS_HIGH_ALT_M) skillMult *= BONUS_HIGH_ALT_MULT;

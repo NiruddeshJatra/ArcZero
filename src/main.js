@@ -7,7 +7,7 @@ import { LEVELS } from './levels.js';
 import { BASE_HEALTH } from './constants.js';
 import { loadSave, saveSave, loadBoards, submitLocalScore } from './persistence.js';
 import { initTouchInput, shouldUseTouchInput } from './touchInput.js';
-import { playMilestone, startAmbient, stopAmbient } from './audio.js';
+import { playMilestone, startAmbient, stopAmbient, playUiClick, playUiConfirm } from './audio.js';
 import { buildShareText } from './share.js';
 import { checkMilestones, updateStreak } from './milestones.js';
 
@@ -285,11 +285,13 @@ function openMenu() {
 }
 
 document.getElementById('menu-campaign-btn').addEventListener('click', () => {
+  playUiConfirm();
   seed(Date.now() & 0xFFFFFFFF);
   startLevel(1, BASE_HEALTH, 'campaign');
 });
 
 document.getElementById('menu-daily-btn').addEventListener('click', () => {
+  playUiConfirm();
   const todayISO = new Date().toISOString().slice(0, 10);
   const dailySeed = seedFromDateISO(todayISO);
   seed(dailySeed);
@@ -303,21 +305,24 @@ document.getElementById('menu-daily-btn').addEventListener('click', () => {
 });
 
 document.getElementById('menu-levelselect-btn').addEventListener('click', () => {
+  playUiClick();
   renderLevelSelect();
   showOnly(levelSelectOverlay);
 });
-document.getElementById('level-select-back-btn').addEventListener('click', openMenu);
+document.getElementById('level-select-back-btn').addEventListener('click', () => { playUiClick(); openMenu(); });
 
 document.getElementById('menu-leaderboard-btn').addEventListener('click', () => {
+  playUiClick();
   currentLbTab = 'daily';
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === 'daily'));
   renderLeaderboard();
   showOnly(leaderboardOverlay);
 });
-document.getElementById('leaderboard-back-btn').addEventListener('click', openMenu);
+document.getElementById('leaderboard-back-btn').addEventListener('click', () => { playUiClick(); openMenu(); });
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
+    playUiClick();
     currentLbTab = btn.dataset.tab;
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
     renderLeaderboard();
@@ -325,18 +330,21 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 document.getElementById('menu-settings-btn').addEventListener('click', () => {
+  playUiClick();
   applySettings(currentSave);
   showOnly(settingsOverlay);
 });
-document.getElementById('settings-back-btn').addEventListener('click', openMenu);
+document.getElementById('settings-back-btn').addEventListener('click', () => { playUiClick(); openMenu(); });
 
 document.getElementById('menu-credits-btn').addEventListener('click', () => {
+  playUiClick();
   showOnly(creditsOverlay);
 });
-document.getElementById('credits-back-btn').addEventListener('click', openMenu);
+document.getElementById('credits-back-btn').addEventListener('click', () => { playUiClick(); openMenu(); });
 
 // ── Restart / main menu from game over ────────────────────────────────────────
 document.getElementById('restart-btn').addEventListener('click', () => {
+  playUiConfirm();
   if (loop) loop.stop();
   showOnly(null);
   seed(Date.now() & 0xFFFFFFFF);
@@ -344,6 +352,7 @@ document.getElementById('restart-btn').addEventListener('click', () => {
 });
 
 document.getElementById('menu-from-gameover-btn').addEventListener('click', () => {
+  playUiClick();
   if (loop) loop.stop();
   openMenu();
 });

@@ -26,6 +26,7 @@ const DEFAULT_SAVE = {
     tapToFire: false,
     colorblindMode: 'off',
     showTrajectoryPreview: true,
+    audioVolumes: { master: 1, sfx: 1, music: 1 },
   },
   streak: { current: 0, best: 0, lastPlayDateISO: null, shield: true },
   daily:  { lastCompletedDateISO: null, lastScore: 0, lastSeed: null },

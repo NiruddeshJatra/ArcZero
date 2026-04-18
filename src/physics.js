@@ -6,6 +6,7 @@ import {
   MIN_INTERCEPT_ALTITUDE,
 } from './constants.js';
 import { createMissile } from './state.js';
+import { playMirvSplit, playSplitterSplit } from './audio.js';
 
 /**
  * Apply one fixed timestep of physics to a single object.
@@ -71,6 +72,7 @@ export function stepPhysics(state) {
     // MIRV split after MIRV_SPLIT_AFTER_S seconds
     if (missile.kind === 'mirv' && !missile.hasSplit && missile.ageS >= MIRV_SPLIT_AFTER_S) {
       missile.hasSplit = true;
+      playMirvSplit();
       const baseAng = Math.atan2(missile.vy, missile.vx);
       const speed = Math.hypot(missile.vx, missile.vy);
       for (const offsetDeg of [-MIRV_SPREAD_DEG, 0, +MIRV_SPREAD_DEG]) {
@@ -90,6 +92,7 @@ export function stepPhysics(state) {
     if (missile.kind === 'splitter' && !missile.hasSplit &&
         missile.y <= SPLITTER_SPLIT_Y && missile.y > MIN_INTERCEPT_ALTITUDE) {
       missile.hasSplit = true;
+      playSplitterSplit();
       spawned.push(createMissile(missile.x, SPLITTER_CHILD_VY, -SPLITTER_CHILD_VX, 'standard'));
       spawned.push(createMissile(missile.x, SPLITTER_CHILD_VY, +SPLITTER_CHILD_VX, 'standard'));
       const last2 = spawned.slice(-2);

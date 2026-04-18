@@ -6,6 +6,7 @@ import { LEVELS } from './levels.js';
 import { createMissile } from './state.js';
 import { randomBetween, pickWeighted } from './rng.js';
 import { FLAGS } from './flags.js';
+import { playCourierAlert } from './audio.js';
 
 /**
  * Advance spawn timer; manage telegraph warnings; spawn missiles when warnings resolve.
@@ -36,6 +37,7 @@ export function updateSpawner(state) {
     const finalVy = kind === 'courier' ? randomBetween(COURIER_VY_MIN, COURIER_VY_MAX) : vy;
     const telegraphS = state.level >= 4 ? SPAWN_TELEGRAPH_HARD_S : SPAWN_TELEGRAPH_EASY_S;
     state.warnings.push({ x, vx, vy: finalVy, kind, remainingS: telegraphS, totalS: telegraphS });
+    if (kind === 'courier') playCourierAlert();
   }
 }
 
