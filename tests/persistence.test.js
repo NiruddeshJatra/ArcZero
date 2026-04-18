@@ -1,5 +1,5 @@
 import { beforeEach, describe, it, expect } from 'vitest';
-import { loadSave, updateBest, loadBoards, submitLocalScore } from './persistence.js';
+import { loadSave, updateBest, loadBoards, submitLocalScore } from '../src/persistence.js';
 
 beforeEach(() => localStorage.clear());
 

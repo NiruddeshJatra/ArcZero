@@ -22,9 +22,10 @@ import {
   checkMissileGroundHit,
   checkInterceptorBounds,
 } from './collision.js';
-import { render, updateHUD, showGameOver, triggerShake } from './renderer.js';
+import { render, updateHUD, triggerShake } from './renderer.js';
 import { playGameOver } from './audio.js';
 import { FLAGS } from './flags.js';
+import { loadSave, updateBest } from './persistence.js';
 
 const PHASE_DUR = { BUILD: WAVE_BUILD_DUR_S, PEAK: WAVE_PEAK_DUR_S, RELEASE: WAVE_RELEASE_DUR_S };
 const NEXT_PHASE = { BUILD: 'PEAK', PEAK: 'RELEASE', RELEASE: 'BUILD' };
@@ -34,7 +35,31 @@ const SPAWN_MULT = { BUILD: WAVE_BUILD_SPAWN_MULT, PEAK: WAVE_PEAK_SPAWN_MULT, R
  * Start the game loop. Returns a handle with stop().
  * onLevelComplete(level, health) is called when the player completes a level.
  */
-export function startGameLoop(ctx, state, keys, onLevelComplete = () => {}) {
+/**
+ * Build the run-result object passed to onGameOver.
+ */
+function buildRunResult(state) {
+  return {
+    score: Math.floor(state.score),
+    level: state.level,
+    longestChain: state.combo.best,
+    closestMissM: state.stats.closestMissM,
+    intercepts: state.stats.intercepts,
+    survivedS: state.totalElapsedS,
+    seed: state.mode === 'daily' ? state.seed : null,
+    dateISO: state.dateISO ?? new Date().toISOString().slice(0, 10),
+  };
+}
+
+/**
+ * Start the game loop. Returns a handle with stop().
+ * callbacks: { onLevelComplete(level, health), onGameOver(runResult) }
+ */
+export function startGameLoop(ctx, state, keys, callbacks = {}) {
+  const onLevelComplete = callbacks.onLevelComplete ?? (() => {});
+  const onGameOver      = callbacks.onGameOver      ?? (() => {});
+  const onToast         = callbacks.onToast         ?? (() => {});
+
   let lastTime = null;
   let accumulator = 0;
   let animFrameId = null;
@@ -56,11 +81,21 @@ export function startGameLoop(ctx, state, keys, onLevelComplete = () => {}) {
       accumulator -= DT;
     }
 
+    // Drain in-game milestone toasts
+    while (state.pendingToasts.length > 0) {
+      onToast(state.pendingToasts.shift());
+    }
+
     if (!state.running) {
       if (state.levelComplete) {
         onLevelComplete(state.level, state.health);
       } else {
-        showGameOver(state.score);
+        // Persist best and notify
+        const runResult = buildRunResult(state);
+        const save = loadSave();
+        updateBest(save, runResult);
+        state.lastRun = runResult;
+        onGameOver(runResult);
       }
       return;
     }
@@ -153,6 +188,7 @@ function gameTick(state, keys, ctx) {
 
   // 5. Collision
   checkCollisions(state);
+  checkInGameMilestones(state);
 
   // 6. Cleanup — filter dead objects
   state.missiles = state.missiles.filter((m) => m.alive);
@@ -192,4 +228,26 @@ function gameTick(state, keys, ctx) {
   // 11. Render
   render(ctx, state);
   updateHUD(state);
+}
+
+// ── In-game (state-only) milestone check ─────────────────────────────────────
+// These milestones can be evaluated from state alone — no save needed.
+// Triggered toasts pushed to state.pendingToasts for main.js to drain.
+const STATE_MILESTONES = [
+  { id: 'first_intercept',  condition: (s) => s.stats.intercepts >= 1,  toast: 'First blood.' },
+  { id: 'ten_intercepts',   condition: (s) => s.stats.intercepts >= 10, toast: '10 down.' },
+  { id: 'minute_survived',  condition: (s) => s.totalElapsedS >= 60,    toast: 'One minute.' },
+  { id: 'first_level_up',   condition: (s) => s.level >= 2,             toast: 'You climb.' },
+  { id: 'chain_5',          condition: (s) => s.combo.best >= 5,        toast: '×5 chain.' },
+  { id: 'chain_10',         condition: (s) => s.combo.best >= 10,       toast: '×10 chain. Machine.' },
+];
+
+function checkInGameMilestones(state) {
+  state._triggeredMilestones = state._triggeredMilestones ?? new Set();
+  for (const m of STATE_MILESTONES) {
+    if (!state._triggeredMilestones.has(m.id) && m.condition(state)) {
+      state._triggeredMilestones.add(m.id);
+      state.pendingToasts.push(m.toast);
+    }
+  }
 }

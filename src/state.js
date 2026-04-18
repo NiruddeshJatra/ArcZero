@@ -50,6 +50,14 @@ export function createState(level = 1, carryHealth = BASE_HEALTH) {
     totalElapsedS: 0,
     mode: 'campaign',
     seed: null,
+    dateISO: null,
+    unranked: false,
+    inputType: 'kbd',
+    menuOpen: true,
+    menuScreen: 'main',
+    lastRun: null,
+    particles: [],
+    pendingToasts: [],
   };
 }
 

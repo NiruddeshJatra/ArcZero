@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { seed, random, randomBetween, seedFromString, seedFromDateISO } from './rng.js';
+import { seed, random, randomBetween, seedFromString, seedFromDateISO } from '../src/rng.js';
 
 describe('rng', () => {
   it('is deterministic across seeds', () => {
