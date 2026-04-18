@@ -1,4 +1,11 @@
-import { GRAVITY, DT, WORLD_HEIGHT, WORLD_WIDTH, SCALE, TRAJECTORY_PREVIEW_STEPS, TRAJECTORY_PREVIEW_DT } from './constants.js';
+import {
+  GRAVITY, DT, WORLD_HEIGHT, WORLD_WIDTH, SCALE,
+  TRAJECTORY_PREVIEW_STEPS, TRAJECTORY_PREVIEW_DT,
+  MIRV_SPLIT_AFTER_S, MIRV_SPREAD_DEG,
+  SPLITTER_SPLIT_Y, SPLITTER_CHILD_VX, SPLITTER_CHILD_VY,
+  MIN_INTERCEPT_ALTITUDE,
+} from './constants.js';
+import { createMissile } from './state.js';
 
 /**
  * Apply one fixed timestep of physics to a single object.
@@ -54,12 +61,43 @@ export function updateMissileTrail(missile) {
  * Apply physics to all live missiles and interceptors.
  */
 export function stepPhysics(state) {
+  const spawned = [];
   for (const missile of state.missiles) {
-    if (missile.alive) {
-      stepObject(missile);
-      updateMissileTrail(missile);
+    if (!missile.alive) continue;
+    missile.ageS = (missile.ageS ?? 0) + DT;
+    stepObject(missile);
+    updateMissileTrail(missile);
+
+    // MIRV split after MIRV_SPLIT_AFTER_S seconds
+    if (missile.kind === 'mirv' && !missile.hasSplit && missile.ageS >= MIRV_SPLIT_AFTER_S) {
+      missile.hasSplit = true;
+      const baseAng = Math.atan2(missile.vy, missile.vx);
+      const speed = Math.hypot(missile.vx, missile.vy);
+      for (const offsetDeg of [-MIRV_SPREAD_DEG, 0, +MIRV_SPREAD_DEG]) {
+        const a = baseAng + offsetDeg * Math.PI / 180;
+        spawned.push(createMissile(missile.x, missile.vy, missile.vx, 'standard'));
+        // replace last with proper velocity
+        const child = spawned[spawned.length - 1];
+        child.vx = Math.cos(a) * speed;
+        child.vy = Math.sin(a) * speed;
+        child.x = missile.x;
+        child.y = missile.y;
+      }
+      missile.alive = false;
+    }
+
+    // Splitter split when below SPLITTER_SPLIT_Y and above danger zone
+    if (missile.kind === 'splitter' && !missile.hasSplit &&
+        missile.y <= SPLITTER_SPLIT_Y && missile.y > MIN_INTERCEPT_ALTITUDE) {
+      missile.hasSplit = true;
+      spawned.push(createMissile(missile.x, SPLITTER_CHILD_VY, -SPLITTER_CHILD_VX, 'standard'));
+      spawned.push(createMissile(missile.x, SPLITTER_CHILD_VY, +SPLITTER_CHILD_VX, 'standard'));
+      const last2 = spawned.slice(-2);
+      for (const c of last2) { c.y = missile.y; }
+      missile.alive = false;
     }
   }
+  for (const m of spawned) state.missiles.push(m);
   for (const interceptor of state.interceptors) {
     if (interceptor.alive) {
       stepObject(interceptor);

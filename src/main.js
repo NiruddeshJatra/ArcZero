@@ -6,6 +6,7 @@ import { initAudio, playLevelUp } from './audio.js';
 import { LEVELS } from './levels.js';
 import { BASE_HEALTH } from './constants.js';
 import { loadSave, saveSave, loadBoards, submitLocalScore } from './persistence.js';
+import { initTouchInput, shouldUseTouchInput } from './touchInput.js';
 import { buildShareText } from './share.js';
 import { checkMilestones, updateStreak } from './milestones.js';
 
@@ -219,6 +220,10 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = 'campaign', dailySe
       state.unranked = mode === 'practice';
       state.settings.showTrajectoryPreview = currentSave.settings.showTrajectoryPreview;
       state.settings.reduceMotion = currentSave.settings.reduceMotion;
+
+      if (shouldUseTouchInput(currentSave.settings)) {
+        initTouchInput(canvas, state, keys);
+      }
 
       loop = startGameLoop(ctx, state, keys, {
         onToast(text) { showToast(text); },
