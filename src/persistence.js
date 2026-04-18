@@ -3,7 +3,7 @@ const BOARDS_KEY  = 'arczero.localBoards.v1';
 
 const DEFAULT_SAVE = {
   schemaVersion: 1,
-  player: { anonId: null, createdAt: null },
+  player: { anonId: null, createdAt: null, displayName: null },
   best: {
     allTime: { score: 0, level: 1, date: null, seed: null },
     perLevel: {},

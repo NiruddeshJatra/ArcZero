@@ -12,6 +12,8 @@ import {
   WAVE_RELEASE_SPAWN_MULT,
   PASSIVE_SCORE_RATE_V2,
   LEVEL_CLEAR_BONUS,
+  DEFAULT_LEVEL_MIN_INTERCEPTS,
+  DEFAULT_LEVEL_MIN_WAVES,
 } from './constants.js';
 import { LEVELS } from './levels.js';
 import { stepPhysics } from './physics.js';
@@ -74,6 +76,15 @@ export function startGameLoop(ctx, state, keys, callbacks = {}) {
 
     // Cap accumulator — prevents spiral of death on tab switch
     accumulator += Math.min(elapsed, 0.25);
+
+    // Pause gate: freeze sim + render paused overlay, but keep rAF alive so unpause is instant.
+    if (state.paused) {
+      accumulator = 0;
+      lastTime = timestamp;
+      render(ctx, state);
+      animFrameId = requestAnimationFrame(tick);
+      return;
+    }
 
     while (accumulator >= DT) {
       if (!state.running) break;
@@ -205,10 +216,18 @@ function gameTick(state, keys, ctx) {
   state.score += passiveRate * DT;
   state.totalElapsedS += DT;
 
-  // 9. Level advancement — only during RELEASE wave phase
-  const levelScore = state.score - state.levelStartScore;
+  // 9. Level advancement — all gates must hold, and only during RELEASE wave phase.
   const config = LEVELS[state.level];
-  if (levelScore >= config.scoreThreshold && state.wave.phase === 'RELEASE') {
+  const levelScore      = state.score - state.levelStartScore;
+  const levelIntercepts = state.stats.intercepts - state.levelStartIntercepts;
+  const wavesCompleted  = state.wave.index - state.levelStartWaveIndex;
+  const minIntercepts   = config.minIntercepts ?? DEFAULT_LEVEL_MIN_INTERCEPTS;
+  const minWaves        = config.minWaves      ?? DEFAULT_LEVEL_MIN_WAVES;
+  const scoreDone       = levelScore >= config.scoreThreshold;
+  const interceptsDone  = levelIntercepts >= minIntercepts;
+  const wavesDone       = wavesCompleted >= minWaves;
+  state.levelProgress = { scoreDone, interceptsDone, wavesDone, levelScore, levelIntercepts, wavesCompleted };
+  if (scoreDone && interceptsDone && wavesDone && state.wave.phase === 'RELEASE') {
     if (FLAGS.SCORE_REBALANCE) {
       const bonus = LEVEL_CLEAR_BONUS * state.level;
       state.score += bonus;

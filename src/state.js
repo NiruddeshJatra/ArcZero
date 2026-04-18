@@ -15,11 +15,14 @@ import { LEVELS } from './levels.js';
 export function createState(level = 1, carryHealth = BASE_HEALTH) {
   return {
     running: true,
+    paused: false,
     tick: 0,
     score: 0,
     health: carryHealth,
     level,
     levelStartScore: 0,
+    levelStartIntercepts: 0,
+    levelStartWaveIndex: 0,
     levelComplete: false,
     launcher: {
       x: LAUNCHER_START_X,

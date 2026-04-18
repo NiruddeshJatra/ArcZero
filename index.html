@@ -182,6 +182,92 @@
       }
       .setting-row input[type=range] { width: 120px; }
       .setting-row input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; }
+      .setting-row input[type=text] {
+        background: rgba(0,0,0,0.5);
+        border: 1px solid rgba(255,255,255,0.18);
+        color: #fff;
+        font-family: 'Courier New', monospace;
+        font-size: 13px;
+        letter-spacing: 0.08em;
+        padding: 6px 10px;
+        border-radius: 3px;
+        width: 170px;
+        outline: none;
+        transition: border-color 0.12s, background 0.12s;
+      }
+      .setting-row input[type=text]:focus {
+        border-color: #44aaff;
+        background: rgba(68,170,255,0.08);
+      }
+      .setting-row input[type=text]::placeholder { color: rgba(255,255,255,0.25); }
+
+      /* ── Menu button subtitle ── */
+      .menu-btn-sub {
+        display: block;
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        color: rgba(255,255,255,0.35);
+        margin-top: 2px;
+        text-transform: none;
+      }
+
+      /* ── How to play ── */
+      #howto-list {
+        width: 420px;
+        max-height: 440px;
+        overflow-y: auto;
+        font-size: 13px;
+        color: rgba(255,255,255,0.7);
+        letter-spacing: 0.05em;
+        line-height: 1.7em;
+      }
+      #howto-list h4 {
+        color: #44aaff;
+        font-size: 13px;
+        letter-spacing: 0.12em;
+        margin: 10px 0 4px;
+      }
+      #howto-list kbd {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 3px;
+        padding: 1px 6px;
+        font-family: inherit;
+        font-size: 12px;
+      }
+
+      /* ── First-run name prompt ── */
+      #first-run-overlay { gap: 14px; }
+      #first-run-title { font-size: 28px; font-weight: 700; color: #44aaff; letter-spacing: 0.08em; }
+      #first-run-sub   { font-size: 12px; color: rgba(255,255,255,0.4); letter-spacing: 0.08em; }
+      #first-run-name  {
+        background: rgba(0,0,0,0.5);
+        border: 1px solid rgba(255,255,255,0.22);
+        color: #fff;
+        font-family: 'Courier New', monospace;
+        font-size: 16px;
+        letter-spacing: 0.12em;
+        padding: 10px 16px;
+        border-radius: 3px;
+        width: 260px;
+        text-align: center;
+        outline: none;
+      }
+      #first-run-name:focus { border-color: #44aaff; }
+
+      /* ── Level progress pill (in-game HUD) ── */
+      #hud-progress:empty { display: none; }
+      #hud-progress {
+        font-size: 11px;
+        color: rgba(255,255,255,0.55);
+        letter-spacing: 0.08em;
+        padding: 4px 10px;
+        background: rgba(68,170,255,0.06);
+        border: 1px solid rgba(68,170,255,0.18);
+        border-radius: 3px;
+        margin-top: 4px;
+        text-align: center;
+      }
 
       /* ── Game over overlay ── */
       #game-over-overlay { gap: 10px; }
@@ -355,15 +441,17 @@
         <div class="hud-item">ANGLE <span id="hud-angle">45°</span></div>
         <div class="hud-item">POWER <span id="hud-power">20</span></div>
       </div>
+      <div id="hud-progress"></div>
 
       <!-- ── Main menu ── -->
       <div id="menu-overlay" class="overlay visible">
         <div id="menu-title">ARCZERO</div>
         <div id="menu-subtitle">PHYSICS-BASED MISSILE INTERCEPTION</div>
-        <button class="menu-btn primary" id="menu-campaign-btn">▶  PLAY CAMPAIGN</button>
-        <button class="menu-btn daily"   id="menu-daily-btn">◈  DAILY CHALLENGE</button>
-        <button class="menu-btn"         id="menu-levelselect-btn">≡  LEVEL SELECT</button>
+        <button class="menu-btn primary" id="menu-campaign-btn">▶  PLAY CAMPAIGN<span class="menu-btn-sub">Level 1 → 10 · random spawns · fully ranked</span></button>
+        <button class="menu-btn daily"   id="menu-daily-btn">◈  DAILY CHALLENGE<span class="menu-btn-sub">Today's seed · same for every player · one ranked run/day</span></button>
+        <button class="menu-btn"         id="menu-levelselect-btn">≡  LEVEL SELECT<span class="menu-btn-sub">Jump to an unlocked level · unranked practice</span></button>
         <button class="menu-btn"         id="menu-leaderboard-btn">⊞  LEADERBOARDS</button>
+        <button class="menu-btn"         id="menu-howto-btn">?  HOW TO PLAY</button>
         <button class="menu-btn"         id="menu-settings-btn">⚙  SETTINGS</button>
         <button class="menu-btn"         id="menu-credits-btn">✦  CREDITS</button>
       </div>
@@ -393,6 +481,10 @@
         <div style="font-size:22px;font-weight:700;letter-spacing:0.1em;color:#44aaff;margin-bottom:16px;">SETTINGS</div>
         <div id="settings-list">
           <div class="setting-row">
+            <span>PLAYER NAME</span>
+            <input type="text" id="setting-name" maxlength="16" placeholder="you" />
+          </div>
+          <div class="setting-row">
             <span>TRAJECTORY PREVIEW</span>
             <input type="checkbox" id="setting-trajectory" checked />
           </div>
@@ -406,6 +498,46 @@
           </div>
         </div>
         <button class="menu-btn back" id="settings-back-btn">← BACK</button>
+      </div>
+
+      <!-- ── How to Play ── -->
+      <div id="howto-overlay" class="overlay">
+        <div style="font-size:22px;font-weight:700;letter-spacing:0.1em;color:#44aaff;margin-bottom:8px;">HOW TO PLAY</div>
+        <div id="howto-list">
+          <h4>OBJECTIVE</h4>
+          Stop missiles before they hit the ground. Survive long enough, rack up enough intercepts, and clear the level.
+
+          <h4>CONTROLS</h4>
+          <kbd>←</kbd> <kbd>→</kbd> move launcher<br/>
+          <kbd>↑</kbd> <kbd>↓</kbd> aim angle<br/>
+          <kbd>Space</kbd> hold to charge power, release to fire<br/>
+          <kbd>Z</kbd> flip launcher facing left/right<br/>
+          <kbd>P</kbd> or <kbd>Esc</kbd> pause · resume
+
+          <h4>SCORING</h4>
+          Every intercept above 20 m scores. Chain intercepts within 3 s to build a combo multiplier (up to ×8). High-altitude, clutch (low-altitude), and long-range hits earn extra score.
+
+          <h4>LEVEL COMPLETION</h4>
+          Three gates must all clear before a level ends — score threshold, minimum intercepts, and minimum waves. The level only advances during a RELEASE phase. The in-game pill under the HUD shows your progress.
+
+          <h4>MODES</h4>
+          <strong>Campaign</strong> — non-seeded random run from L1. Fully ranked.<br/>
+          <strong>Daily Challenge</strong> — all players get the same missile pattern today (seed changes each calendar day). One ranked attempt per day.<br/>
+          <strong>Level Select</strong> — mid-campaign start, marked unranked.
+
+          <h4>DAILY CHALLENGE — HOW</h4>
+          The seed is derived from today's ISO date (<code>YYYY-MM-DD</code>) via a hash — see <code>rng.js</code> <code>seedFromDateISO</code>. At local midnight a new date → new seed → new pattern. Spawns, angles, and missile kinds are deterministic per seed, so the same puzzle is replayable for fair comparison.
+        </div>
+        <button class="menu-btn back" id="howto-back-btn">← BACK</button>
+      </div>
+
+      <!-- ── First-run name prompt ── -->
+      <div id="first-run-overlay" class="overlay">
+        <div id="first-run-title">WELCOME, PILOT</div>
+        <div id="first-run-sub">PICK A NAME FOR THE LEADERBOARDS</div>
+        <input type="text" id="first-run-name" maxlength="16" placeholder="YOUR CALLSIGN" autocomplete="off" />
+        <button class="menu-btn primary" id="first-run-save" style="width:260px;text-align:center;">SAVE &amp; CONTINUE</button>
+        <button class="menu-btn back" id="first-run-skip">SKIP FOR NOW</button>
       </div>
 
       <!-- ── Credits ── -->

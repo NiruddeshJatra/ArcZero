@@ -22,10 +22,13 @@ const settingsOverlay   = document.getElementById('settings-overlay');
 const creditsOverlay    = document.getElementById('credits-overlay');
 const gameOverOverlay   = document.getElementById('game-over-overlay');
 const levelIntroOverlay = document.getElementById('level-intro-overlay');
+const howtoOverlay      = document.getElementById('howto-overlay');
+const firstRunOverlay   = document.getElementById('first-run-overlay');
 
 const allOverlays = [
   menuOverlay, levelSelectOverlay, leaderboardOverlay,
   settingsOverlay, creditsOverlay, gameOverOverlay, levelIntroOverlay,
+  howtoOverlay, firstRunOverlay,
 ];
 
 function showOnly(overlay) {
@@ -48,6 +51,7 @@ function showToast(text) {
 let keys = null;
 let loop = null;
 let currentSave = loadSave();
+let activeState = null; // current game state, set in startLevel — used by pause handler
 
 // ── Leaderboard rendering ─────────────────────────────────────────────────────
 let currentLbTab = 'daily';
@@ -93,12 +97,25 @@ function renderLeaderboard() {
 
 // ── Settings persistence ──────────────────────────────────────────────────────
 function applySettings(save) {
+  document.getElementById('setting-name').value = save.player.displayName ?? '';
   document.getElementById('setting-trajectory').checked = save.settings.showTrajectoryPreview;
   document.getElementById('setting-reduce-motion').checked = save.settings.reduceMotion;
   document.getElementById('setting-volume').value = save.settings.soundVolume;
 }
 
+function sanitizeName(raw) {
+  // eslint-disable-next-line no-control-regex
+  const cleaned = String(raw).replace(/[\x00-\x1f\x7f]/g, '').trim().slice(0, 16);
+  return cleaned.length ? cleaned : null;
+}
+
 function bindSettingsControls() {
+  document.getElementById('setting-name').addEventListener('change', (e) => {
+    const name = sanitizeName(e.target.value);
+    currentSave.player.displayName = name;
+    e.target.value = name ?? '';
+    saveSave(currentSave);
+  });
   document.getElementById('setting-trajectory').addEventListener('change', (e) => {
     currentSave.settings.showTrajectoryPreview = e.target.checked;
     saveSave(currentSave);
@@ -135,7 +152,7 @@ function renderLevelSelect() {
 }
 
 // ── Game-over PB overlay ──────────────────────────────────────────────────────
-function showGameOverScreen(runResult, isPB) {
+function showGameOverScreen(runResult, isPB, prevLvlBest) {
   const scoreEl  = document.getElementById('final-score-value');
   const pbLine   = document.getElementById('pb-line');
   const statChain   = document.getElementById('stat-chain');
@@ -145,7 +162,7 @@ function showGameOverScreen(runResult, isPB) {
 
   // Count-up animation
   const finalScore = runResult.score;
-  const prevBest   = isPB ? finalScore : currentSave.best.allTime.score;
+  const prevBest   = isPB ? finalScore : prevLvlBest;
   let current = 0;
   const start = performance.now();
   const dur = 800;
@@ -219,6 +236,7 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = 'campaign', dailySe
       state.seed   = dailySeed;
       state.dateISO = dailySeed ? new Date().toISOString().slice(0, 10) : null;
       state.unranked = mode === 'practice';
+      activeState = state;
       state.settings.showTrajectoryPreview = currentSave.settings.showTrajectoryPreview;
       state.settings.reduceMotion = currentSave.settings.reduceMotion;
 
@@ -239,7 +257,8 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = 'campaign', dailySe
         onGameOver(runResult) {
           stopAmbient();
           // Persist
-          const isPB = runResult.score > currentSave.best.allTime.score;
+          const lvlBest = currentSave.best.perLevel[runResult.level] ?? 0;
+          const isPB = runResult.score > lvlBest;
           // updateBest is called inside gameLoop now; reload save
           currentSave = loadSave();
 
@@ -248,26 +267,31 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = 'campaign', dailySe
           for (const t of toasts) showToast(t);
           saveSave(currentSave);
 
-          // Submit to local boards
-          if (mode === 'daily' && !state.unranked) {
+          // Submit to local boards. Campaign + daily both feed the all-time board;
+          // daily additionally feeds the seeded daily bucket. Practice is never ranked.
+          if (!state.unranked) {
             const boards = loadBoards();
-            submitLocalScore(boards, {
+            const baseEntry = {
               anonId: currentSave.player.anonId,
               name: currentSave.player.displayName ?? 'you',
               ...runResult,
               inputType: state.inputType ?? 'kbd',
               modifiers: [],
-            });
-            // Update daily record
-            currentSave.daily.lastCompletedDateISO = state.dateISO;
-            currentSave.daily.lastScore = runResult.score;
-            currentSave.daily.lastSeed = dailySeed;
-            // Streak
-            updateStreak(currentSave, state.dateISO);
-            saveSave(currentSave);
+            };
+            // Always submit an all-time entry (seed stripped so it hits the allTime bucket).
+            submitLocalScore(boards, { ...baseEntry, seed: null });
+            if (mode === 'daily' && runResult.seed) {
+              // Seeded daily-bucket entry for the daily leaderboard tab.
+              submitLocalScore(boards, baseEntry);
+              currentSave.daily.lastCompletedDateISO = state.dateISO;
+              currentSave.daily.lastScore = runResult.score;
+              currentSave.daily.lastSeed = dailySeed;
+              updateStreak(currentSave, state.dateISO);
+              saveSave(currentSave);
+            }
           }
 
-          showGameOverScreen({ ...runResult, waveStats: state.stats.waveStats, unranked: state.unranked }, isPB);
+          showGameOverScreen({ ...runResult, waveStats: state.stats.waveStats, unranked: state.unranked }, isPB, lvlBest);
         },
       });
     } else {
@@ -358,13 +382,54 @@ document.getElementById('menu-from-gameover-btn').addEventListener('click', () =
 });
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
+function togglePause() {
+  if (!activeState || !activeState.running) return;
+  activeState.paused = !activeState.paused;
+  if (keys && keys.reset) keys.reset();
+}
+
+function maybePromptFirstRunName() {
+  if (currentSave.player.displayName) return;
+  const modal = document.getElementById('first-run-overlay');
+  if (!modal) return;
+  const input = document.getElementById('first-run-name');
+  const btn   = document.getElementById('first-run-save');
+  const skip  = document.getElementById('first-run-skip');
+  showOnly(modal);
+  input.value = '';
+  input.focus();
+  const commit = (name) => {
+    currentSave.player.displayName = name;
+    saveSave(currentSave);
+    showOnly(menuOverlay);
+  };
+  btn.onclick = () => {
+    const name = sanitizeName(input.value);
+    if (!name) { input.focus(); return; }
+    playUiConfirm();
+    commit(name);
+  };
+  skip.onclick = () => { playUiClick(); commit(null); };
+  input.onkeydown = (e) => { if (e.key === 'Enter') btn.click(); };
+}
+
 function bootstrap() {
   // Pre-warm AudioContext on first keydown
   document.addEventListener('keydown', () => initAudio(), { once: true });
-  keys = initInput();
+  keys = initInput(togglePause);
   bindSettingsControls();
-  // Show main menu
-  showOnly(menuOverlay);
+  bindHowToPlay();
+  // First-run name prompt, then main menu.
+  if (!currentSave.player.displayName) maybePromptFirstRunName();
+  else showOnly(menuOverlay);
+}
+
+function bindHowToPlay() {
+  const btn = document.getElementById('menu-howto-btn');
+  const back = document.getElementById('howto-back-btn');
+  const overlay = document.getElementById('howto-overlay');
+  if (btn)   btn.addEventListener('click', () => { playUiClick(); showOnly(overlay); });
+  if (back) back.addEventListener('click', () => { playUiClick(); openMenu(); });
 }
 
 if (document.readyState === 'loading') {

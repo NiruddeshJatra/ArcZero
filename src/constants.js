@@ -12,17 +12,22 @@ export const GRAVITY = -12; // m/s² (negative = downward)
 export const DT = 0.05; // seconds per tick (fixed timestep)
 
 // Objects
-export const MISSILE_RADIUS = 3; // meters
-export const INTERCEPTOR_RADIUS = 2; // meters
-export const COLLISION_RADIUS = 5; // MISSILE_RADIUS + INTERCEPTOR_RADIUS
+export const MISSILE_RADIUS = 5; // meters
+export const INTERCEPTOR_RADIUS = 5; // meters (collision only — art size is INTERCEPTOR_ART_SCALE)
+export const COLLISION_RADIUS = 10; // MISSILE_RADIUS + INTERCEPTOR_RADIUS
+
+// Interceptor drawing (px). Decoupled from INTERCEPTOR_RADIUS so art can scale
+// without changing collision or explosion burst size.
+export const INTERCEPTOR_ART_SCALE = 1.6;     // multiplies arrow dimensions
+export const INTERCEPTOR_HALO_RADIUS_PX = 10; // glow radius
 
 // Launcher
 export const LAUNCHER_START_X = 100; // meters from left
-export const LAUNCHER_SPEED = 50; // m/s lateral
+export const LAUNCHER_SPEED = 60; // m/s lateral
 export const LAUNCHER_X_MIN = 0;
 export const LAUNCHER_X_MAX = 200;
-export const ANGLE_MIN = 20; // degrees
-export const ANGLE_MAX = 80; // degrees
+export const ANGLE_MIN = 25; // degrees
+export const ANGLE_MAX = 75; // degrees
 export const ANGLE_START = 45; // degrees
 export const ANGLE_SPEED = 30; // degrees/s
 
@@ -93,6 +98,7 @@ export const LAUNCHER_RECOIL_DUR = 0.12;    // s
 export const FACING_RIGHT = 1;
 export const FACING_LEFT = -1;
 export const FLIP_KEY = 'z';                 // lowercase; check key.toLowerCase()
+export const PAUSE_KEYS = ['p', 'escape'];   // lowercase; check key.toLowerCase()
 
 // === Phase 1 — launcher art ===
 export const LAUNCHER_BARREL_LEN = 18;      // px
@@ -123,6 +129,15 @@ export const WAVE_RELEASE_DUR_S = 8;
 export const WAVE_BUILD_SPAWN_MULT = 1.0;
 export const WAVE_PEAK_SPAWN_MULT  = 0.6;
 export const WAVE_RELEASE_SPAWN_MULT = 1.8;
+
+// === Level completion gating ===
+// All three must hold (plus phase === RELEASE) before a level completes:
+//   levelScore >= scoreThreshold
+//   intercepts  >= minIntercepts
+//   wavesCompleted >= minWaves
+// Defaults used if a level config omits minIntercepts / minWaves.
+export const DEFAULT_LEVEL_MIN_INTERCEPTS = 10;
+export const DEFAULT_LEVEL_MIN_WAVES = 2;
 
 // === Phase 4 — event missiles ===
 export const COURIER_VY_MIN = -50;

@@ -11,6 +11,7 @@ import {
   FIRE_COOLDOWN,
   DT,
   FLIP_KEY,
+  PAUSE_KEYS,
   FACING_RIGHT,
   FACING_LEFT,
   MUZZLE_FLASH_DUR,
@@ -23,8 +24,10 @@ import { playShoot, playDryClick } from './audio.js';
 /**
  * Initialize keyboard listeners. Returns a keys object mutated live.
  * Call once at game start. Use keys.reset() on restart.
+ *
+ * onPauseToggle is invoked on P/Esc press (edge-triggered). main.js owns pause state.
  */
-export function initInput() {
+export function initInput(onPauseToggle = null) {
   const keys = {
     left: false,
     right: false,
@@ -46,8 +49,14 @@ export function initInput() {
       case 'ArrowUp':    keys.up    = true; break;
       case 'ArrowDown':  keys.down  = true; break;
       case ' ':          keys.space = true; break;
-      default:
-        if (e.key.toLowerCase() === FLIP_KEY) keys.flipJustPressed = true;
+      default: {
+        const k = e.key.toLowerCase();
+        if (k === FLIP_KEY) keys.flipJustPressed = true;
+        else if (PAUSE_KEYS.includes(k)) {
+          e.preventDefault();
+          if (onPauseToggle) onPauseToggle();
+        }
+      }
     }
   }
 

@@ -7,6 +7,8 @@ import {
   COLOR_GROUND,
   MISSILE_RADIUS,
   INTERCEPTOR_RADIUS,
+  INTERCEPTOR_ART_SCALE,
+  INTERCEPTOR_HALO_RADIUS_PX,
   POWER_MIN,
   POWER_MAX,
   MIN_INTERCEPT_ALTITUDE,
@@ -80,6 +82,22 @@ export function render(ctx, state) {
   drawWaveIndicator(ctx, state);
 
   ctx.restore();
+
+  // Pause overlay — fully opaque to prevent scouting missile positions mid-pause.
+  if (state.paused) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(10,10,15,0.96)';
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    ctx.fillStyle = '#44aaff';
+    ctx.font = '700 52px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('PAUSED', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 12);
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.font = '14px "Courier New", monospace';
+    ctx.fillText('PRESS P OR ESC TO RESUME', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 30);
+    ctx.restore();
+  }
 
   // Full-screen flash overlay (drawn above everything, no shake translate)
   if (state.flash && state.flash.color && state.flash.dur > 0) {
@@ -339,13 +357,14 @@ function drawInterceptor(ctx, interceptor) {
   const cx = toCanvasX(interceptor.x);
   const cy = toCanvasY(interceptor.y);
   const ang = Math.atan2(-interceptor.vy, interceptor.vx);
+  const s = INTERCEPTOR_ART_SCALE;
 
   // Trail
   for (const pt of interceptor.trail ?? []) {
     const a = pt.age / 0.3;
     ctx.fillStyle = `rgba(100, 200, 255, ${0.5 * (1 - a)})`;
     ctx.beginPath();
-    ctx.arc(toCanvasX(pt.x), toCanvasY(pt.y), 1.5 * (1 - a), 0, Math.PI * 2);
+    ctx.arc(toCanvasX(pt.x), toCanvasY(pt.y), 1.5 * s * (1 - a), 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -354,28 +373,29 @@ function drawInterceptor(ctx, interceptor) {
   ctx.rotate(ang);
 
   // Halo
-  const halo = ctx.createRadialGradient(0, 0, 0, 0, 0, 10);
+  const haloR = INTERCEPTOR_HALO_RADIUS_PX * s;
+  const halo = ctx.createRadialGradient(0, 0, 0, 0, 0, haloR);
   halo.addColorStop(0, 'rgba(100, 200, 255, 0.5)');
   halo.addColorStop(1, 'rgba(100, 200, 255, 0)');
   ctx.fillStyle = halo;
-  ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(0, 0, haloR, 0, Math.PI * 2); ctx.fill();
 
   // Body (arrow pointing in velocity direction)
   ctx.fillStyle = '#4488ff';
   ctx.strokeStyle = '#66ccff';
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(6, 0);
-  ctx.lineTo(-4, -3);
-  ctx.lineTo(-4, 3);
+  ctx.moveTo(6 * s, 0);
+  ctx.lineTo(-4 * s, -3 * s);
+  ctx.lineTo(-4 * s,  3 * s);
   ctx.closePath();
   ctx.fill(); ctx.stroke();
 
   // Fins
   ctx.fillStyle = '#66ccff';
   ctx.beginPath();
-  ctx.moveTo(-4, -3); ctx.lineTo(-7, -5); ctx.lineTo(-4, -1);
-  ctx.moveTo(-4, 3);  ctx.lineTo(-7, 5);  ctx.lineTo(-4, 1);
+  ctx.moveTo(-4 * s, -3 * s); ctx.lineTo(-7 * s, -5 * s); ctx.lineTo(-4 * s, -1 * s);
+  ctx.moveTo(-4 * s,  3 * s); ctx.lineTo(-7 * s,  5 * s); ctx.lineTo(-4 * s,  1 * s);
   ctx.closePath();
   ctx.fill();
 
@@ -467,6 +487,23 @@ export function updateHUD(state) {
   document.getElementById('hud-health').textContent = Math.max(0, state.health);
   document.getElementById('hud-angle').textContent = Math.round(state.launcher.angle) + '°';
   document.getElementById('hud-power').textContent = Math.round(state.launcher.power);
+
+  // Level-progress pill — shows what's needed to clear the current level.
+  const el = document.getElementById('hud-progress');
+  if (el) {
+    const p = state.levelProgress;
+    const cfg = LEVELS[state.level];
+    if (!p || !cfg || !isFinite(cfg.scoreThreshold)) {
+      el.textContent = '';
+    } else {
+      const minI = cfg.minIntercepts ?? 0;
+      const minW = cfg.minWaves ?? 0;
+      const sMark = p.scoreDone ? '✓' : Math.min(100, Math.floor((p.levelScore / cfg.scoreThreshold) * 100)) + '%';
+      const iMark = p.interceptsDone ? '✓' : `${p.levelIntercepts}/${minI}`;
+      const wMark = p.wavesDone ? '✓' : `${p.wavesCompleted}/${minW}`;
+      el.textContent = `SCORE ${sMark} · KILLS ${iMark} · WAVES ${wMark}`;
+    }
+  }
 }
 
 /**
