@@ -9,9 +9,10 @@ import { createState, createMissile, createInterceptor } from '../src/state.js';
 import {
   COLLISION_RADIUS, MISSILE_DAMAGE,
   BASE_INTERCEPT_SCORE_V2, COMBO_MULT_PER_HIT,
-  BONUS_ALT_MAX_MULT, BONUS_ANGLE_MIN_MULT, BONUS_ANGLE_MAX_MULT,
+  BONUS_ALT_MAX_MULT, BONUS_ALT_PRACTICAL_MAX_M,
+  BONUS_ANGLE_LOW_MULT, BONUS_ANGLE_HIGH_MULT,
   ANGLE_MIN, ANGLE_MAX, ANGLE_START,
-  MIN_INTERCEPT_ALTITUDE, WORLD_HEIGHT,
+  MIN_INTERCEPT_ALTITUDE,
 } from '../src/constants.js';
 
 describe('distance', () => {
@@ -40,12 +41,12 @@ describe('checkCollisions', () => {
     expect(interceptor.alive).toBe(false);
     // SCORE_REBALANCE=true: first hit combo.count=1 → mult=1+1*COMBO_MULT_PER_HIT
     const comboMult = 1 + 1 * COMBO_MULT_PER_HIT;
-    // Continuous altitude mult at y=50
-    const altFrac = (50 - MIN_INTERCEPT_ALTITUDE) / (WORLD_HEIGHT - MIN_INTERCEPT_ALTITUDE);
+    // Continuous altitude mult at y=50 (capped at practical max)
+    const altFrac = Math.min((50 - MIN_INTERCEPT_ALTITUDE) / (BONUS_ALT_PRACTICAL_MAX_M - MIN_INTERCEPT_ALTITUDE), 1.0);
     const altMult = 1.0 + altFrac * (BONUS_ALT_MAX_MULT - 1.0);
-    // Angle mult at ANGLE_START (45°)
+    // Angle mult at ANGLE_START (45°) — low angle gives more points
     const angleFrac = (ANGLE_START - ANGLE_MIN) / (ANGLE_MAX - ANGLE_MIN);
-    const angleMult = BONUS_ANGLE_MIN_MULT + angleFrac * (BONUS_ANGLE_MAX_MULT - BONUS_ANGLE_MIN_MULT);
+    const angleMult = BONUS_ANGLE_LOW_MULT - angleFrac * (BONUS_ANGLE_LOW_MULT - BONUS_ANGLE_HIGH_MULT);
     const skillMult = altMult * angleMult;
     expect(state.score).toBe(Math.round(BASE_INTERCEPT_SCORE_V2 * comboMult * skillMult));
   });

@@ -111,15 +111,17 @@ export const COMBO_DECAY_DUR_S = 1.0;
 export const BASE_INTERCEPT_SCORE_V2 = 10;   // used when SCORE_REBALANCE is on
 export const PASSIVE_SCORE_RATE_V2 = 0.25;   // per second when SCORE_REBALANCE is on
 export const LEVEL_CLEAR_BONUS = 50;         // × level
-// Continuous altitude multiplier: 1.0× at MIN_INTERCEPT_ALTITUDE, BONUS_ALT_MAX_MULT× at world top
+// Continuous altitude multiplier: 1.0× at MIN_INTERCEPT_ALTITUDE, BONUS_ALT_MAX_MULT× at practical ceiling
 export const BONUS_ALT_MAX_MULT = 2.0;
+export const BONUS_ALT_PRACTICAL_MAX_M = 100; // realistic max intercept altitude; capped here
 export const BONUS_CLUTCH_M = 35;            // intercept y below this (but above MIN_INTERCEPT_ALTITUDE)
 export const BONUS_CLUTCH_MULT = 1.5;
 export const BONUS_LONG_RANGE_M = 50;        // |impactX - launcherX|
 export const BONUS_LONG_RANGE_MULT = 1.2;
-// Angle multiplier: low angle (ANGLE_MIN) divides points, high angle (ANGLE_MAX) amplifies
-export const BONUS_ANGLE_MIN_MULT = 0.5;
-export const BONUS_ANGLE_MAX_MULT = 1.25;
+// Angle multiplier: low angle (ANGLE_MIN 30°) gives MORE points; high angle (ANGLE_MAX 70°) gives fewer
+// BONUS_ANGLE_LOW_MULT / BONUS_ANGLE_HIGH_MULT = 2 (30° scores 2× vs 70°)
+export const BONUS_ANGLE_LOW_MULT  = 1.5;   // multiplier at ANGLE_MIN (30°)
+export const BONUS_ANGLE_HIGH_MULT = 0.75;  // multiplier at ANGLE_MAX (70°)
 
 // === Phase 2 — telegraph ===
 export const SPAWN_TELEGRAPH_EASY_S = 0.7;   // L1-L3
