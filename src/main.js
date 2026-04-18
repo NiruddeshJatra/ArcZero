@@ -2,7 +2,7 @@ import { createState } from './state.js';
 import { initInput } from './input.js';
 import { startGameLoop } from './gameLoop.js';
 import { seed, seedFromDateISO } from './rng.js';
-import { initAudio, playLevelUp } from './audio.js';
+import { initAudio, playLevelUp, toggleMute, isMuted } from './audio.js';
 import { LEVELS } from './levels.js';
 import { BASE_HEALTH } from './constants.js';
 import { loadSave, saveSave, loadBoards, submitLocalScore } from './persistence.js';
@@ -200,6 +200,7 @@ function showGameOverScreen(runResult, isPB, prevLvlBest) {
     shareBtn.classList.add('visible');
     shareBtn.onclick = () => {
       const text = buildShareText(runResult, runResult.waveStats ?? []);
+      // eslint-disable-next-line no-undef -- browser globals not in ESLint env
       navigator.clipboard.writeText(text).then(() => {
         shareConfirm.textContent = 'COPIED!';
         setTimeout(() => { shareConfirm.textContent = ''; }, 2000);
@@ -248,11 +249,11 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = 'campaign', dailySe
 
       loop = startGameLoop(ctx, state, keys, {
         onToast(text) { showToast(text); playMilestone(); },
-        onLevelComplete(completedLevel, finalHealth) {
+        onLevelComplete(completedLevel) {
           loop.stop();
           keys.reset();
           playLevelUp();
-          startLevel(completedLevel + 1, finalHealth, mode, dailySeed);
+          startLevel(completedLevel + 1, BASE_HEALTH, mode, dailySeed);
         },
         onGameOver(runResult) {
           stopAmbient();
@@ -416,6 +417,17 @@ function maybePromptFirstRunName() {
 function bootstrap() {
   // Pre-warm AudioContext on first keydown
   document.addEventListener('keydown', () => initAudio(), { once: true });
+
+  // Mute toggle — button + M key
+  const muteBtn = document.getElementById('mute-btn');
+  const syncMuteBtn = () => muteBtn.classList.toggle('muted', isMuted());
+  muteBtn.addEventListener('click', () => { toggleMute(); syncMuteBtn(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() === 'm' && e.target.tagName !== 'INPUT') {
+      toggleMute(); syncMuteBtn();
+    }
+  });
+
   keys = initInput(togglePause);
   bindSettingsControls();
   bindHowToPlay();

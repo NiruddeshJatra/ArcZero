@@ -410,6 +410,23 @@ export function getVolumes() {
   };
 }
 
+let _muteVolume = null; // non-null = muted, stores pre-mute master gain
+
+export function toggleMute() {
+  getCtx();
+  if (_muteVolume !== null) {
+    _masterGain.gain.value = _muteVolume;
+    _muteVolume = null;
+  } else {
+    _muteVolume = _masterGain.gain.value || 1;
+    _masterGain.gain.value = 0;
+  }
+}
+
+export function isMuted() {
+  return _muteVolume !== null;
+}
+
 function _persistVolumes() {
   const save = loadSave();
   save.settings.audioVolumes = getVolumes();

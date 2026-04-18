@@ -107,7 +107,7 @@ Near-miss: distance ≤ 10m but > 5m → graze sound, spark particle, stats.near
 - Level clear bonus: 50 × level number
 
 ### Health
-- Start: 100, carries over between levels
+- Start: 100 per level (resets to BASE_HEALTH on every level transition)
 - Missile hits ground: -10
 - Game over: health ≤ 0
 
@@ -144,23 +144,9 @@ Level advance only fires during RELEASE phase.
 | mirv | Splits after 1.5s into 3 spread children | Pink |
 
 ## Audio
-Required files in `public/audio/`. Code in `audio.js` fails silently if missing.
-
-| Slot | File | Current status |
-|------|------|---------------|
-| shoot | shoot.mp3 | ✓ present |
-| intercept | intercept.mp3 | ✓ present |
-| damage | damage.mp3 | ✓ present |
-| gameOver | game-over.mp3 | ✓ present |
-| levelUp | level-up.mp3 | ✓ present |
-| thump | thump.mp3 | ✗ missing (low thud, layer under intercept) |
-| graze | graze.mp3 | ✗ missing (near-miss whoosh) |
-| dryClick | dry_click.mp3 | ✗ missing (fire-during-cooldown click) |
-| waveWarning | wave_warning.mp3 | ✗ missing (PEAK phase alert) |
-| milestone | milestone.mp3 | ✗ missing (achievement chime) |
-| ambientLoop | ambient_loop.mp3 | ✗ missing (space drone loop) |
-
-New files in public/audio/ not yet wired: see audio.js section below.
+All slots wired in `audio.js`. Files in `public/audio/`. Fails silently if a file is absent.
+In-game mute toggle: `[M]` key or the `♪` button in the HUD (session-only, not persisted).
+Full volume controls in Settings overlay (master slider, persisted via `persistence.js`).
 
 ## Game Loop Order (per tick)
 1. Shake/flash decay

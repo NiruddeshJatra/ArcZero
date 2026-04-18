@@ -28,6 +28,29 @@ import {
 } from './constants.js';
 import { toCanvasX, toCanvasY, simulateTrajectory } from './physics.js';
 
+// Per-level star cache — fixed seed per level, deterministic LCG, no Math.random.
+// L1 = empty. Star count grows with level. ~28% pulse subtly.
+const _starCache = {};
+function getStars(level) {
+  if (_starCache[level]) return _starCache[level];
+  if (level <= 1) return (_starCache[level] = []);
+  let t = (level * 0x9E3779B9 + 0xDEADBEEF) >>> 0;
+  const lcg = () => { t = (Math.imul(1664525, t) + 1013904223) >>> 0; return t / 4294967296; };
+  const count = Math.min(15 + (level - 2) * 10, 90); // L2=15 … L10=90
+  return (_starCache[level] = Array.from({ length: count }, () => {
+    const pulsing = lcg() < 0.28;
+    return {
+      x: lcg() * CANVAS_WIDTH,
+      y: lcg() * (CANVAS_HEIGHT * 0.88),
+      r: 0.4 + lcg() * 1.8,
+      a: 0.18 + lcg() * 0.52,
+      pulseSpeed: pulsing ? (0.5 + lcg() * 2.0) : 0,
+      pulsePhase: lcg() * Math.PI * 2,
+      pulseAmp:   pulsing ? (0.08 + lcg() * 0.15) : 0,
+    };
+  }));
+}
+
 export function triggerShake(state, amp, durS) {
   if (state.settings?.reduceMotion) { amp *= 0.3; }
   state.shake = { amp, dur: durS, elapsed: 0 };
@@ -46,6 +69,8 @@ export function render(ctx, state) {
   const levelCfg = LEVELS[state.level];
   ctx.fillStyle = (levelCfg && levelCfg.tint) ? levelCfg.tint : COLOR_BG;
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+  drawBackground(ctx, state.level);
 
   // Screen shake
   const shakeActive = state.shake && state.shake.amp > 0;
@@ -107,6 +132,56 @@ export function render(ctx, state) {
     ctx.fillStyle = state.flash.color;
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     ctx.restore();
+  }
+}
+
+function drawBackground(ctx, level) {
+  if (level <= 1) return;
+
+  const stars = getStars(level);
+  const now = performance.now() / 1000;
+  for (const s of stars) {
+    const alpha = s.pulseAmp > 0
+      ? s.a + s.pulseAmp * Math.sin(now * s.pulseSpeed + s.pulsePhase)
+      : s.a;
+    ctx.fillStyle = `rgba(255,255,255,${Math.max(0.05, alpha)})`;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Vertical scan lines — density and brightness scale with level
+  const spacing = level <= 3 ? 100 : level <= 6 ? 80 : 60;
+  const vAlpha  = level <= 3 ? 0.04 : level <= 6 ? 0.06 : 0.09;
+  ctx.strokeStyle = `rgba(120,180,255,${vAlpha})`;
+  ctx.lineWidth = 1;
+  for (let x = spacing; x < CANVAS_WIDTH; x += spacing) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, CANVAS_HEIGHT * 0.87);
+    ctx.stroke();
+  }
+
+  // Horizontal altitude grid — L5 onward
+  if (level >= 5) {
+    const hAlpha = level >= 8 ? 0.06 : 0.035;
+    ctx.strokeStyle = `rgba(180,200,255,${hAlpha})`;
+    ctx.setLineDash([3, 14]);
+    for (let y = 120; y < CANVAS_HEIGHT * 0.87; y += 120) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(CANVAS_WIDTH, y);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+  }
+
+  // L8 Blackout: CRT raster bands reinforce the no-trajectory theme
+  if (level === 8) {
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    for (let y = 0; y < CANVAS_HEIGHT; y += 4) {
+      ctx.fillRect(0, y, CANVAS_WIDTH, 2);
+    }
   }
 }
 

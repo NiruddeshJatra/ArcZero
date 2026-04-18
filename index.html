@@ -92,7 +92,7 @@
         font-family: 'Courier New', monospace;
         font-size: 14px;
         letter-spacing: 0.12em;
-        padding: 11px 48px;
+        padding: 13px 36px;
         cursor: pointer;
         border-radius: 3px;
         width: 260px;
@@ -399,6 +399,21 @@
       @keyframes toast-in  { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
       @keyframes toast-out { to { opacity: 0; transform: translateY(-8px); } }
 
+      #mute-btn {
+        background: none;
+        border: 1px solid rgba(255,255,255,0.15);
+        color: rgba(255,255,255,0.5);
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        padding: 2px 8px;
+        cursor: pointer;
+        border-radius: 3px;
+        transition: color 0.12s, border-color 0.12s;
+        align-self: center;
+      }
+      #mute-btn:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
+      #mute-btn.muted { color: rgba(255,80,80,0.7); border-color: rgba(255,80,80,0.3); text-decoration: line-through; }
+
       /* ── Mobile / responsive ── */
       @media (max-width: 768px) {
         body { justify-content: flex-start; padding-top: 8px; }
@@ -440,6 +455,7 @@
         <div class="hud-item">HEALTH <span id="hud-health">100</span></div>
         <div class="hud-item">ANGLE <span id="hud-angle">45°</span></div>
         <div class="hud-item">POWER <span id="hud-power">20</span></div>
+        <button id="mute-btn" title="[M] Toggle mute">♪</button>
       </div>
       <div id="hud-progress"></div>
 
