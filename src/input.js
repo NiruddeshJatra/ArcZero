@@ -18,7 +18,7 @@ import {
   LAUNCHER_RECOIL_PX,
 } from './constants.js';
 import { createInterceptor } from './state.js';
-import { playShoot } from './audio.js';
+import { playShoot, playDryClick } from './audio.js';
 
 /**
  * Initialize keyboard listeners. Returns a keys object mutated live.
@@ -32,6 +32,7 @@ export function initInput() {
     down: false,
     space: false,
     spaceJustReleased: false,
+    spaceWasDown: false,
     flipJustPressed: false,
   };
 
@@ -117,6 +118,12 @@ export function processInput(state, keys) {
     launcher.charging = true;
     launcher.power = Math.min(POWER_MAX, launcher.power + POWER_CHARGE_RATE * DT);
   }
+
+  // Dry click when pressing space during cooldown (once per press)
+  if (keys.space && launcher.fireCooldown > 0 && !keys.spaceWasDown) {
+    playDryClick();
+  }
+  keys.spaceWasDown = keys.space;
 
   // Fire on space release
   if (keys.spaceJustReleased) {

@@ -25,7 +25,8 @@ import {
   COURIER_SCORE_MULT,
 } from './constants.js';
 import { createExplosion } from './state.js';
-import { playIntercept, playDamage } from './audio.js';
+import { playIntercept, playDamage, playGraze } from './audio.js';
+import { NEAR_MISS_THRESHOLD } from './constants.js';
 import { triggerShake, triggerFlash } from './renderer.js';
 import { FLAGS } from './flags.js';
 
@@ -87,6 +88,25 @@ export function checkCollisions(state) {
           });
         } else {
           state.score += INTERCEPT_SCORE;
+        }
+      } else {
+        // Near-miss detection
+        const d = distance(interceptor, missile);
+        if (d <= NEAR_MISS_THRESHOLD && missile.y >= MIN_INTERCEPT_ALTITUDE) {
+          interceptor._grazes = interceptor._grazes ?? new Set();
+          if (!interceptor._grazes.has(missile.id)) {
+            interceptor._grazes.add(missile.id);
+            state.stats.nearMisses += 1;
+            if (d < state.stats.closestMissM) state.stats.closestMissM = d;
+            playGraze();
+            state.particles = state.particles ?? [];
+            state.particles.push({
+              x: (interceptor.x + missile.x) / 2,
+              y: (interceptor.y + missile.y) / 2,
+              vx: 0, vy: 0, age: 0, maxAge: 0.25,
+              color: 'rgba(100,220,255,0.9)', kind: 'spark',
+            });
+          }
         }
       }
     }

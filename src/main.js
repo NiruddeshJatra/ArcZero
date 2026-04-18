@@ -7,6 +7,7 @@ import { LEVELS } from './levels.js';
 import { BASE_HEALTH } from './constants.js';
 import { loadSave, saveSave, loadBoards, submitLocalScore } from './persistence.js';
 import { initTouchInput, shouldUseTouchInput } from './touchInput.js';
+import { playMilestone, startAmbient, stopAmbient } from './audio.js';
 import { buildShareText } from './share.js';
 import { checkMilestones, updateStreak } from './milestones.js';
 
@@ -225,8 +226,10 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = 'campaign', dailySe
         initTouchInput(canvas, state, keys);
       }
 
+      startAmbient();
+
       loop = startGameLoop(ctx, state, keys, {
-        onToast(text) { showToast(text); },
+        onToast(text) { showToast(text); playMilestone(); },
         onLevelComplete(completedLevel, finalHealth) {
           loop.stop();
           keys.reset();
@@ -234,6 +237,7 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = 'campaign', dailySe
           startLevel(completedLevel + 1, finalHealth, mode, dailySeed);
         },
         onGameOver(runResult) {
+          stopAmbient();
           // Persist
           const isPB = runResult.score > currentSave.best.allTime.score;
           // updateBest is called inside gameLoop now; reload save
