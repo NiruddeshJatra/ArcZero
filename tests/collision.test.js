@@ -6,7 +6,13 @@ import {
   checkInterceptorBounds,
 } from '../src/collision.js';
 import { createState, createMissile, createInterceptor } from '../src/state.js';
-import { COLLISION_RADIUS, MISSILE_DAMAGE, BASE_INTERCEPT_SCORE_V2, COMBO_MULT_PER_HIT } from '../src/constants.js';
+import {
+  COLLISION_RADIUS, MISSILE_DAMAGE,
+  BASE_INTERCEPT_SCORE_V2, COMBO_MULT_PER_HIT,
+  BONUS_ALT_MAX_MULT, BONUS_ANGLE_MIN_MULT, BONUS_ANGLE_MAX_MULT,
+  ANGLE_MIN, ANGLE_MAX, ANGLE_START,
+  MIN_INTERCEPT_ALTITUDE, WORLD_HEIGHT,
+} from '../src/constants.js';
 
 describe('distance', () => {
   it('computes 3-4-5 triangle correctly', () => {
@@ -33,8 +39,15 @@ describe('checkCollisions', () => {
     expect(missile.alive).toBe(false);
     expect(interceptor.alive).toBe(false);
     // SCORE_REBALANCE=true: first hit combo.count=1 → mult=1+1*COMBO_MULT_PER_HIT
-    const expectedMult = 1 + 1 * COMBO_MULT_PER_HIT;
-    expect(state.score).toBe(Math.round(BASE_INTERCEPT_SCORE_V2 * expectedMult));
+    const comboMult = 1 + 1 * COMBO_MULT_PER_HIT;
+    // Continuous altitude mult at y=50
+    const altFrac = (50 - MIN_INTERCEPT_ALTITUDE) / (WORLD_HEIGHT - MIN_INTERCEPT_ALTITUDE);
+    const altMult = 1.0 + altFrac * (BONUS_ALT_MAX_MULT - 1.0);
+    // Angle mult at ANGLE_START (45°)
+    const angleFrac = (ANGLE_START - ANGLE_MIN) / (ANGLE_MAX - ANGLE_MIN);
+    const angleMult = BONUS_ANGLE_MIN_MULT + angleFrac * (BONUS_ANGLE_MAX_MULT - BONUS_ANGLE_MIN_MULT);
+    const skillMult = altMult * angleMult;
+    expect(state.score).toBe(Math.round(BASE_INTERCEPT_SCORE_V2 * comboMult * skillMult));
   });
 
   it('does not destroy when outside COLLISION_RADIUS', () => {

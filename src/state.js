@@ -89,8 +89,9 @@ export function createMissile(x, vy = 0, vx = 0, kind = 'standard') {
 
 /**
  * Creates a new interceptor fired from launcher position.
+ * launchAngle (degrees) is stored for scoring purposes.
  */
-export function createInterceptor(x, vx, vy) {
+export function createInterceptor(x, vx, vy, launchAngle = ANGLE_START) {
   return {
     x,
     y: 0,
@@ -98,6 +99,7 @@ export function createInterceptor(x, vx, vy) {
     vy,
     alive: true,
     trail: [],
+    launchAngle,
   };
 }
 

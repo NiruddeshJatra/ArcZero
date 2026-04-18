@@ -140,7 +140,7 @@ export function processInput(state, keys) {
       const rad = (launcher.angle * Math.PI) / 180;
       const vx = launcher.facing * launcher.power * Math.cos(rad);
       const vy = launcher.power * Math.sin(rad);
-      state.interceptors.push(createInterceptor(launcher.x, vx, vy));
+      state.interceptors.push(createInterceptor(launcher.x, vx, vy, launcher.angle));
       playShoot();
       launcher.fireCooldown = FIRE_COOLDOWN;
       launcher.recoilPx = LAUNCHER_RECOIL_PX;

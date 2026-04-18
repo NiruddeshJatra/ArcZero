@@ -16,13 +16,17 @@ import {
   COMBO_MULT_PER_HIT,
   COMBO_MULT_CAP,
   BASE_INTERCEPT_SCORE_V2,
-  BONUS_HIGH_ALT_M,
-  BONUS_HIGH_ALT_MULT,
+  BONUS_ALT_MAX_MULT,
   BONUS_CLUTCH_M,
   BONUS_CLUTCH_MULT,
   BONUS_LONG_RANGE_M,
   BONUS_LONG_RANGE_MULT,
   COURIER_SCORE_MULT,
+  BONUS_ANGLE_MIN_MULT,
+  BONUS_ANGLE_MAX_MULT,
+  ANGLE_MIN,
+  ANGLE_MAX,
+  ANGLE_START,
 } from './constants.js';
 import { createExplosion } from './state.js';
 import { playIntercept, playDamage, playGraze, playComboUp, playComboPeak } from './audio.js';
@@ -72,8 +76,15 @@ export function checkCollisions(state) {
           if (state.combo.multiplier >= COMBO_MULT_CAP) playComboPeak();
           else if (state.combo.count > 1) playComboUp();
 
-          let skillMult = 1.0;
-          if (missile.y >= BONUS_HIGH_ALT_M) skillMult *= BONUS_HIGH_ALT_MULT;
+          // Continuous altitude multiplier: 1.0× at MIN_INTERCEPT_ALTITUDE → BONUS_ALT_MAX_MULT× at top
+          const altFrac = (missile.y - MIN_INTERCEPT_ALTITUDE) / (WORLD_HEIGHT - MIN_INTERCEPT_ALTITUDE);
+          let skillMult = 1.0 + altFrac * (BONUS_ALT_MAX_MULT - 1.0);
+
+          // Angle multiplier: low angle (ANGLE_MIN) → BONUS_ANGLE_MIN_MULT×, high → BONUS_ANGLE_MAX_MULT×
+          const launchAngle = interceptor.launchAngle ?? ANGLE_START;
+          const angleFrac = (launchAngle - ANGLE_MIN) / (ANGLE_MAX - ANGLE_MIN);
+          skillMult *= BONUS_ANGLE_MIN_MULT + angleFrac * (BONUS_ANGLE_MAX_MULT - BONUS_ANGLE_MIN_MULT);
+
           if (missile.y <= BONUS_CLUTCH_M && missile.y >= MIN_INTERCEPT_ALTITUDE) skillMult *= BONUS_CLUTCH_MULT;
           const horizDist = Math.abs(interceptor.x - state.launcher.x);
           if (horizDist >= BONUS_LONG_RANGE_M) skillMult *= BONUS_LONG_RANGE_MULT;
