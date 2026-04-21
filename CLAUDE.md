@@ -208,6 +208,20 @@ npm run lint:fix  # Auto-fix lint issues
 - `playwright-skill` — Global: Playwright E2E best practices
 - `frontend-design` — Project: HUD, overlays, menus — use when touching renderer.js or index.html
 - `game-physics` — Project: physics correctness — use when touching physics.js, collision.js, spawner.js, gameLoop.js
+- `gsap-core` — Animation: tweens, easing, stagger, defaults — use whenever writing JS animations
+- `gsap-timeline` — Animation: sequencing, position parameter, nesting — use for choreographed animation
+- `gsap-plugins` — Animation: ScrollToPlugin, Flip, Draggable, SplitText, etc — use when a GSAP plugin is needed
+- `gsap-scrolltrigger` — Animation: scroll-linked, pinning, scrub — use for any scroll-driven animation
+- `gsap-react` — Animation: useGSAP, refs, cleanup — use when animating inside React components
+- `gsap-performance` — Animation: transforms, batching, will-change — use when optimizing animation FPS
+- `gsap-utils` — Animation: clamp, mapRange, snap, random — use when needing GSAP utility helpers
+- `gsap-frameworks` — Animation: Vue/Svelte lifecycle + cleanup — use for non-React framework animation
+
+## gstack
+gstack installed at `~/.claude/skills/gstack`. Use `/browse` for all web browsing — never use `mcp__claude-in-chrome__*` tools.
+
+Available skills:
+`/office-hours`, `/plan-ceo-review`, `/plan-eng-review`, `/plan-design-review`, `/design-consultation`, `/design-shotgun`, `/design-html`, `/review`, `/ship`, `/land-and-deploy`, `/canary`, `/benchmark`, `/browse`, `/connect-chrome`, `/qa`, `/qa-only`, `/design-review`, `/setup-browser-cookies`, `/setup-deploy`, `/retro`, `/investigate`, `/document-release`, `/codex`, `/cso`, `/autoplan`, `/plan-devex-review`, `/devex-review`, `/careful`, `/freeze`, `/guard`, `/unfreeze`, `/gstack-upgrade`, `/learn`
 
 ## Security Notes
 - Never commit `.env` files

@@ -132,6 +132,7 @@ function bindSettingsControls() {
 
 // ── Level select ──────────────────────────────────────────────────────────────
 function renderLevelSelect() {
+  currentSave = loadSave();
   const list = document.getElementById('level-select-list');
   list.innerHTML = '';
   const unlocked = currentSave.progress.unlockedStartLevels;
