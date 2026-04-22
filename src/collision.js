@@ -36,6 +36,12 @@ import { NEAR_MISS_THRESHOLD } from './constants.js';
 import { triggerShake, triggerFlash } from './renderer.js';
 import { FLAGS } from './flags.js';
 
+// Cache the streak callout element once to avoid repeated DOM lookups in the hot collision path.
+let _streakEl = null;
+function getStreakEl() {
+  return _streakEl ?? (_streakEl = document.getElementById('streak-callout'));
+}
+
 /**
  * Euclidean distance between two physics objects.
  */
@@ -82,20 +88,30 @@ export function checkCollisions(state) {
             const callout = STREAK_CALLOUTS.find(c => c.count === state.combo.count && state.combo.count > state.combo.lastCalloutAt);
             if (callout) {
               state.combo.lastCalloutAt = state.combo.count;
-              const el = document.getElementById('streak-callout');
+              const el = getStreakEl();
               if (el) {
                 el.textContent = callout.text;
-                el.className = 'active';
-                if (callout.count >= 8) {
-                  el.style.fontSize = '52px'; el.style.color = '#ffd700';
-                } else if (callout.count >= 5) {
-                  el.style.fontSize = '36px'; el.style.color = '#ff9944';
+                // Per-tier color palette — escalates as streak grows
+                let color, fontSize;
+                if (callout.count >= 10) {
+                  color = '#ff4dff'; fontSize = '28px'; // legendary — magenta
+                } else if (callout.count >= 8) {
+                  color = '#ffd700'; fontSize = '26px'; // godlike — gold
+                } else if (callout.count >= 6) {
+                  color = '#ff7722'; fontSize = '22px'; // overdrive — orange
+                } else if (callout.count >= 4) {
+                  color = '#44ffcc'; fontSize = '18px'; // quad — teal
+                } else if (callout.count >= 3) {
+                  color = '#88aaff'; fontSize = '17px'; // triple — blue
                 } else {
-                  el.style.fontSize = '22px'; el.style.color = '#ffffff';
+                  color = 'rgba(255,255,255,0.9)'; fontSize = '16px'; // double — white
                 }
-                
+                el.style.color = color;
+                el.style.fontSize = fontSize;
+                el.className = 'active';
+
                 if (el._timer) clearTimeout(el._timer);
-                el._timer = setTimeout(() => { el.className = ''; }, 3000);
+                el._timer = setTimeout(() => { el.className = ''; }, 2000);
               }
               playMilestone();
               if (callout.flash) {

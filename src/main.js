@@ -70,7 +70,6 @@ function renderLeaderboard() {
   const controls = document.getElementById('leaderboard-controls');
   list.innerHTML = '';
   controls.style.display = 'none';
-
   if (currentLbTab === 'achievements') {
     const b = currentSave.best;
     const ch = b.longestChain;
@@ -86,10 +85,40 @@ function renderLeaderboard() {
   <div style="display:flex;justify-content:space-between"><span style="color:rgba(255,255,255,0.6)">Total Intercepts</span><span style="color:#44aaff">${inter}</span></div>
   <div style="display:flex;justify-content:space-between"><span style="color:rgba(255,255,255,0.6)">Total Survived</span><span style="color:#44ffee">${surv}</span></div>
 </div>`;
+    list.innerHTML = '';
     if (b.totalIntercepts === 0) {
-      html = '<div style="color:rgba(255,255,255,0.3);padding:20px;text-align:center;font-size:13px;">play your first run to see personal records</div>';
+      const msg = document.createElement('div');
+      msg.style.cssText = 'color:rgba(255,255,255,0.3);padding:20px;text-align:center;font-size:13px;';
+      msg.textContent = 'play your first run to see personal records';
+      list.appendChild(msg);
+      return;
     }
-    list.innerHTML = html;
+    const statsData = [
+      ['Longest Chain', `\u00d7${ch}`, '#ffd700'],
+      ['Closest Miss',  cl,           '#ff9944'],
+      ['Total Intercepts', String(inter), '#44aaff'],
+      ['Total Survived',   surv,          '#44ffee'],
+    ];
+    const note = document.createElement('div');
+    note.style.cssText = 'text-align:center;color:rgba(255,255,255,0.3);margin-bottom:12px;font-size:11px;';
+    note.textContent = 'vs. others coming in v2';
+    list.appendChild(note);
+    const grid = document.createElement('div');
+    grid.style.cssText = 'font-size:13px;line-height:2em;margin-top:10px;';
+    for (const [label, value, color] of statsData) {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;justify-content:space-between';
+      const lbl = document.createElement('span');
+      lbl.style.color = 'rgba(255,255,255,0.6)';
+      lbl.textContent = label;
+      const val = document.createElement('span');
+      val.style.color = color;
+      val.textContent = value;
+      row.appendChild(lbl);
+      row.appendChild(val);
+      grid.appendChild(row);
+    }
+    list.appendChild(grid);
     return;
   }
 
@@ -128,13 +157,23 @@ function renderLeaderboard() {
   }
 
   if (entries.length === 0) {
-    let emptyHtml = '';
-    if (currentLbTab === 'allTime') emptyHtml = 'no runs yet<br><span style="font-size:11px;opacity:0.5">play a campaign to get on the board</span>';
-    if (currentLbTab === 'daily') emptyHtml = 'no attempts today<br><span style="font-size:11px;opacity:0.5">today\'s challenge resets at midnight</span>';
-    if (currentLbTab === 'weekly') emptyHtml = 'no daily runs this week<br><span style="font-size:11px;opacity:0.5">play the daily challenge to appear here</span>';
-    if (currentLbTab === 'levelrun') emptyHtml = 'no level runs yet<br><span style="font-size:11px;opacity:0.5">start from level select to rank here</span>';
-
-    list.innerHTML = `<div style="color:rgba(255,255,255,0.3);padding:20px;text-align:center;font-size:13px;line-height:1.5em">${emptyHtml}</div>`;
+    const emptyDiv = document.createElement('div');
+    emptyDiv.style.cssText = 'color:rgba(255,255,255,0.3);padding:20px;text-align:center;font-size:13px;line-height:1.5em';
+    const msgs = {
+      allTime:  ['no runs yet', 'play a campaign to get on the board'],
+      daily:    ['no attempts today', "today's challenge resets at midnight"],
+      weekly:   ['no daily runs this week', 'play the daily challenge to appear here'],
+      levelrun: ['no level runs yet', 'start from level select to rank here'],
+    };
+    const [main, sub] = msgs[currentLbTab] ?? ['no entries', ''];
+    emptyDiv.textContent = main;
+    if (sub) {
+      const subEl = document.createElement('span');
+      subEl.style.cssText = 'font-size:11px;opacity:0.5;display:block;';
+      subEl.textContent = sub;
+      emptyDiv.appendChild(subEl);
+    }
+    list.appendChild(emptyDiv);
     return;
   }
 
@@ -142,16 +181,38 @@ function renderLeaderboard() {
   entries.forEach((e, i) => {
     const row = document.createElement('div');
     row.className = 'lb-row' + (e.anonId === myId ? ' me' : '');
-    
+
+    const rank = document.createElement('span');
+    rank.className = 'lb-rank';
+    rank.textContent = String(i + 1);
+
+    const name = document.createElement('span');
+    name.className = 'lb-name';
+    name.textContent = e.name ?? 'you';
+
+    const score = document.createElement('span');
+    score.className = 'lb-score';
+
+    row.appendChild(rank);
     if (currentLbTab === 'levelrun') {
-      row.innerHTML = `<span class="lb-rank">${i + 1}</span><span class="lb-name">${e.name ?? 'you'}</span><span style="color:rgba(255,255,255,0.5);font-size:11px;margin-right:12px">L${e.startLevel ?? '?'}</span><span class="lb-score">${e.levelScore}</span>`;
+      const lvlTag = document.createElement('span');
+      lvlTag.style.cssText = 'color:rgba(255,255,255,0.5);font-size:11px;margin-right:12px';
+      lvlTag.textContent = `L${e.startLevel ?? '?'}`;
+      row.appendChild(name);
+      row.appendChild(lvlTag);
+      score.textContent = String(e.levelScore ?? 0);
     } else {
-      let modHtml = '';
       if (e.modifier && e.modifier !== 'standard') {
-        modHtml = ` <span style="font-size:9px;color:rgba(255,255,255,0.4)" title="${e.modifier}">${e.modifier.slice(0, 3).toUpperCase()}</span>`;
+        const modTag = document.createElement('span');
+        modTag.style.cssText = 'font-size:9px;color:rgba(255,255,255,0.4)';
+        modTag.title = e.modifier;
+        modTag.textContent = ` ${e.modifier.slice(0, 3).toUpperCase()}`;
+        name.appendChild(modTag);
       }
-      row.innerHTML = `<span class="lb-rank">${i + 1}</span><span class="lb-name">${e.name ?? 'you'}${modHtml}</span><span class="lb-score">${e.score}</span>`;
+      row.appendChild(name);
+      score.textContent = String(e.score);
     }
+    row.appendChild(score);
     list.appendChild(row);
   });
 }
@@ -255,9 +316,13 @@ function showGameOverScreen(runResult, isPB, prevLvlBest, isChainPB) {
   // Stats
   const closest = runResult.closestMissM === Infinity ? '—' : runResult.closestMissM.toFixed(1) + 'm';
   if (isChainPB) {
-    statChain.innerHTML = `CHAIN &times;${runResult.longestChain} <span style="color:#ffd700">(NEW BEST!)</span>`;
+    statChain.textContent = `CHAIN \u00d7${runResult.longestChain} `;
+    const badge = document.createElement('span');
+    badge.style.color = '#ffd700';
+    badge.textContent = '(NEW BEST!)';
+    statChain.appendChild(badge);
   } else {
-    statChain.textContent = `CHAIN ×${runResult.longestChain}`;
+    statChain.textContent = `CHAIN \u00d7${runResult.longestChain}`;
   }
   statClosest.textContent = `CLOSEST ${closest}`;
 
@@ -378,6 +443,19 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPA
           }
           document.getElementById('level-summary-achievement').textContent = achText;
 
+          // Stat grid
+          const shots = state.stats.shots ?? 0;
+          const intercepts = state.stats.intercepts ?? 0;
+          const nearMisses = state.stats.nearMisses ?? 0;
+          const levelElapsed = state.totalElapsedS ?? 0;
+          const accPct = shots > 0 ? Math.round((intercepts / shots) * 100) : 100;
+          const mins = Math.floor(levelElapsed / 60);
+          const secs = Math.floor(levelElapsed % 60);
+          document.getElementById('lss-intercepts').textContent  = intercepts;
+          document.getElementById('lss-accuracy').textContent    = `${accPct}%`;
+          document.getElementById('lss-nearmisses').textContent  = nearMisses;
+          document.getElementById('lss-time').textContent        = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+
           const onClickNext = () => {
             if (!transitionActive) return;
             playUiClick();
@@ -408,6 +486,7 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPA
               anonId: currentSave.player.anonId,
               name: currentSave.player.displayName ?? 'you',
               ...runResult,
+              levelScore: runResult.levelScore,   // explicit — ensures levelRuns board sorts correctly
               inputType: state.inputType ?? 'kbd',
               modifiers: [],
             };

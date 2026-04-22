@@ -133,28 +133,26 @@ export function saveBoards(boards) {
   localStorage.setItem(BOARDS_KEY, JSON.stringify(boards));
 }
 
+/** Shared helper: push entry into list, sort descending by sortKey, cap at limit. */
+function pushSortedTopN(list, entry, sortKey, limit = 20) {
+  list.push(entry);
+  list.sort((a, z) => z[sortKey] - a[sortKey]);
+  return list.slice(0, limit);
+}
+
 export function submitLocalScore(boards, bucket, entry) {
-  boards[bucket] = boards[bucket] || [];
-  boards[bucket].push(entry);
-  boards[bucket].sort((a, z) => z.score - a.score);
-  boards[bucket] = boards[bucket].slice(0, 20);
+  boards[bucket] = pushSortedTopN(boards[bucket] || [], entry, 'score');
   saveBoards(boards);
 }
 
 export function submitDailyScore(boards, seed, entry) {
   boards.daily = boards.daily || {};
-  boards.daily[seed] = boards.daily[seed] || [];
-  boards.daily[seed].push(entry);
-  boards.daily[seed].sort((a, z) => z.score - a.score);
-  boards.daily[seed] = boards.daily[seed].slice(0, 20);
+  boards.daily[seed] = pushSortedTopN(boards.daily[seed] || [], entry, 'score');
   saveBoards(boards);
 }
 
 export function submitLevelRunScore(boards, entry, level) {
   boards.levelRuns = boards.levelRuns || {};
-  boards.levelRuns[level] = boards.levelRuns[level] || [];
-  boards.levelRuns[level].push({ ...entry, levelScore: entry.levelScore });
-  boards.levelRuns[level].sort((a, z) => z.levelScore - a.levelScore);
-  boards.levelRuns[level] = boards.levelRuns[level].slice(0, 20);
+  boards.levelRuns[level] = pushSortedTopN(boards.levelRuns[level] || [], entry, 'levelScore');
   saveBoards(boards);
 }
