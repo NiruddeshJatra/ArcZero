@@ -46,3 +46,12 @@ export function seedFromString(str) {
 export function seedFromDateISO(dateISO) {
   return seedFromString('arczero_' + dateISO);
 }
+
+export function dailyModifier(dateISO) {
+  if (!dateISO) return 'standard';
+  const dayMs = Date.parse(dateISO);
+  if (isNaN(dayMs)) return 'standard';
+  const dayIndex = Math.abs(Math.floor(dayMs / 86400000));
+  const mods = ['standard', 'speedrun', 'noradar', 'precision'];
+  return mods[dayIndex % 4];
+}

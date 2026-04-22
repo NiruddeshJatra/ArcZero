@@ -27,7 +27,8 @@ export function updateSpawner(state) {
   state.warnings = state.warnings.filter(w => w.remainingS > 0);
 
   // --- Queue new telegraph ---
-  const interval = state.currentSpawnInterval ?? cfg.spawnInterval;
+  let interval = state.currentSpawnInterval ?? cfg.spawnInterval;
+  if (state.dailyModifier === 'speedrun') interval /= 1.5;
   if (state.spawnTimer >= interval) {
     state.spawnTimer = 0;
     const x  = randomBetween(SPAWN_X_MIN, SPAWN_X_MAX);

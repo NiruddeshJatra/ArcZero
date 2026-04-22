@@ -1,11 +1,12 @@
 import { createState } from './state.js';
 import { initInput } from './input.js';
 import { startGameLoop } from './gameLoop.js';
-import { seed, seedFromDateISO } from './rng.js';
+import { seed, seedFromDateISO, dailyModifier } from './rng.js';
+import { FLAGS } from './flags.js';
 import { initAudio, playLevelUp, toggleMute, isMuted } from './audio.js';
 import { LEVELS } from './levels.js';
-import { BASE_HEALTH } from './constants.js';
-import { loadSave, saveSave, loadBoards, submitLocalScore } from './persistence.js';
+import { BASE_HEALTH, STREAK_CALLOUTS, RANKING_MODES } from './constants.js';
+import { loadSave, saveSave, loadBoards, submitLocalScore, submitDailyScore, submitLevelRunScore, checkIsChainPB } from './persistence.js';
 import { initTouchInput, shouldUseTouchInput } from './touchInput.js';
 import { playMilestone, startAmbient, stopAmbient, playUiClick, playUiConfirm } from './audio.js';
 import { buildShareText } from './share.js';
@@ -24,14 +25,20 @@ const gameOverOverlay   = document.getElementById('game-over-overlay');
 const levelIntroOverlay = document.getElementById('level-intro-overlay');
 const howtoOverlay      = document.getElementById('howto-overlay');
 const firstRunOverlay   = document.getElementById('first-run-overlay');
+const levelSummaryOverlay = document.getElementById('level-summary-overlay');
 
 const allOverlays = [
   menuOverlay, levelSelectOverlay, leaderboardOverlay,
   settingsOverlay, creditsOverlay, gameOverOverlay, levelIntroOverlay,
-  howtoOverlay, firstRunOverlay,
+  howtoOverlay, firstRunOverlay, levelSummaryOverlay,
 ];
 
+let transitionActive = false;
+
 function showOnly(overlay) {
+  if (overlay !== levelSummaryOverlay && overlay !== levelIntroOverlay) {
+    transitionActive = false;
+  }
   for (const o of allOverlays) o.classList.remove('visible');
   if (overlay) overlay.classList.add('visible');
 }
@@ -55,11 +62,36 @@ let activeState = null; // current game state, set in startLevel — used by pau
 
 // ── Leaderboard rendering ─────────────────────────────────────────────────────
 let currentLbTab = 'daily';
+let currentLbLevel = null;
 
 function renderLeaderboard() {
   const boards = loadBoards();
   const list = document.getElementById('leaderboard-list');
+  const controls = document.getElementById('leaderboard-controls');
   list.innerHTML = '';
+  controls.style.display = 'none';
+
+  if (currentLbTab === 'achievements') {
+    const b = currentSave.best;
+    const ch = b.longestChain;
+    const cl = b.closestMissM === Infinity ? '—' : b.closestMissM.toFixed(1) + 'm';
+    const inter = b.totalIntercepts;
+    const surv = Math.floor(b.totalSurvivedS / 3600) + 'h ' + Math.floor((b.totalSurvivedS % 3600) / 60) + 'm';
+    
+    let html = `<div style="text-align:center;color:rgba(255,255,255,0.3);margin-bottom:12px;font-size:11px;">vs. others coming in v2</div>`;
+    html += `
+<div style="font-size:13px;line-height:2em;margin-top:10px;">
+  <div style="display:flex;justify-content:space-between"><span style="color:rgba(255,255,255,0.6)">Longest Chain</span><span style="color:#ffd700">×${ch}</span></div>
+  <div style="display:flex;justify-content:space-between"><span style="color:rgba(255,255,255,0.6)">Closest Miss</span><span style="color:#ff9944">${cl}</span></div>
+  <div style="display:flex;justify-content:space-between"><span style="color:rgba(255,255,255,0.6)">Total Intercepts</span><span style="color:#44aaff">${inter}</span></div>
+  <div style="display:flex;justify-content:space-between"><span style="color:rgba(255,255,255,0.6)">Total Survived</span><span style="color:#44ffee">${surv}</span></div>
+</div>`;
+    if (b.totalIntercepts === 0) {
+      html = '<div style="color:rgba(255,255,255,0.3);padding:20px;text-align:center;font-size:13px;">play your first run to see personal records</div>';
+    }
+    list.innerHTML = html;
+    return;
+  }
 
   let entries = [];
   if (currentLbTab === 'daily') {
@@ -77,12 +109,32 @@ function renderLeaderboard() {
       }
     }
     entries = Object.values(agg).sort((a, b) => b.score - a.score).slice(0, 20);
+  } else if (currentLbTab === 'levelrun') {
+    controls.style.display = 'block';
+    if (currentLbLevel === null) currentLbLevel = currentSave.progress.highestLevelReached ?? 1;
+    let selectHtml = `<select id="lb-level-select" aria-label="Select starting level for Level Runs leaderboard" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.18); color: #fff; font-family: 'Courier New', monospace; font-size: 12px; border-radius: 3px; padding: 4px 8px">`;
+    for(let i = 1; i < LEVELS.length; i++) {
+      selectHtml += `<option value="${i}" ${i === currentLbLevel ? 'selected' : ''}>LEVEL ${i}</option>`;
+    }
+    selectHtml += `</select>`;
+    controls.innerHTML = selectHtml;
+    document.getElementById('lb-level-select').addEventListener('change', (e) => {
+      currentLbLevel = parseInt(e.target.value, 10);
+      renderLeaderboard();
+    });
+    entries = boards.levelRuns[currentLbLevel] ?? [];
   } else {
     entries = boards.allTime;
   }
 
   if (entries.length === 0) {
-    list.innerHTML = '<div style="color:rgba(255,255,255,0.3);padding:20px;text-align:center;font-size:12px;">NO ENTRIES YET</div>';
+    let emptyHtml = '';
+    if (currentLbTab === 'allTime') emptyHtml = 'no runs yet<br><span style="font-size:11px;opacity:0.5">play a campaign to get on the board</span>';
+    if (currentLbTab === 'daily') emptyHtml = 'no attempts today<br><span style="font-size:11px;opacity:0.5">today\'s challenge resets at midnight</span>';
+    if (currentLbTab === 'weekly') emptyHtml = 'no daily runs this week<br><span style="font-size:11px;opacity:0.5">play the daily challenge to appear here</span>';
+    if (currentLbTab === 'levelrun') emptyHtml = 'no level runs yet<br><span style="font-size:11px;opacity:0.5">start from level select to rank here</span>';
+
+    list.innerHTML = `<div style="color:rgba(255,255,255,0.3);padding:20px;text-align:center;font-size:13px;line-height:1.5em">${emptyHtml}</div>`;
     return;
   }
 
@@ -90,7 +142,16 @@ function renderLeaderboard() {
   entries.forEach((e, i) => {
     const row = document.createElement('div');
     row.className = 'lb-row' + (e.anonId === myId ? ' me' : '');
-    row.innerHTML = `<span class="lb-rank">${i + 1}</span><span class="lb-name">${e.name ?? 'you'}</span><span class="lb-score">${e.score}</span>`;
+    
+    if (currentLbTab === 'levelrun') {
+      row.innerHTML = `<span class="lb-rank">${i + 1}</span><span class="lb-name">${e.name ?? 'you'}</span><span style="color:rgba(255,255,255,0.5);font-size:11px;margin-right:12px">L${e.startLevel ?? '?'}</span><span class="lb-score">${e.levelScore}</span>`;
+    } else {
+      let modHtml = '';
+      if (e.modifier && e.modifier !== 'standard') {
+        modHtml = ` <span style="font-size:9px;color:rgba(255,255,255,0.4)" title="${e.modifier}">${e.modifier.slice(0, 3).toUpperCase()}</span>`;
+      }
+      row.innerHTML = `<span class="lb-rank">${i + 1}</span><span class="lb-name">${e.name ?? 'you'}${modHtml}</span><span class="lb-score">${e.score}</span>`;
+    }
     list.appendChild(row);
   });
 }
@@ -145,7 +206,7 @@ function renderLevelSelect() {
     if (isUnlocked) {
       btn.addEventListener('click', () => {
         showOnly(null);
-        startLevel(lvl, BASE_HEALTH, 'practice');
+        startLevel(lvl, BASE_HEALTH, RANKING_MODES.LEVELRUN);
       });
     }
     list.appendChild(btn);
@@ -153,7 +214,7 @@ function renderLevelSelect() {
 }
 
 // ── Game-over PB overlay ──────────────────────────────────────────────────────
-function showGameOverScreen(runResult, isPB, prevLvlBest) {
+function showGameOverScreen(runResult, isPB, prevLvlBest, isChainPB) {
   const scoreEl  = document.getElementById('final-score-value');
   const pbLine   = document.getElementById('pb-line');
   const statChain   = document.getElementById('stat-chain');
@@ -193,11 +254,15 @@ function showGameOverScreen(runResult, isPB, prevLvlBest) {
 
   // Stats
   const closest = runResult.closestMissM === Infinity ? '—' : runResult.closestMissM.toFixed(1) + 'm';
-  statChain.textContent   = `CHAIN ×${runResult.longestChain}`;
+  if (isChainPB) {
+    statChain.innerHTML = `CHAIN &times;${runResult.longestChain} <span style="color:#ffd700">(NEW BEST!)</span>`;
+  } else {
+    statChain.textContent = `CHAIN ×${runResult.longestChain}`;
+  }
   statClosest.textContent = `CLOSEST ${closest}`;
 
   // Share button (daily only)
-  if (runResult.seed !== null && !runResult.unranked) {
+  if (runResult.seed !== null && runResult.rankingMode !== RANKING_MODES.UNRANKED) {
     shareBtn.classList.add('visible');
     shareBtn.onclick = () => {
       const text = buildShareText(runResult, runResult.waveStats ?? []);
@@ -216,8 +281,9 @@ function showGameOverScreen(runResult, isPB, prevLvlBest) {
 }
 
 // ── Core start/loop ───────────────────────────────────────────────────────────
-function startLevel(level, carryHealth = BASE_HEALTH, mode = 'campaign', dailySeed = null) {
+function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPAIGN, dailySeed = null, carryScore = 0, initialStartLevel = null) {
   const safeLevel = Math.min(level, LEVELS.length - 1);
+  transitionActive = true;
   showOnly(levelIntroOverlay);
 
   const introEl = document.getElementById('level-intro-title');
@@ -225,22 +291,44 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = 'campaign', dailySe
   const cdEl = document.getElementById('level-intro-countdown');
   const cfg = LEVELS[safeLevel];
   introEl.textContent = cfg.label ?? `LEVEL ${safeLevel}`;
-  introText.textContent = cfg.intro ?? '';
+  
+  let modText = '';
+  if (mode === RANKING_MODES.DAILY && FLAGS.DAILY_MODIFIERS) {
+    const fakeIso = dailySeed ? new Date().toISOString().slice(0, 10) : null;
+    const dm = dailyModifier(fakeIso);
+    if (dm === 'speedrun') modText = 'SPEEDRUN: 1.5X SPAWNS';
+    if (dm === 'noradar') modText = 'NO RADAR: PREVIEWS DISABLED';
+    if (dm === 'precision') modText = 'PRECISION: PREVIEWS FORCED ON';
+  }
+  introText.textContent = modText || (cfg.intro ?? '');
+  
   cdEl.textContent = '3';
 
   let count = 3;
   const tick = () => {
+    if (!transitionActive) return;
     count--;
     if (count <= 0) {
       showOnly(null);
-      const state = createState(safeLevel, carryHealth);
+      const state = createState(safeLevel, carryHealth, carryScore);
+      state.startLevel = initialStartLevel !== null ? initialStartLevel : safeLevel;
       state.mode   = mode;
       state.seed   = dailySeed;
       state.dateISO = dailySeed ? new Date().toISOString().slice(0, 10) : null;
-      state.unranked = mode === 'practice';
+      state.rankingMode = mode;
+      
+      state.dailyModifier = (mode === RANKING_MODES.DAILY && FLAGS.DAILY_MODIFIERS) ? dailyModifier(state.dateISO) : 'standard';
+      
       activeState = state;
       state.settings.showTrajectoryPreview = currentSave.settings.showTrajectoryPreview;
       state.settings.reduceMotion = currentSave.settings.reduceMotion;
+      
+      if (state.dailyModifier === 'noradar') {
+        state.settings.showTrajectoryPreview = false;
+      }
+      if (state.dailyModifier === 'precision') {
+        state.modifierOverrideTrajectory = true;
+      }
 
       if (shouldUseTouchInput(currentSave.settings)) {
         initTouchInput(canvas, state, keys);
@@ -254,13 +342,57 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = 'campaign', dailySe
           loop.stop();
           keys.reset();
           playLevelUp();
-          startLevel(completedLevel + 1, BASE_HEALTH, mode, dailySeed);
+          const carryScore = (mode === RANKING_MODES.CAMPAIGN || mode === RANKING_MODES.DAILY) ? state.score : 0;
+          const pointsEarned = state.score - state.levelStartScore;
+          
+          transitionActive = true;
+          showOnly(levelSummaryOverlay);
+          
+          document.getElementById('level-summary-title').textContent = `LEVEL ${completedLevel} COMPLETE`;
+          const scoreEl = document.getElementById('level-summary-score');
+          
+          if (pointsEarned > 0) {
+            let current = 0;
+            const start = performance.now();
+            const dur = 600;
+            function animateScore(ts) {
+              if (!transitionActive) return;
+              const t = Math.min((ts - start) / dur, 1);
+              const eased = 1 - Math.pow(1 - t, 3);
+              current = Math.floor(eased * pointsEarned);
+              scoreEl.textContent = `+${current}`;
+              if (t < 1) requestAnimationFrame(animateScore);
+              else scoreEl.textContent = `+${Math.floor(pointsEarned)}`;
+            }
+            requestAnimationFrame(animateScore);
+          } else {
+            scoreEl.textContent = '+0';
+          }
+          
+          let achText = '';
+          if (state.combo && state.combo.best >= 2) {
+            const bestCallout = STREAK_CALLOUTS.slice().reverse().find(c => c.count <= state.combo.best);
+            if (bestCallout) {
+              achText = `BEST CHAIN: ${bestCallout.text.toUpperCase()} (×${state.combo.best})`;
+            }
+          }
+          document.getElementById('level-summary-achievement').textContent = achText;
+
+          const onClickNext = () => {
+            if (!transitionActive) return;
+            playUiClick();
+            startLevel(completedLevel + 1, BASE_HEALTH, mode, dailySeed, carryScore, state.startLevel);
+          };
+          levelSummaryOverlay.addEventListener('click', onClickNext, { once: true });
         },
         onGameOver(runResult) {
           stopAmbient();
           // Persist
           const lvlBest = currentSave.best.perLevel[runResult.level] ?? 0;
+          const prevChainBest = currentSave.best.longestChain ?? 0;
           const isPB = runResult.score > lvlBest;
+          const isChainPB = checkIsChainPB(runResult.longestChain, prevChainBest);
+          
           // updateBest is called inside gameLoop now; reload save
           currentSave = loadSave();
 
@@ -269,9 +401,8 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = 'campaign', dailySe
           for (const t of toasts) showToast(t);
           saveSave(currentSave);
 
-          // Submit to local boards. Campaign + daily both feed the all-time board;
-          // daily additionally feeds the seeded daily bucket. Practice is never ranked.
-          if (!state.unranked) {
+          // Submit to local boards based on ranking mode
+          if (state.rankingMode !== RANKING_MODES.UNRANKED) {
             const boards = loadBoards();
             const baseEntry = {
               anonId: currentSave.player.anonId,
@@ -280,20 +411,23 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = 'campaign', dailySe
               inputType: state.inputType ?? 'kbd',
               modifiers: [],
             };
-            // Always submit an all-time entry (seed stripped so it hits the allTime bucket).
-            submitLocalScore(boards, { ...baseEntry, seed: null });
-            if (mode === 'daily' && runResult.seed) {
-              // Seeded daily-bucket entry for the daily leaderboard tab.
-              submitLocalScore(boards, baseEntry);
+            if (state.rankingMode === RANKING_MODES.CAMPAIGN) {
+              submitLocalScore(boards, 'allTime', { ...baseEntry, seed: null });
+            }
+            if (state.rankingMode === RANKING_MODES.DAILY && runResult.seed) {
+              submitDailyScore(boards, runResult.seed, baseEntry);
               currentSave.daily.lastCompletedDateISO = state.dateISO;
               currentSave.daily.lastScore = runResult.score;
               currentSave.daily.lastSeed = dailySeed;
               updateStreak(currentSave, state.dateISO);
               saveSave(currentSave);
             }
+            if (state.rankingMode === RANKING_MODES.LEVELRUN) {
+              submitLevelRunScore(boards, baseEntry, state.startLevel);
+            }
           }
 
-          showGameOverScreen({ ...runResult, waveStats: state.stats.waveStats, unranked: state.unranked }, isPB, lvlBest);
+          showGameOverScreen({ ...runResult, waveStats: state.stats.waveStats, rankingMode: state.rankingMode }, isPB, lvlBest, isChainPB);
         },
       });
     } else {
@@ -313,7 +447,7 @@ function openMenu() {
 document.getElementById('menu-campaign-btn').addEventListener('click', () => {
   playUiConfirm();
   seed(Date.now() & 0xFFFFFFFF);
-  startLevel(1, BASE_HEALTH, 'campaign');
+  startLevel(1, BASE_HEALTH, RANKING_MODES.CAMPAIGN);
 });
 
 document.getElementById('menu-daily-btn').addEventListener('click', () => {
@@ -323,11 +457,10 @@ document.getElementById('menu-daily-btn').addEventListener('click', () => {
   seed(dailySeed);
   if (currentSave.daily.lastCompletedDateISO === todayISO) {
     showToast(`Already played today (${currentSave.daily.lastScore}). Replaying unranked.`);
-    startLevel(1, BASE_HEALTH, 'daily', dailySeed);
-    // mark unranked handled inside startLevel via state.unranked=true after onGameOver
+    startLevel(1, BASE_HEALTH, RANKING_MODES.UNRANKED, dailySeed);
     return;
   }
-  startLevel(1, BASE_HEALTH, 'daily', dailySeed);
+  startLevel(1, BASE_HEALTH, RANKING_MODES.DAILY, dailySeed);
 });
 
 document.getElementById('menu-levelselect-btn').addEventListener('click', () => {
@@ -374,7 +507,7 @@ document.getElementById('restart-btn').addEventListener('click', () => {
   if (loop) loop.stop();
   showOnly(null);
   seed(Date.now() & 0xFFFFFFFF);
-  startLevel(1, BASE_HEALTH, 'campaign');
+  startLevel(1, BASE_HEALTH, RANKING_MODES.CAMPAIGN);
 });
 
 document.getElementById('menu-from-gameover-btn').addEventListener('click', () => {

@@ -1,12 +1,12 @@
 import { beforeEach, describe, it, expect } from 'vitest';
-import { loadSave, updateBest, loadBoards, submitLocalScore } from '../src/persistence.js';
+import { loadSave, updateBest, loadBoards, submitLocalScore, checkIsChainPB } from '../src/persistence.js';
 
 beforeEach(() => localStorage.clear());
 
 describe('persistence', () => {
   it('creates a fresh save on first load', () => {
     const s = loadSave();
-    expect(s.schemaVersion).toBe(1);
+    expect(s.schemaVersion).toBe(2);
     expect(s.player.anonId).toMatch(/^az_/);
   });
 
@@ -37,9 +37,15 @@ describe('persistence', () => {
   it('caps local boards at 20 entries sorted desc', () => {
     const boards = loadBoards();
     for (let i = 0; i < 30; i++) {
-      submitLocalScore(boards, { anonId: 'x', name: 'x', score: i, level: 1, chainBest: 0, durationS: 10, seed: null, dateISO: '2026-04-17', inputType: 'kbd', modifiers: [] });
+      submitLocalScore(boards, 'allTime', { anonId: 'x', name: 'x', score: i, level: 1, chainBest: 0, durationS: 10, seed: null, dateISO: '2026-04-17', inputType: 'kbd', modifiers: [] });
     }
     expect(boards.allTime.length).toBe(20);
     expect(boards.allTime[0].score).toBe(29);
+  });
+
+  it('checkIsChainPB identifies valid chain PBs', () => {
+    expect(checkIsChainPB(3, 0)).toBe(true);  // prevBest=0, chain=3 → isChainPB=true
+    expect(checkIsChainPB(3, 3)).toBe(false); // prevBest=3, chain=3 → isChainPB=false (equal, not new record)
+    expect(checkIsChainPB(1, 0)).toBe(false); // prevBest=0, chain=1 → isChainPB=false (guard: chain <= 1 not a streak)
   });
 });

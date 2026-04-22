@@ -12,9 +12,9 @@ export const GRAVITY = -12; // m/s² (negative = downward)
 export const DT = 0.05; // seconds per tick (fixed timestep)
 
 // Objects
-export const MISSILE_RADIUS = 5; // meters
-export const INTERCEPTOR_RADIUS = 3; // meters (collision only — art size is INTERCEPTOR_ART_SCALE)
-export const COLLISION_RADIUS = 8; // MISSILE_RADIUS + INTERCEPTOR_RADIUS
+export const MISSILE_RADIUS = 3; // meters
+export const INTERCEPTOR_RADIUS = 2; // meters (collision only — art size is INTERCEPTOR_ART_SCALE)
+export const COLLISION_RADIUS = 5; // MISSILE_RADIUS + INTERCEPTOR_RADIUS
 
 // Interceptor drawing (px). Decoupled from INTERCEPTOR_RADIUS so art can scale
 // without changing collision or explosion burst size.
@@ -73,7 +73,7 @@ export const LAUNCHER_BARREL_LENGTH_M = 5;
 
 // === Phase 0 foundation ===
 export const PHYSICS_VERSION = 1;     // bump when physics changes; never during a daily season
-export const SCHEMA_VERSION = 1;      // save file schema
+export const SCHEMA_VERSION = 2;      // save file schema
 export const GAME_NAME = 'ArcZero';
 
 // === Phase 1 — feel ===
@@ -104,15 +104,34 @@ export const PAUSE_KEYS = ['p', 'escape'];   // lowercase; check key.toLowerCase
 export const LAUNCHER_BARREL_LEN = 18;      // px
 
 // === Phase 2 — combo + scoring ===
+export const STREAK_CALLOUTS = [
+  { count: 2,  text: 'Double Blast!',    soundKey: 'streakHorn1' },
+  { count: 3,  text: 'Triple Strike!',   soundKey: 'streakHorn2' },
+  { count: 4,  text: 'Quad Blast!',      soundKey: 'streakHorn3' },
+  { count: 5,  text: 'Overdrive!',       soundKey: 'streakSiren1' },
+  { count: 6,  text: 'Destruction Mode!',soundKey: 'streakSiren2' },
+  { count: 7,  text: 'Unstoppable!',     soundKey: 'streakFanfare1' },
+  { count: 8,  text: 'ANNIHILATION!',    soundKey: 'streakFanfare2', flash: true },
+  { count: 9,  text: 'Godlike!',         soundKey: 'streakGodlike' },
+  { count: 10, text: 'LEGENDARY BLAST!', soundKey: 'streakLegendary', flash: true },
+];
+
+export const RANKING_MODES = Object.freeze({
+  CAMPAIGN: 'campaign',
+  LEVELRUN: 'levelrun',
+  DAILY: 'daily',
+  UNRANKED: 'unranked'
+});
+
 export const COMBO_WINDOW_S = 3.0;
 export const COMBO_MULT_PER_HIT = 0.25;      // +0.25x per intercept
-export const COMBO_MULT_CAP = 8;
+export const COMBO_MULT_CAP = 10;
 export const COMBO_DECAY_DUR_S = 1.0;
 export const BASE_INTERCEPT_SCORE_V2 = 10;   // used when SCORE_REBALANCE is on
 export const PASSIVE_SCORE_RATE_V2 = 0.25;   // per second when SCORE_REBALANCE is on
 export const LEVEL_CLEAR_BONUS = 50;         // × level
 // Continuous altitude multiplier: 1.0× at MIN_INTERCEPT_ALTITUDE, BONUS_ALT_MAX_MULT× at practical ceiling
-export const BONUS_ALT_MAX_MULT = 2.0;
+export const BONUS_ALT_MAX_MULT = 3.0;
 export const BONUS_ALT_PRACTICAL_MAX_M = 100; // realistic max intercept altitude; capped here
 export const BONUS_CLUTCH_M = 35;            // intercept y below this (but above MIN_INTERCEPT_ALTITUDE)
 export const BONUS_CLUTCH_MULT = 1.5;

@@ -28,6 +28,7 @@ import { render, updateHUD, triggerShake } from './renderer.js';
 import { playGameOver, playWaveWarning, playWaveStart, playLevelClear, startPeakBed, stopPeakBed } from './audio.js';
 import { FLAGS } from './flags.js';
 import { loadSave, updateBest } from './persistence.js';
+import { RANKING_MODES } from './constants.js';
 
 const PHASE_DUR = { BUILD: WAVE_BUILD_DUR_S, PEAK: WAVE_PEAK_DUR_S, RELEASE: WAVE_RELEASE_DUR_S };
 const NEXT_PHASE = { BUILD: 'PEAK', PEAK: 'RELEASE', RELEASE: 'BUILD' };
@@ -43,12 +44,15 @@ const SPAWN_MULT = { BUILD: WAVE_BUILD_SPAWN_MULT, PEAK: WAVE_PEAK_SPAWN_MULT, R
 function buildRunResult(state) {
   return {
     score: Math.floor(state.score),
+    levelScore: Math.floor(state.score - state.levelStartScore),
     level: state.level,
+    startLevel: state.startLevel,
+    rankingMode: state.rankingMode,
     longestChain: state.combo.best,
     closestMissM: state.stats.closestMissM,
     intercepts: state.stats.intercepts,
     survivedS: state.totalElapsedS,
-    seed: state.mode === 'daily' ? state.seed : null,
+    seed: state.mode === RANKING_MODES.DAILY ? state.seed : null,
     dateISO: state.dateISO ?? new Date().toISOString().slice(0, 10),
   };
 }
@@ -157,6 +161,7 @@ function gameTick(state, keys, ctx) {
     state.combo.multiplier = Math.max(1.0, state.combo.multiplier - step);
     if (state.combo.multiplier <= 1.0) {
       state.combo.count = 0;
+      state.combo.lastCalloutAt = 0;
       state.combo.decaying = false;
     }
   }

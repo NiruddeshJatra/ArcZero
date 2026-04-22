@@ -1,7 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { seed, random, randomBetween, seedFromString, seedFromDateISO } from '../src/rng.js';
+import { seed, random, randomBetween, seedFromString, seedFromDateISO, dailyModifier } from '../src/rng.js';
 
 describe('rng', () => {
+  it('dailyModifier handles valid and invalid dates', () => {
+    expect(dailyModifier('2026-04-17')).toBeTypeOf('string');
+    expect(dailyModifier('invalid-date')).toBe('standard');
+    expect(dailyModifier('')).toBe('standard');
+    expect(dailyModifier(null)).toBe('standard');
+  });
   it('is deterministic across seeds', () => {
     seed(42);
     const a = [random(), random(), random()];
