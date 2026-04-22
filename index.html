@@ -273,24 +273,27 @@
       /* ── Streak callout ── */
       #streak-callout {
         position: absolute;
-        top: 30%;
+        top: 56px;
         left: 50%;
-        transform: translate(-50%, -50%) scale(0.8);
+        transform: translateX(-50%) scale(0.8);
         opacity: 0;
         pointer-events: none;
         font-weight: 700;
-        text-shadow: 0 0 8px rgba(0,0,0,0.8), 0 0 16px currentColor;
-        transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.1s;
-        z-index: 50;
+        letter-spacing: 0.1em;
+        text-shadow: 0 0 6px rgba(0,0,0,0.9), 0 0 14px currentColor;
+        transition: transform 0.12s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.12s;
+        z-index: 110;
+        white-space: nowrap;
       }
       #streak-callout.active {
         opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-        animation: streak-pulse 0.5s ease-out forwards;
+        transform: translateX(-50%) scale(1);
+        animation: streak-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
       }
-      @keyframes streak-pulse {
-        0% { transform: translate(-50%, -50%) scale(1.5); }
-        100% { transform: translate(-50%, -50%) scale(1); }
+      @keyframes streak-pop {
+        0%   { transform: translateX(-50%) scale(1.6); }
+        60%  { transform: translateX(-50%) scale(0.95); }
+        100% { transform: translateX(-50%) scale(1); }
       }
 
       /* ── Game over overlay ── */
@@ -619,14 +622,21 @@
       </div>
 
       <!-- ── Level summary ── -->
-      <div id="level-summary-overlay" class="overlay" style="cursor:pointer">
+      <div id="level-summary-overlay" class="overlay" style="cursor:pointer;gap:16px;">
         <div id="level-summary-title" style="font-size:56px;font-weight:700;color:#44aaff;letter-spacing:0.08em;margin-top:-60px;animation:slideDown 0.3s ease-out">LEVEL COMPLETE</div>
         <div>
            <div id="level-summary-score" style="font-size:72px;font-weight:700;text-align:center">0</div>
            <div style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:0.1em;text-align:center;margin-top:-10px">SCORE THIS LEVEL</div>
         </div>
         <div id="level-summary-achievement" style="font-size:14px;color:#ffd700;letter-spacing:0.1em;min-height:18px"></div>
-        <div id="level-summary-click-text" style="font-size:14px;color:rgba(255,255,255,0.6);letter-spacing:0.08em;margin-top:32px;">Click anywhere on the screen to go to next level</div>
+        <!-- stat grid -->
+        <div id="level-summary-stats" style="display:grid;grid-template-columns:1fr 1fr;gap:8px 32px;font-size:12px;color:rgba(255,255,255,0.5);letter-spacing:0.08em;text-align:left;">
+          <span>INTERCEPTS <strong id="lss-intercepts" style="color:rgba(255,255,255,0.85)">—</strong></span>
+          <span>ACCURACY <strong id="lss-accuracy" style="color:rgba(255,255,255,0.85)">—</strong></span>
+          <span>NEAR-MISSES <strong id="lss-nearmisses" style="color:rgba(255,255,255,0.85)">—</strong></span>
+          <span>TIME <strong id="lss-time" style="color:rgba(255,255,255,0.85)">—</strong></span>
+        </div>
+        <div id="level-summary-click-text" style="font-size:13px;color:rgba(255,255,255,0.4);letter-spacing:0.08em;margin-top:8px;">CLICK ANYWHERE TO CONTINUE</div>
       </div>
 
       <!-- ── Level intro ── -->
