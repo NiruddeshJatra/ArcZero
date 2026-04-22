@@ -71,21 +71,13 @@ function renderLeaderboard() {
   list.innerHTML = '';
   controls.style.display = 'none';
   if (currentLbTab === 'achievements') {
+    currentSave = loadSave(); // ensure we have the freshest data (e.g. just finished a run)
     const b = currentSave.best;
     const ch = b.longestChain;
-    const cl = b.closestMissM === Infinity ? '—' : b.closestMissM.toFixed(1) + 'm';
+    const cl = (b.closestMissM == null || b.closestMissM === Infinity) ? '—' : b.closestMissM.toFixed(1) + 'm';
     const inter = b.totalIntercepts;
     const surv = Math.floor(b.totalSurvivedS / 3600) + 'h ' + Math.floor((b.totalSurvivedS % 3600) / 60) + 'm';
-    
-    let html = `<div style="text-align:center;color:rgba(255,255,255,0.3);margin-bottom:12px;font-size:11px;">vs. others coming in v2</div>`;
-    html += `
-<div style="font-size:13px;line-height:2em;margin-top:10px;">
-  <div style="display:flex;justify-content:space-between"><span style="color:rgba(255,255,255,0.6)">Longest Chain</span><span style="color:#ffd700">×${ch}</span></div>
-  <div style="display:flex;justify-content:space-between"><span style="color:rgba(255,255,255,0.6)">Closest Miss</span><span style="color:#ff9944">${cl}</span></div>
-  <div style="display:flex;justify-content:space-between"><span style="color:rgba(255,255,255,0.6)">Total Intercepts</span><span style="color:#44aaff">${inter}</span></div>
-  <div style="display:flex;justify-content:space-between"><span style="color:rgba(255,255,255,0.6)">Total Survived</span><span style="color:#44ffee">${surv}</span></div>
-</div>`;
-    list.innerHTML = '';
+
     if (b.totalIntercepts === 0) {
       const msg = document.createElement('div');
       msg.style.cssText = 'color:rgba(255,255,255,0.3);padding:20px;text-align:center;font-size:13px;';
@@ -94,25 +86,26 @@ function renderLeaderboard() {
       return;
     }
     const statsData = [
-      ['Longest Chain', `\u00d7${ch}`, '#ffd700'],
-      ['Closest Miss',  cl,           '#ff9944'],
-      ['Total Intercepts', String(inter), '#44aaff'],
-      ['Total Survived',   surv,          '#44ffee'],
+      ['Longest Chain',    `\u00d7${ch}`,     '#ffd700'],
+      ['Closest Miss',     cl,               '#ff9944'],
+      ['Total Intercepts', String(inter),    '#44aaff'],
+      ['Total Survived',   surv,             '#44ffee'],
+      ['Best Level',       String(b.allTime.level ?? 1), 'rgba(255,255,255,0.75)'],
     ];
     const note = document.createElement('div');
     note.style.cssText = 'text-align:center;color:rgba(255,255,255,0.3);margin-bottom:12px;font-size:11px;';
-    note.textContent = 'vs. others coming in v2';
+    note.textContent = 'Personal Records — vs. others coming in v2';
     list.appendChild(note);
     const grid = document.createElement('div');
-    grid.style.cssText = 'font-size:13px;line-height:2em;margin-top:10px;';
+    grid.style.cssText = 'font-size:13px;line-height:2.2em;margin-top:6px;width:100%;';
     for (const [label, value, color] of statsData) {
       const row = document.createElement('div');
-      row.style.cssText = 'display:flex;justify-content:space-between';
+      row.style.cssText = 'display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.06);padding:2px 0;';
       const lbl = document.createElement('span');
-      lbl.style.color = 'rgba(255,255,255,0.6)';
+      lbl.style.color = 'rgba(255,255,255,0.55)';
       lbl.textContent = label;
       const val = document.createElement('span');
-      val.style.color = color;
+      val.style.cssText = `color:${color};font-weight:700;`;
       val.textContent = value;
       row.appendChild(lbl);
       row.appendChild(val);
@@ -314,7 +307,7 @@ function showGameOverScreen(runResult, isPB, prevLvlBest, isChainPB) {
   }
 
   // Stats
-  const closest = runResult.closestMissM === Infinity ? '—' : runResult.closestMissM.toFixed(1) + 'm';
+  const closest = (runResult.closestMissM == null || runResult.closestMissM === Infinity) ? '—' : runResult.closestMissM.toFixed(1) + 'm';
   if (isChainPB) {
     statChain.textContent = `CHAIN \u00d7${runResult.longestChain} `;
     const badge = document.createElement('span');

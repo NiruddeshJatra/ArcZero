@@ -20,8 +20,8 @@ export function buildShareText(runResult, waveStats) {
   }).join('');
 
   const closest =
-    runResult.closestMissM === Infinity
-      ? '—'
+    (runResult.closestMissM == null || runResult.closestMissM === Infinity)
+      ? 'no near-misses'
       : runResult.closestMissM.toFixed(1) + 'm';
 
   return [

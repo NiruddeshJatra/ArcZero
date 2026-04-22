@@ -100,7 +100,7 @@ export function updateBest(save, runResult) {
   const lvlBest = b.perLevel[runResult.level] ?? 0;
   if (runResult.levelScore > lvlBest) b.perLevel[runResult.level] = runResult.levelScore;
   if (runResult.longestChain > b.longestChain) b.longestChain = runResult.longestChain;
-  if (runResult.closestMissM < b.closestMissM) b.closestMissM = runResult.closestMissM;
+  if (runResult.closestMissM != null && runResult.closestMissM < (b.closestMissM ?? Infinity)) b.closestMissM = runResult.closestMissM;
   b.totalIntercepts += runResult.intercepts;
   b.totalSurvivedS  += runResult.survivedS;
   save.progress.sessionsPlayed += 1;
