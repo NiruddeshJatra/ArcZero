@@ -84,8 +84,9 @@ export function render(ctx, state) {
   drawGround(ctx);
   drawDangerZone(ctx);
 
-  // L8 forceTrajectoryOff overrides settings
-  const showTraj = !(levelCfg && levelCfg.forceTrajectoryOff);
+  // L8 forceTrajectoryOff overrides settings, but precision modifier overrides everything
+  let showTraj = !(levelCfg && levelCfg.forceTrajectoryOff);
+  if (state.modifierOverrideTrajectory) showTraj = true;
   drawTrajectory(ctx, state.launcher, showTraj ? state.settings : { showTrajectoryPreview: false });
 
   drawWarnings(ctx, state);

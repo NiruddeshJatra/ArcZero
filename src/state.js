@@ -5,6 +5,7 @@ import {
   BASE_HEALTH,
   WORLD_HEIGHT,
   FACING_RIGHT,
+  RANKING_MODES,
 } from './constants.js';
 import { LEVELS } from './levels.js';
 
@@ -12,15 +13,16 @@ import { LEVELS } from './levels.js';
  * Creates a fresh game state for the given level.
  * Pass carryHealth to preserve health across level transitions.
  */
-export function createState(level = 1, carryHealth = BASE_HEALTH) {
+export function createState(level = 1, carryHealth = BASE_HEALTH, carryScore = 0) {
   return {
     running: true,
     paused: false,
     tick: 0,
-    score: 0,
+    score: carryScore,
     health: carryHealth,
     level,
-    levelStartScore: 0,
+    startLevel: 1,
+    levelStartScore: carryScore,
     levelStartIntercepts: 0,
     levelStartWaveIndex: 0,
     levelComplete: false,
@@ -45,16 +47,18 @@ export function createState(level = 1, carryHealth = BASE_HEALTH) {
     hitstopRemainingS: 0,
     stats: { intercepts: 0, shots: 0, nearMisses: 0, closestMissM: Infinity, longestChain: 0, waveStats: [] },
     settings: { reduceMotion: false, showTrajectoryPreview: true },
-    combo: { count: 0, timerS: 0, multiplier: 1.0, best: 0, decaying: false },
+    combo: { count: 0, timerS: 0, multiplier: 1.0, best: 0, decaying: false, lastCalloutAt: 0 },
     floaters: [],
     warnings: [],
     wave: { phase: 'BUILD', elapsedS: 0, index: 0 },
     currentSpawnInterval: LEVELS[level].spawnInterval,
     totalElapsedS: 0,
-    mode: 'campaign',
+    mode: RANKING_MODES.CAMPAIGN,
     seed: null,
     dateISO: null,
-    unranked: false,
+    rankingMode: RANKING_MODES.CAMPAIGN,
+    dailyModifier: null,
+    modifierOverrideTrajectory: false,
     inputType: 'kbd',
     menuOpen: true,
     menuScreen: 'main',

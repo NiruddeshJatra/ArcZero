@@ -28,9 +28,10 @@ import {
   ANGLE_MIN,
   ANGLE_MAX,
   ANGLE_START,
+  STREAK_CALLOUTS,
 } from './constants.js';
 import { createExplosion } from './state.js';
-import { playIntercept, playDamage, playGraze, playComboUp, playComboPeak } from './audio.js';
+import { playIntercept, playDamage, playGraze, playComboUp, playComboPeak, playMilestone } from './audio.js';
 import { NEAR_MISS_THRESHOLD } from './constants.js';
 import { triggerShake, triggerFlash } from './renderer.js';
 import { FLAGS } from './flags.js';
@@ -76,6 +77,32 @@ export function checkCollisions(state) {
           if (state.combo.count > state.combo.best) state.combo.best = state.combo.count;
           if (state.combo.multiplier >= COMBO_MULT_CAP) playComboPeak();
           else if (state.combo.count > 1) playComboUp();
+
+          if (FLAGS.STREAK_CALLOUTS) {
+            const callout = STREAK_CALLOUTS.find(c => c.count === state.combo.count && state.combo.count > state.combo.lastCalloutAt);
+            if (callout) {
+              state.combo.lastCalloutAt = state.combo.count;
+              const el = document.getElementById('streak-callout');
+              if (el) {
+                el.textContent = callout.text;
+                el.className = 'active';
+                if (callout.count >= 8) {
+                  el.style.fontSize = '52px'; el.style.color = '#ffd700';
+                } else if (callout.count >= 5) {
+                  el.style.fontSize = '36px'; el.style.color = '#ff9944';
+                } else {
+                  el.style.fontSize = '22px'; el.style.color = '#ffffff';
+                }
+                
+                if (el._timer) clearTimeout(el._timer);
+                el._timer = setTimeout(() => { el.className = ''; }, 3000);
+              }
+              playMilestone();
+              if (callout.flash) {
+                triggerFlash(state, '#ffd700', FLASH_INTERCEPT * 2);
+              }
+            }
+          }
 
           // Continuous altitude multiplier: 1.0× at MIN_INTERCEPT_ALTITUDE → BONUS_ALT_MAX_MULT× at practical ceiling
           const altFrac = Math.min(

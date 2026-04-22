@@ -1,8 +1,10 @@
+import { SCHEMA_VERSION, RANKING_MODES } from './constants.js';
+
 const STORAGE_KEY = 'arczero.save.v1';
 const BOARDS_KEY  = 'arczero.localBoards.v1';
 
 const DEFAULT_SAVE = {
-  schemaVersion: 1,
+  schemaVersion: SCHEMA_VERSION,
   player: { anonId: null, createdAt: null, displayName: null },
   best: {
     allTime: { score: 0, level: 1, date: null, seed: null },
@@ -62,7 +64,13 @@ export function loadSave() {
     }
     const parsed = JSON.parse(raw);
     // Merge to ensure forward-compat fields exist
-    return deepMerge(DEFAULT_SAVE, parsed);
+    const save = deepMerge(DEFAULT_SAVE, parsed);
+    if (save.schemaVersion < 2) {
+      save.best.perLevel = {};
+      save.schemaVersion = 2;
+      saveSave(save);
+    }
+    return save;
   } catch (e) {
     console.warn('Save corrupt, resetting.', e); // eslint-disable-line no-console
     const fresh = structuredClone(DEFAULT_SAVE);
@@ -82,15 +90,15 @@ export function saveSave(data) {
 }
 
 export function updateBest(save, runResult) {
-  // runResult: { score, level, longestChain, closestMissM, intercepts, survivedS, seed, dateISO }
+  // runResult: { score, levelScore, level, startLevel, rankingMode, longestChain, closestMissM, intercepts, survivedS, seed, dateISO }
   const b = save.best;
   let updated = false;
-  if (runResult.score > b.allTime.score) {
+  if (runResult.rankingMode !== RANKING_MODES.LEVELRUN && runResult.score > b.allTime.score) {
     b.allTime = { score: runResult.score, level: runResult.level, date: runResult.dateISO, seed: runResult.seed };
     updated = true;
   }
   const lvlBest = b.perLevel[runResult.level] ?? 0;
-  if (runResult.score > lvlBest) b.perLevel[runResult.level] = runResult.score;
+  if (runResult.levelScore > lvlBest) b.perLevel[runResult.level] = runResult.levelScore;
   if (runResult.longestChain > b.longestChain) b.longestChain = runResult.longestChain;
   if (runResult.closestMissM < b.closestMissM) b.closestMissM = runResult.closestMissM;
   b.totalIntercepts += runResult.intercepts;
@@ -107,32 +115,46 @@ export function updateBest(save, runResult) {
   return updated;
 }
 
+export function checkIsChainPB(chain, prevBest) {
+  return chain > 1 && chain > prevBest;
+}
+
 // --- Local leaderboards ---
 
 export function loadBoards() {
   try {
     const raw = localStorage.getItem(BOARDS_KEY);
-    if (!raw) return { daily: {}, weekly: [], allTime: [] };
+    if (!raw) return { daily: {}, weekly: [], allTime: [], levelRuns: {} };
     return JSON.parse(raw);
-  } catch { return { daily: {}, weekly: [], allTime: [] }; }
+  } catch { return { daily: {}, weekly: [], allTime: [], levelRuns: {} }; }
 }
 
 export function saveBoards(boards) {
   localStorage.setItem(BOARDS_KEY, JSON.stringify(boards));
 }
 
-export function submitLocalScore(boards, entry) {
-  // entry: { anonId, name, score, level, chainBest, durationS, seed, dateISO, inputType, modifiers }
-  const bucket = entry.seed ? 'daily' : 'allTime';
-  if (bucket === 'daily') {
-    boards.daily[entry.seed] = boards.daily[entry.seed] || [];
-    boards.daily[entry.seed].push(entry);
-    boards.daily[entry.seed].sort((a,b) => b.score - a.score);
-    boards.daily[entry.seed] = boards.daily[entry.seed].slice(0, 20);
-  } else {
-    boards.allTime.push(entry);
-    boards.allTime.sort((a,b) => b.score - a.score);
-    boards.allTime = boards.allTime.slice(0, 20);
-  }
+export function submitLocalScore(boards, bucket, entry) {
+  boards[bucket] = boards[bucket] || [];
+  boards[bucket].push(entry);
+  boards[bucket].sort((a, z) => z.score - a.score);
+  boards[bucket] = boards[bucket].slice(0, 20);
+  saveBoards(boards);
+}
+
+export function submitDailyScore(boards, seed, entry) {
+  boards.daily = boards.daily || {};
+  boards.daily[seed] = boards.daily[seed] || [];
+  boards.daily[seed].push(entry);
+  boards.daily[seed].sort((a, z) => z.score - a.score);
+  boards.daily[seed] = boards.daily[seed].slice(0, 20);
+  saveBoards(boards);
+}
+
+export function submitLevelRunScore(boards, entry, level) {
+  boards.levelRuns = boards.levelRuns || {};
+  boards.levelRuns[level] = boards.levelRuns[level] || [];
+  boards.levelRuns[level].push({ ...entry, levelScore: entry.levelScore });
+  boards.levelRuns[level].sort((a, z) => z.levelScore - a.levelScore);
+  boards.levelRuns[level] = boards.levelRuns[level].slice(0, 20);
   saveBoards(boards);
 }

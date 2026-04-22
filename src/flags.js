@@ -6,6 +6,8 @@ export const FLAGS = {
   // Content
   EVENT_MISSILES: true,        // Phase 4 — couriers/splitters/MIRV
   MOBILE_TOUCH: true,          // Phase 4 — touch controls
+  STREAK_CALLOUTS: true,       // Phase 5 — visual combo texts
+  DAILY_MODIFIERS: false,      // Phase 5 — daily modifiers
   // Accessibility
   REDUCE_MOTION: false,        // user setting override
 };

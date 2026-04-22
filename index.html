@@ -132,6 +132,7 @@
       /* ── Leaderboard ── */
       #leaderboard-tabs {
         display: flex;
+        flex-wrap: wrap;
         gap: 8px;
         margin-bottom: 12px;
       }
@@ -269,6 +270,29 @@
         text-align: center;
       }
 
+      /* ── Streak callout ── */
+      #streak-callout {
+        position: absolute;
+        top: 30%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0;
+        pointer-events: none;
+        font-weight: 700;
+        text-shadow: 0 0 8px rgba(0,0,0,0.8), 0 0 16px currentColor;
+        transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.1s;
+        z-index: 50;
+      }
+      #streak-callout.active {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+        animation: streak-pulse 0.5s ease-out forwards;
+      }
+      @keyframes streak-pulse {
+        0% { transform: translate(-50%, -50%) scale(1.5); }
+        100% { transform: translate(-50%, -50%) scale(1); }
+      }
+
       /* ── Game over overlay ── */
       #game-over-overlay { gap: 10px; }
 
@@ -399,6 +423,9 @@
       @keyframes toast-in  { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
       @keyframes toast-out { to { opacity: 0; transform: translateY(-8px); } }
 
+      @keyframes slideDown { from { transform: translateY(-40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+      @keyframes fillBar { from { width: 0%; } to { width: 100%; } }
+
       #mute-btn {
         background: none;
         border: 1px solid rgba(255,255,255,0.15);
@@ -422,6 +449,10 @@
         #hud { font-size: 11px; gap: 10px; padding: 4px 8px; flex-wrap: wrap; }
         .hud-item span { font-size: 12px; }
         .menu-btn { width: 90vw; max-width: 320px; }
+      }
+
+      @media (max-width: 480px) {
+        .tab-btn { padding: 6px 10px; font-size: 11px; }
       }
 
       /* Portrait warning */
@@ -458,6 +489,7 @@
         <button id="mute-btn" title="[M] Toggle mute">♪</button>
       </div>
       <div id="hud-progress"></div>
+      <div id="streak-callout"></div>
 
       <!-- ── Main menu ── -->
       <div id="menu-overlay" class="overlay visible">
@@ -484,10 +516,13 @@
       <div id="leaderboard-overlay" class="overlay">
         <div style="font-size:22px;font-weight:700;letter-spacing:0.1em;color:#44aaff;margin-bottom:8px;">LEADERBOARDS</div>
         <div id="leaderboard-tabs">
-          <button class="tab-btn active" data-tab="daily">DAILY</button>
-          <button class="tab-btn" data-tab="weekly">WEEKLY</button>
-          <button class="tab-btn" data-tab="allTime">ALL-TIME</button>
+          <button class="tab-btn" data-tab="allTime" title="ALL-TIME">ALL-TIME</button>
+          <button class="tab-btn active" data-tab="daily" title="DAILY">DAILY</button>
+          <button class="tab-btn" data-tab="weekly" title="THIS WEEK">THIS WEEK</button>
+          <button class="tab-btn" data-tab="levelrun" title="LEVEL RUNS">RUNS</button>
+          <button class="tab-btn" data-tab="achievements" title="ACHIEVEMENTS">RECORDS</button>
         </div>
+        <div id="leaderboard-controls" style="display:none; margin-bottom: 8px; text-align: center;"></div>
         <div id="leaderboard-list"></div>
         <button class="menu-btn back" id="leaderboard-back-btn">← BACK</button>
       </div>
@@ -581,6 +616,17 @@
         <div id="share-confirm"></div>
         <button id="menu-from-gameover-btn">MAIN MENU</button>
         <div id="controls-hint">← → MOVE &nbsp; ↑ ↓ AIM &nbsp; SPACE FIRE &nbsp; Z FLIP</div>
+      </div>
+
+      <!-- ── Level summary ── -->
+      <div id="level-summary-overlay" class="overlay" style="cursor:pointer">
+        <div id="level-summary-title" style="font-size:56px;font-weight:700;color:#44aaff;letter-spacing:0.08em;margin-top:-60px;animation:slideDown 0.3s ease-out">LEVEL COMPLETE</div>
+        <div>
+           <div id="level-summary-score" style="font-size:72px;font-weight:700;text-align:center">0</div>
+           <div style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:0.1em;text-align:center;margin-top:-10px">SCORE THIS LEVEL</div>
+        </div>
+        <div id="level-summary-achievement" style="font-size:14px;color:#ffd700;letter-spacing:0.1em;min-height:18px"></div>
+        <div id="level-summary-click-text" style="font-size:14px;color:rgba(255,255,255,0.6);letter-spacing:0.08em;margin-top:32px;">Click anywhere on the screen to go to next level</div>
       </div>
 
       <!-- ── Level intro ── -->
