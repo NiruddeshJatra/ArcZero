@@ -340,6 +340,7 @@ function showGameOverScreen(runResult, isPB, prevLvlBest, isChainPB) {
 
 // ── Core start/loop ───────────────────────────────────────────────────────────
 function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPAIGN, dailySeed = null, carryScore = 0, initialStartLevel = null) {
+  playUiConfirm();
   const safeLevel = Math.min(level, LEVELS.length - 1);
   transitionActive = true;
   showOnly(levelIntroOverlay);
@@ -451,7 +452,6 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPA
 
           const onClickNext = () => {
             if (!transitionActive) return;
-            playUiClick();
             startLevel(completedLevel + 1, BASE_HEALTH, mode, dailySeed, carryScore, state.startLevel);
           };
           levelSummaryOverlay.addEventListener('click', onClickNext, { once: true });
@@ -517,13 +517,11 @@ function openMenu() {
 }
 
 document.getElementById('menu-campaign-btn').addEventListener('click', () => {
-  playUiConfirm();
   seed(Date.now() & 0xFFFFFFFF);
   startLevel(1, BASE_HEALTH, RANKING_MODES.CAMPAIGN);
 });
 
 document.getElementById('menu-daily-btn').addEventListener('click', () => {
-  playUiConfirm();
   const todayISO = new Date().toISOString().slice(0, 10);
   const dailySeed = seedFromDateISO(todayISO);
   seed(dailySeed);
@@ -575,7 +573,6 @@ document.getElementById('credits-back-btn').addEventListener('click', () => { pl
 
 // ── Restart / main menu from game over ────────────────────────────────────────
 document.getElementById('restart-btn').addEventListener('click', () => {
-  playUiConfirm();
   if (loop) loop.stop();
   showOnly(null);
   seed(Date.now() & 0xFFFFFFFF);

@@ -4,481 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ArcZero</title>
-    <style>
-      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-      body {
-        background: #0a0a0f;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        font-family: 'Courier New', monospace;
-        color: #ffffff;
-        overflow: hidden;
-      }
-
-      #game-wrapper {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
-      }
-
-      #game-canvas {
-        display: block;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 2px;
-        max-width: 100vw;
-        max-height: 80vh;
-      }
-
-      #hud {
-        display: flex;
-        gap: 24px;
-        font-size: 14px;
-        letter-spacing: 0.05em;
-        color: rgba(255, 255, 255, 0.5);
-        padding: 6px 16px;
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 4px;
-        width: 100%;
-        justify-content: space-between;
-      }
-
-      .hud-item span {
-        color: #ffffff;
-        font-size: 15px;
-      }
-
-      /* ── Overlay base ── */
-      .overlay {
-        display: none;
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(10, 10, 15, 0.92);
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 16px;
-        border-radius: 2px;
-      }
-      .overlay.visible { display: flex; }
-
-      /* ── Main menu ── */
-      #menu-overlay { gap: 0; }
-
-      #menu-title {
-        font-size: 56px;
-        font-weight: 700;
-        letter-spacing: 0.12em;
-        color: #44aaff;
-        margin-bottom: 10px;
-      }
-      #menu-subtitle {
-        font-size: 12px;
-        color: rgba(255,255,255,0.3);
-        letter-spacing: 0.15em;
-        margin-bottom: 36px;
-      }
-
-      .menu-btn {
-        background: none;
-        border: 1px solid rgba(255,255,255,0.18);
-        color: #fff;
-        font-family: 'Courier New', monospace;
-        font-size: 14px;
-        letter-spacing: 0.12em;
-        padding: 13px 36px;
-        cursor: pointer;
-        border-radius: 3px;
-        width: 260px;
-        text-align: left;
-        transition: background 0.12s, border-color 0.12s;
-        margin-bottom: 8px;
-      }
-      .menu-btn:hover { background: rgba(68,170,255,0.12); border-color: #44aaff; }
-      .menu-btn.primary { border-color: #44aaff; color: #44aaff; }
-      .menu-btn.daily  { border-color: #ff9944; color: #ff9944; }
-      .menu-btn.back   { border-color: rgba(255,255,255,0.15); color: rgba(255,255,255,0.45); font-size: 12px; margin-top: 8px; }
-
-      /* ── Level select ── */
-      #level-select-list {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        max-height: 420px;
-        overflow-y: auto;
-        width: 320px;
-      }
-      .lvl-btn {
-        background: none;
-        border: 1px solid rgba(255,255,255,0.15);
-        color: rgba(255,255,255,0.7);
-        font-family: 'Courier New', monospace;
-        font-size: 13px;
-        padding: 9px 16px;
-        cursor: pointer;
-        border-radius: 3px;
-        text-align: left;
-        transition: background 0.1s;
-      }
-      .lvl-btn:hover { background: rgba(68,170,255,0.1); }
-      .lvl-btn.locked { opacity: 0.35; cursor: default; }
-
-      /* ── Leaderboard ── */
-      #leaderboard-tabs {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-bottom: 12px;
-      }
-      .tab-btn {
-        background: none;
-        border: 1px solid rgba(255,255,255,0.2);
-        color: rgba(255,255,255,0.5);
-        font-family: 'Courier New', monospace;
-        font-size: 12px;
-        letter-spacing: 0.1em;
-        padding: 6px 18px;
-        cursor: pointer;
-        border-radius: 3px;
-      }
-      .tab-btn.active { border-color: #44aaff; color: #44aaff; }
-
-      #leaderboard-list {
-        width: 380px;
-        max-height: 380px;
-        overflow-y: auto;
-        font-size: 13px;
-      }
-      .lb-row {
-        display: flex;
-        justify-content: space-between;
-        padding: 6px 8px;
-        border-bottom: 1px solid rgba(255,255,255,0.06);
-      }
-      .lb-row.me { color: #44ffee; }
-      .lb-rank { width: 32px; color: rgba(255,255,255,0.35); }
-      .lb-name { flex: 1; }
-      .lb-score { color: #ff9944; }
-
-      /* ── Settings ── */
-      #settings-list {
-        width: 340px;
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-      }
-      .setting-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        font-size: 13px;
-        color: rgba(255,255,255,0.7);
-        letter-spacing: 0.06em;
-      }
-      .setting-row input[type=range] { width: 120px; }
-      .setting-row input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; }
-      .setting-row input[type=text] {
-        background: rgba(0,0,0,0.5);
-        border: 1px solid rgba(255,255,255,0.18);
-        color: #fff;
-        font-family: 'Courier New', monospace;
-        font-size: 13px;
-        letter-spacing: 0.08em;
-        padding: 6px 10px;
-        border-radius: 3px;
-        width: 170px;
-        outline: none;
-        transition: border-color 0.12s, background 0.12s;
-      }
-      .setting-row input[type=text]:focus {
-        border-color: #44aaff;
-        background: rgba(68,170,255,0.08);
-      }
-      .setting-row input[type=text]::placeholder { color: rgba(255,255,255,0.25); }
-
-      /* ── Menu button subtitle ── */
-      .menu-btn-sub {
-        display: block;
-        font-size: 10px;
-        letter-spacing: 0.08em;
-        color: rgba(255,255,255,0.35);
-        margin-top: 2px;
-        text-transform: none;
-      }
-
-      /* ── How to play ── */
-      #howto-list {
-        width: 420px;
-        max-height: 440px;
-        overflow-y: auto;
-        font-size: 13px;
-        color: rgba(255,255,255,0.7);
-        letter-spacing: 0.05em;
-        line-height: 1.7em;
-      }
-      #howto-list h4 {
-        color: #44aaff;
-        font-size: 13px;
-        letter-spacing: 0.12em;
-        margin: 10px 0 4px;
-      }
-      #howto-list kbd {
-        background: rgba(255,255,255,0.1);
-        border: 1px solid rgba(255,255,255,0.2);
-        border-radius: 3px;
-        padding: 1px 6px;
-        font-family: inherit;
-        font-size: 12px;
-      }
-
-      /* ── First-run name prompt ── */
-      #first-run-overlay { gap: 14px; }
-      #first-run-title { font-size: 28px; font-weight: 700; color: #44aaff; letter-spacing: 0.08em; }
-      #first-run-sub   { font-size: 12px; color: rgba(255,255,255,0.4); letter-spacing: 0.08em; }
-      #first-run-name  {
-        background: rgba(0,0,0,0.5);
-        border: 1px solid rgba(255,255,255,0.22);
-        color: #fff;
-        font-family: 'Courier New', monospace;
-        font-size: 16px;
-        letter-spacing: 0.12em;
-        padding: 10px 16px;
-        border-radius: 3px;
-        width: 260px;
-        text-align: center;
-        outline: none;
-      }
-      #first-run-name:focus { border-color: #44aaff; }
-
-      /* ── Level progress pill (in-game HUD) ── */
-      #hud-progress:empty { display: none; }
-      #hud-progress {
-        font-size: 11px;
-        color: rgba(255,255,255,0.55);
-        letter-spacing: 0.08em;
-        padding: 4px 10px;
-        background: rgba(68,170,255,0.06);
-        border: 1px solid rgba(68,170,255,0.18);
-        border-radius: 3px;
-        margin-top: 4px;
-        text-align: center;
-      }
-
-      /* ── Streak callout ── */
-      #streak-callout {
-        position: absolute;
-        top: 56px;
-        left: 50%;
-        transform: translateX(-50%) scale(0.8);
-        opacity: 0;
-        pointer-events: none;
-        font-weight: 700;
-        letter-spacing: 0.1em;
-        text-shadow: 0 0 6px rgba(0,0,0,0.9), 0 0 14px currentColor;
-        transition: transform 0.12s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.12s;
-        z-index: 110;
-        white-space: nowrap;
-      }
-      #streak-callout.active {
-        opacity: 1;
-        transform: translateX(-50%) scale(1);
-        animation: streak-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-      }
-      @keyframes streak-pop {
-        0%   { transform: translateX(-50%) scale(1.6); }
-        60%  { transform: translateX(-50%) scale(0.95); }
-        100% { transform: translateX(-50%) scale(1); }
-      }
-
-      /* ── Game over overlay ── */
-      #game-over-overlay { gap: 10px; }
-
-      #game-over-title {
-        font-size: 52px;
-        font-weight: 700;
-        color: #ff3535;
-        letter-spacing: 0.08em;
-      }
-
-      #final-score {
-        font-size: 22px;
-        color: rgba(255, 255, 255, 0.65);
-      }
-
-      #pb-line {
-        font-size: 14px;
-        color: rgba(255,255,255,0.4);
-        letter-spacing: 0.06em;
-        min-height: 18px;
-      }
-      #pb-line.new-best { color: #ffd700; }
-
-      #run-stats {
-        font-size: 12px;
-        color: rgba(255,255,255,0.35);
-        letter-spacing: 0.06em;
-        display: flex;
-        gap: 20px;
-      }
-
-      #restart-btn {
-        margin-top: 8px;
-        padding: 12px 36px;
-        background: #ff4444;
-        border: none;
-        border-radius: 4px;
-        color: #fff;
-        font-family: 'Courier New', monospace;
-        font-size: 15px;
-        font-weight: 700;
-        letter-spacing: 0.1em;
-        cursor: pointer;
-        transition: opacity 0.15s;
-      }
-      #restart-btn:hover { opacity: 0.8; }
-
-      #menu-from-gameover-btn {
-        padding: 8px 24px;
-        background: none;
-        border: 1px solid rgba(255,255,255,0.2);
-        border-radius: 4px;
-        color: rgba(255,255,255,0.5);
-        font-family: 'Courier New', monospace;
-        font-size: 13px;
-        cursor: pointer;
-        transition: opacity 0.15s;
-      }
-      #menu-from-gameover-btn:hover { opacity: 0.7; }
-
-      #share-btn {
-        padding: 8px 24px;
-        background: none;
-        border: 1px solid #ff9944;
-        border-radius: 4px;
-        color: #ff9944;
-        font-family: 'Courier New', monospace;
-        font-size: 13px;
-        cursor: pointer;
-        display: none;
-        transition: opacity 0.15s;
-      }
-      #share-btn.visible { display: inline-block; }
-      #share-btn:hover { opacity: 0.7; }
-      #share-confirm { font-size: 11px; color: #66ff99; min-height: 14px; }
-
-      #controls-hint {
-        font-size: 11px;
-        color: rgba(255, 255, 255, 0.25);
-        letter-spacing: 0.05em;
-        margin-top: 4px;
-      }
-
-      /* ── Level intro overlay ── */
-      #level-intro-overlay {
-        background: rgba(10, 10, 15, 0.88);
-        gap: 20px;
-      }
-
-      #level-intro-title {
-        font-size: 52px;
-        font-weight: 700;
-        color: #44aaff;
-        letter-spacing: 0.08em;
-      }
-
-      #level-intro-countdown {
-        font-size: 80px;
-        font-weight: 700;
-        color: rgba(255, 255, 255, 0.75);
-        min-width: 1ch;
-        text-align: center;
-      }
-
-      /* ── Toast ── */
-      #toast-container {
-        position: absolute;
-        top: 12px;
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 6px;
-        pointer-events: none;
-        z-index: 100;
-      }
-      .toast {
-        background: rgba(20,20,30,0.9);
-        border: 1px solid rgba(255,255,255,0.18);
-        color: #fff;
-        font-size: 13px;
-        letter-spacing: 0.08em;
-        padding: 7px 20px;
-        border-radius: 3px;
-        animation: toast-in 0.2s ease, toast-out 0.4s ease 2.6s forwards;
-      }
-      @keyframes toast-in  { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
-      @keyframes toast-out { to { opacity: 0; transform: translateY(-8px); } }
-
-      @keyframes slideDown { from { transform: translateY(-40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-      @keyframes fillBar { from { width: 0%; } to { width: 100%; } }
-
-      #mute-btn {
-        background: none;
-        border: 1px solid rgba(255,255,255,0.15);
-        color: rgba(255,255,255,0.5);
-        font-family: 'Courier New', monospace;
-        font-size: 14px;
-        padding: 2px 8px;
-        cursor: pointer;
-        border-radius: 3px;
-        transition: color 0.12s, border-color 0.12s;
-        align-self: center;
-      }
-      #mute-btn:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
-      #mute-btn.muted { color: rgba(255,80,80,0.7); border-color: rgba(255,80,80,0.3); text-decoration: line-through; }
-
-      /* ── Mobile / responsive ── */
-      @media (max-width: 768px) {
-        body { justify-content: flex-start; padding-top: 8px; }
-        #game-wrapper { width: 100vw; gap: 4px; }
-        #game-canvas { max-height: 70vh; width: 100%; }
-        #hud { font-size: 11px; gap: 10px; padding: 4px 8px; flex-wrap: wrap; }
-        .hud-item span { font-size: 12px; }
-        .menu-btn { width: 90vw; max-width: 320px; }
-      }
-
-      @media (max-width: 480px) {
-        .tab-btn { padding: 6px 10px; font-size: 11px; }
-      }
-
-      /* Portrait warning */
-      #portrait-warning {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: #0a0a0f;
-        color: #fff;
-        font-family: 'Courier New', monospace;
-        font-size: 18px;
-        letter-spacing: 0.08em;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        z-index: 9999;
-        flex-direction: column;
-        gap: 16px;
-      }
-      @media (max-width: 768px) and (orientation: portrait) {
-        #portrait-warning { display: flex; }
-      }
-    </style>
+    <link rel="stylesheet" href="/src/index.css" />
   </head>
   <body>
     <div id="game-wrapper">
@@ -500,7 +26,7 @@
         <div id="menu-subtitle">PHYSICS-BASED MISSILE INTERCEPTION</div>
         <button class="menu-btn primary" id="menu-campaign-btn">▶  PLAY CAMPAIGN<span class="menu-btn-sub">Level 1 → 10 · random spawns · fully ranked</span></button>
         <button class="menu-btn daily"   id="menu-daily-btn">◈  DAILY CHALLENGE<span class="menu-btn-sub">Today's seed · same for every player · one ranked run/day</span></button>
-        <button class="menu-btn"         id="menu-levelselect-btn">≡  LEVEL SELECT<span class="menu-btn-sub">Jump to an unlocked level · unranked practice</span></button>
+        <button class="menu-btn"         id="menu-levelselect-btn">≡  LEVEL SELECT<span class="menu-btn-sub">Jump to an unlocked level · ranked on level runs</span></button>
         <button class="menu-btn"         id="menu-leaderboard-btn">⊞  LEADERBOARDS</button>
         <button class="menu-btn"         id="menu-howto-btn">?  HOW TO PLAY</button>
         <button class="menu-btn"         id="menu-settings-btn">⚙  SETTINGS</button>
@@ -510,7 +36,7 @@
       <!-- ── Level select ── -->
       <div id="level-select-overlay" class="overlay">
         <div style="font-size:22px;font-weight:700;letter-spacing:0.1em;color:#44aaff;margin-bottom:8px;">LEVEL SELECT</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:16px;">RUNS START MID-CAMPAIGN — MARKED UNRANKED</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:16px;">RUNS START MID-CAMPAIGN — RANKED ON LEVEL RUNS LEADERBOARD</div>
         <div id="level-select-list"></div>
         <button class="menu-btn back" id="level-select-back-btn">← BACK</button>
       </div>
@@ -559,28 +85,32 @@
         <div style="font-size:22px;font-weight:700;letter-spacing:0.1em;color:#44aaff;margin-bottom:8px;">HOW TO PLAY</div>
         <div id="howto-list">
           <h4>OBJECTIVE</h4>
-          Stop missiles before they hit the ground. Survive long enough, rack up enough intercepts, and clear the level.
+          Defend your base by intercepting incoming missiles before they hit the ground. You start with 100 Health, and each missile that hits the ground deals 10 damage. Reach 0 Health, and it's Game Over. Survive waves, rack up points, and clear levels to climb the leaderboards.
 
           <h4>CONTROLS</h4>
           <kbd>←</kbd> <kbd>→</kbd> move launcher<br/>
-          <kbd>↑</kbd> <kbd>↓</kbd> aim angle<br/>
+          <kbd>↑</kbd> <kbd>↓</kbd> aim angle (30° to 70°)<br/>
           <kbd>Space</kbd> hold to charge power, release to fire<br/>
           <kbd>Z</kbd> flip launcher facing left/right<br/>
-          <kbd>P</kbd> or <kbd>Esc</kbd> pause · resume
+          <kbd>P</kbd> or <kbd>Esc</kbd> pause · resume<br/>
+          <kbd>M</kbd> mute · unmute audio
 
-          <h4>SCORING</h4>
-          Every intercept above 20 m scores. Chain intercepts within 3 s to build a combo multiplier (up to ×8). High-altitude, clutch (low-altitude), and long-range hits earn extra score.
+          <h4>SCORING & COMBOS</h4>
+          Every intercept above 20m scores base points.<br/>
+          <strong>Combo:</strong> Chain intercepts within 3 seconds to build a multiplier (+0.25× per hit, up to ×10 maximum).<br/>
+          <strong>Bonuses:</strong><br/>
+          • <strong>Altitude:</strong> High-altitude hits scale up to 3× points (maxes at 100m).<br/>
+          • <strong>Clutch:</strong> Low-altitude hits under 35m grant a 1.5× bonus.<br/>
+          • <strong>Long Range:</strong> Hitting a target more than 50m away horizontally gives a 1.2× bonus.<br/>
+          • <strong>Angle:</strong> Shallower angles score more (1.5× at 30°), while steep angles score less (0.75× at 70°).
 
           <h4>LEVEL COMPLETION</h4>
-          Three gates must all clear before a level ends — score threshold, minimum intercepts, and minimum waves. The level only advances during a RELEASE phase. The in-game pill under the HUD shows your progress.
+          To complete a level, you must survive the enemy waves and pass three thresholds: a minimum Score, a minimum Intercept count, and a minimum number of Waves survived. The level will only advance once the current wave enters its final "Release" phase and all goals are met.
 
           <h4>MODES</h4>
-          <strong>Campaign</strong> — non-seeded random run from L1. Fully ranked.<br/>
-          <strong>Daily Challenge</strong> — all players get the same missile pattern today (seed changes each calendar day). One ranked attempt per day.<br/>
-          <strong>Level Select</strong> — mid-campaign start, marked unranked.
-
-          <h4>DAILY CHALLENGE — HOW</h4>
-          The seed is derived from today's ISO date (<code>YYYY-MM-DD</code>) via a hash — see <code>rng.js</code> <code>seedFromDateISO</code>. At local midnight a new date → new seed → new pattern. Spawns, angles, and missile kinds are deterministic per seed, so the same puzzle is replayable for fair comparison.
+          <strong>Campaign</strong> — A full run starting from Level 1 with random spawns. Ranked on the All-Time leaderboard.<br/>
+          <strong>Daily Challenge</strong> — Every player faces the exact same deterministic missile pattern for the day. Features daily modifiers (Speedrun, No Radar, or Precision). You get one ranked attempt per day before it locks to unranked practice. Resets at local midnight.<br/>
+          <strong>Level Select</strong> — Practice or start a run from any unlocked level. Ranked on the dedicated Level Runs leaderboard.
         </div>
         <button class="menu-btn back" id="howto-back-btn">← BACK</button>
       </div>
@@ -599,8 +129,8 @@
         <div style="font-size:22px;font-weight:700;letter-spacing:0.1em;color:#44aaff;margin-bottom:16px;">CREDITS</div>
         <div style="font-size:13px;color:rgba(255,255,255,0.55);text-align:center;line-height:2em;">
           ArcZero — physics-based missile interception<br/>
-          Audio: freesound.org / Zapsplat (CC)<br/>
-          Built with vanilla JS + HTML5 Canvas
+          Created by NiruddeshJatra<br/>
+          Audio: freesound.org / Zapsplat (CC)
         </div>
         <button class="menu-btn back" id="credits-back-btn">← BACK</button>
       </div>
