@@ -575,8 +575,27 @@ document.getElementById('credits-back-btn').addEventListener('click', () => { pl
 document.getElementById('restart-btn').addEventListener('click', () => {
   if (loop) loop.stop();
   showOnly(null);
-  seed(Date.now() & 0xFFFFFFFF);
-  startLevel(1, BASE_HEALTH, RANKING_MODES.CAMPAIGN);
+  
+  if (!activeState) {
+    seed(Date.now() & 0xFFFFFFFF);
+    startLevel(1, BASE_HEALTH, RANKING_MODES.CAMPAIGN);
+    return;
+  }
+
+  const mode = activeState.rankingMode;
+  const startLvl = activeState.startLevel;
+  const prevSeed = activeState.seed;
+
+  if (mode === RANKING_MODES.DAILY || mode === RANKING_MODES.UNRANKED) {
+    seed(prevSeed);
+    startLevel(startLvl, BASE_HEALTH, RANKING_MODES.UNRANKED, prevSeed);
+  } else if (mode === RANKING_MODES.LEVELRUN) {
+    seed(Date.now() & 0xFFFFFFFF);
+    startLevel(startLvl, BASE_HEALTH, RANKING_MODES.LEVELRUN);
+  } else {
+    seed(Date.now() & 0xFFFFFFFF);
+    startLevel(1, BASE_HEALTH, RANKING_MODES.CAMPAIGN);
+  }
 });
 
 document.getElementById('menu-from-gameover-btn').addEventListener('click', () => {
