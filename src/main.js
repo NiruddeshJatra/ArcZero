@@ -339,7 +339,7 @@ function showGameOverScreen(runResult, isPB, prevLvlBest, isChainPB) {
 }
 
 // ── Core start/loop ───────────────────────────────────────────────────────────
-function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPAIGN, dailySeed = null, carryScore = 0, initialStartLevel = null) {
+function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPAIGN, dailySeed = null, carryScore = 0, initialStartLevel = null, carryAegis = null) {
   playUiConfirm();
   const safeLevel = Math.min(level, LEVELS.length - 1);
   transitionActive = true;
@@ -369,7 +369,7 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPA
     count--;
     if (count <= 0) {
       showOnly(null);
-      const state = createState(safeLevel, carryHealth, carryScore);
+      const state = createState(safeLevel, carryHealth, carryScore, carryAegis);
       state.startLevel = initialStartLevel !== null ? initialStartLevel : safeLevel;
       state.mode   = mode;
       state.seed   = dailySeed;
@@ -452,7 +452,7 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPA
 
           const onClickNext = () => {
             if (!transitionActive) return;
-            startLevel(completedLevel + 1, BASE_HEALTH, mode, dailySeed, carryScore, state.startLevel);
+            startLevel(completedLevel + 1, BASE_HEALTH, mode, dailySeed, carryScore, state.startLevel, state.aegis);
           };
           levelSummaryOverlay.addEventListener('click', onClickNext, { once: true });
         },

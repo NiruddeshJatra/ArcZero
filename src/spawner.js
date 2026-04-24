@@ -34,8 +34,15 @@ export function updateSpawner(state) {
     const x  = randomBetween(SPAWN_X_MIN, SPAWN_X_MAX);
     const vy = randomBetween(cfg.missileVyMin, cfg.missileVyMax);
     const vx = cfg.missileVxRange ? randomBetween(-cfg.missileVxRange, cfg.missileVxRange) : 0;
-    const kind = FLAGS.EVENT_MISSILES ? pickMissileKind(cfg) : 'standard';
-    const finalVy = kind === 'courier' ? randomBetween(COURIER_VY_MIN, COURIER_VY_MAX) : vy;
+    let kind = FLAGS.EVENT_MISSILES ? pickMissileKind(cfg) : 'standard';
+    
+    // Aegis: Spawn one Medic missile per level during PEAK phase on Level 9+
+    if (state.level >= 9 && state.wave?.phase === 'PEAK' && !state.levelMedicSpawned) {
+      kind = 'medic';
+      state.levelMedicSpawned = true;
+    }
+
+    const finalVy = kind === 'courier' || kind === 'medic' ? randomBetween(COURIER_VY_MIN, COURIER_VY_MAX) : vy;
     const telegraphS = state.level >= 4 ? SPAWN_TELEGRAPH_HARD_S : SPAWN_TELEGRAPH_EASY_S;
     state.warnings.push({ x, vx, vy: finalVy, kind, remainingS: telegraphS, totalS: telegraphS });
     if (kind === 'courier') playCourierAlert();

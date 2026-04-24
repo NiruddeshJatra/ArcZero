@@ -155,17 +155,18 @@ Full volume controls in Settings overlay (master slider, persisted via `persiste
 4. Floater aging
 5. Wave tick
 6. Input
-7. Spawn
-8. Physics (+ MIRV/splitter splits)
-9. Ground/bounds checks
-10. Collision (+ combo scoring + near-miss)
-11. In-game milestone check → pendingToasts
-12. Cleanup
-13. Explosion aging
-14. Passive scoring
-15. Level advancement check (RELEASE only)
-16. Game over check
-17. Render + HUD
+7. Spawn (including Aegis Medic)
+8. Physics (+ MIRV/splitter splits + Scrap Orb gravity)
+9. Ground/bounds checks (+ Aegis Shield block)
+10. Collision (+ combo scoring + near-miss + Aegis triggers)
+11. Scrap Orb collection
+12. In-game milestone check → pendingToasts
+13. Cleanup
+14. Explosion aging
+15. Passive scoring
+16. Level advancement check (RELEASE only)
+17. Game over check
+18. Render + HUD
 
 ## Commands
 ```bash

@@ -29,9 +29,13 @@ import {
   ANGLE_MAX,
   ANGLE_START,
   STREAK_CALLOUTS,
+  BASE_HEALTH,
+  AEGIS_MAX, AEGIS_BASE_HEAL, AEGIS_OVERHEALTH_MAX, AEGIS_EMP_HEAL,
+  ENERGY_LOW_ANGLE, ENERGY_HIGH_ALT, ENERGY_GRAZE, ENERGY_COURIER,
+  ENERGY_SCRAP, ENERGY_MEDIC, ENERGY_COMBO_3, ENERGY_COMBO_5
 } from './constants.js';
 import { createExplosion } from './state.js';
-import { playIntercept, playDamage, playGraze, playComboUp, playComboPeak, playMilestone } from './audio.js';
+import { playIntercept, playDamage, playGraze, playComboUp, playComboPeak, playMilestone, playAegisTrigger, playShieldBreak, playScrapCollect, playEmp } from './audio.js';
 import { NEAR_MISS_THRESHOLD } from './constants.js';
 import { triggerShake, triggerFlash } from './renderer.js';
 import { FLAGS } from './flags.js';
@@ -40,6 +44,35 @@ import { FLAGS } from './flags.js';
 let _streakEl = null;
 function getStreakEl() {
   return _streakEl ?? (_streakEl = document.getElementById('streak-callout'));
+}
+
+export function addAegisEnergy(state, amount, reason) {
+  if (state.aegis.broken) return;
+  
+  state.aegis.energy += amount;
+  
+  if (reason) {
+    state.pendingToasts.push(`${reason} +${amount}`);
+  }
+  
+  if (state.aegis.energy >= AEGIS_MAX) {
+    state.aegis.energy = 0;
+    if (playAegisTrigger) playAegisTrigger();
+    
+    // Level 3+: Base Heal (+ Overhealth at Level 10+)
+    const maxH = state.level >= 10 ? AEGIS_OVERHEALTH_MAX : BASE_HEALTH;
+    state.health = Math.min(maxH, state.health + AEGIS_BASE_HEAL);
+    
+    // Level 7+: Global Grid
+    if (state.level >= 7) {
+      state.aegis.activeShield = true;
+      state.pendingToasts.push(`DEFENSE GRID ONLINE`);
+    } else {
+      state.pendingToasts.push(`AEGIS DEPLOYED: +${AEGIS_BASE_HEAL} HP`);
+    }
+    
+    triggerFlash(state, '#ffffff', 0.1);
+  }
 }
 
 /**
@@ -83,6 +116,19 @@ export function checkCollisions(state) {
           if (state.combo.count > state.combo.best) state.combo.best = state.combo.count;
           if (state.combo.multiplier >= COMBO_MULT_CAP) playComboPeak();
           else if (state.combo.count > 1) playComboUp();
+
+          // Aegis combos
+          if (state.level >= 3 && state.combo.count === 3) {
+            addAegisEnergy(state, ENERGY_COMBO_3);
+          }
+          if (state.level >= 3 && state.combo.count === 5) {
+            addAegisEnergy(state, ENERGY_COMBO_5);
+          }
+          if (state.level >= 8 && state.combo.count === 4) {
+            // Drop physical scrap
+            state.scrapOrbs = state.scrapOrbs || [];
+            state.scrapOrbs.push({ x: midX, y: midY, vx: 0, vy: -15, alive: true });
+          }
 
           if (FLAGS.STREAK_CALLOUTS) {
             const callout = STREAK_CALLOUTS.find(c => c.count === state.combo.count && state.combo.count > state.combo.lastCalloutAt);
@@ -139,6 +185,20 @@ export function checkCollisions(state) {
           const finalScore = Math.round(BASE_INTERCEPT_SCORE_V2 * state.combo.multiplier * skillMult);
           state.score += finalScore;
 
+          // Aegis checks
+          if (state.level >= 3 && launchAngle < 45) {
+            addAegisEnergy(state, ENERGY_LOW_ANGLE, 'LOW ANGLE');
+          }
+          if (state.level >= 5 && missile.y > 70) {
+            addAegisEnergy(state, ENERGY_HIGH_ALT, 'ALTITUDE');
+          }
+          if (state.level >= 6 && missile.kind === 'courier') {
+            addAegisEnergy(state, ENERGY_COURIER, 'COURIER SIPHON');
+          }
+          if (state.level >= 9 && missile.kind === 'medic') {
+            addAegisEnergy(state, ENERGY_MEDIC, 'SUPPLY SECURED');
+          }
+
           state.floaters.push({
             x: midX, y: midY,
             text: `+${finalScore}`,
@@ -165,6 +225,9 @@ export function checkCollisions(state) {
               vx: 0, vy: 0, age: 0, maxAge: 0.25,
               color: 'rgba(100,220,255,0.9)', kind: 'spark',
             });
+            if (state.level >= 4) {
+              addAegisEnergy(state, ENERGY_GRAZE, 'GRAZE');
+            }
           }
         }
       }
@@ -182,10 +245,25 @@ export function checkMissileGroundHit(state) {
     if (missile.y <= 0) {
       missile.alive = false;
       if (missile.x >= 0 && missile.x <= WORLD_WIDTH) {
-        state.health -= MISSILE_DAMAGE;
-        playDamage();
-        triggerShake(state, SHAKE_AMP_DAMAGE, SHAKE_DUR_DAMAGE);
-        triggerFlash(state, '#ff3535', FLASH_DAMAGE);
+        if (state.aegis.activeShield) {
+          state.aegis.activeShield = false;
+          if (playShieldBreak) playShieldBreak();
+          triggerFlash(state, 'rgba(68,170,255,0.6)', 0.15); // blue flash
+        } else {
+          state.health -= MISSILE_DAMAGE;
+          playDamage();
+          triggerShake(state, SHAKE_AMP_DAMAGE, SHAKE_DUR_DAMAGE);
+          triggerFlash(state, '#ff3535', FLASH_DAMAGE);
+          
+          if (state.level >= 10 && state.health <= 0 && state.aegis.energy >= 50 && !state.aegis.broken) {
+            state.health = AEGIS_EMP_HEAL;
+            state.aegis.energy = 0;
+            state.aegis.broken = true;
+            if (playEmp) playEmp();
+            triggerFlash(state, '#ffffff', 0.5);
+            for (const m of state.missiles) { m.alive = false; }
+          }
+        }
       }
     }
   }
@@ -207,4 +285,23 @@ export function checkInterceptorBounds(state) {
       interceptor.alive = false;
     }
   }
+}
+
+/**
+ * Check if the launcher caught any scrap orbs.
+ */
+export function checkScrapCollection(state) {
+  if (!state.scrapOrbs) return;
+  const lx = state.launcher.x;
+  for (const orb of state.scrapOrbs) {
+    if (!orb.alive) continue;
+    if (orb.y <= 5 && orb.x >= lx - 8 && orb.x <= lx + 8) {
+      orb.alive = false;
+      if (playScrapCollect) playScrapCollect();
+      addAegisEnergy(state, ENERGY_SCRAP, 'SCRAP RECYCLED');
+    } else if (orb.y < -5) {
+      orb.alive = false;
+    }
+  }
+  state.scrapOrbs = state.scrapOrbs.filter(o => o.alive);
 }

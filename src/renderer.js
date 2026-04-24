@@ -25,6 +25,7 @@ import {
   MISSILE_FIN_H,
   MISSILE_DANGER_GLOW_START_M,
   MISSILE_COLORS,
+  AEGIS_MAX, COLOR_GRID_SHIELD, COLOR_OVERHEALTH,
 } from './constants.js';
 import { toCanvasX, toCanvasY, simulateTrajectory } from './physics.js';
 
@@ -101,6 +102,9 @@ export function render(ctx, state) {
   for (const explosion of state.explosions) {
     drawExplosion(ctx, explosion);
   }
+
+  drawScrapOrbs(ctx, state);
+  drawAegisSystem(ctx, state);
 
   drawReloadMeter(ctx, state.launcher);
   drawFloaters(ctx, state);
@@ -300,11 +304,7 @@ function drawLauncher(ctx, state) {
     ctx.fill();
   }
 
-  // --- Facing indicator ---
-  ctx.fillStyle = 'rgba(200,220,255,0.6)';
-  ctx.font = '10px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText(launcher.facing === FACING_RIGHT ? '▶' : '◀', cx, groundY + 12);
+
 }
 
 function drawReloadMeter(ctx, launcher) {
@@ -313,7 +313,7 @@ function drawReloadMeter(ctx, launcher) {
   const cx = toCanvasX(launcher.x);
   const groundY = toCanvasY(0);
   const barW = 40, barH = 3;
-  const y = groundY + 6;
+  const y = groundY - 20;
   ctx.fillStyle = 'rgba(255,255,255,0.15)';
   ctx.fillRect(cx - barW / 2, y, barW, barH);
   ctx.fillStyle = frac > 0.8 ? '#66ff99' : '#ff9944';
@@ -560,9 +560,31 @@ function drawWaveIndicator(ctx, state) {
 export function updateHUD(state) {
   document.getElementById('hud-level').textContent = state.level;
   document.getElementById('hud-score').textContent = Math.floor(state.score);
-  document.getElementById('hud-health').textContent = Math.max(0, state.health);
+  
+  const healthEl = document.getElementById('hud-health');
+  healthEl.textContent = Math.max(0, state.health);
+  healthEl.style.color = state.health > 100 ? COLOR_OVERHEALTH : '';
+  
   document.getElementById('hud-angle').textContent = Math.round(state.launcher.angle) + '°';
   document.getElementById('hud-power').textContent = Math.round(state.launcher.power);
+
+  // Aegis energy readout (visible from Level 3+)
+  const aegisWrap = document.getElementById('hud-aegis-wrap');
+  const aegisEl   = document.getElementById('hud-aegis');
+  if (aegisWrap && aegisEl) {
+    if (state.level >= 3) {
+      aegisWrap.style.display = '';
+      if (state.aegis.broken) {
+        aegisEl.textContent = 'OFF';
+        aegisEl.style.color = '#ff4444';
+      } else {
+        aegisEl.textContent = Math.floor(state.aegis.energy);
+        aegisEl.style.color = state.aegis.energy >= 80 ? '#44ffcc' : '#00ffff';
+      }
+    } else {
+      aegisWrap.style.display = 'none';
+    }
+  }
 
   // Level-progress pill — shows what's needed to clear the current level.
   const el = document.getElementById('hud-progress');
@@ -622,3 +644,63 @@ export function hideLevelIntro() {
 export function updateCountdown(n) {
   document.getElementById('level-intro-countdown').textContent = String(n);
 }
+
+function drawScrapOrbs(ctx, state) {
+  if (!state.scrapOrbs) return;
+  for (const orb of state.scrapOrbs) {
+    if (!orb.alive) continue;
+    const cx = toCanvasX(orb.x);
+    const cy = toCanvasY(orb.y);
+    
+    const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 150);
+    ctx.fillStyle = `rgba(200, 255, 100, ${0.7 + 0.3 * pulse})`;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 4 * SCALE, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+}
+
+function drawAegisSystem(ctx, state) {
+  if (state.level < 3) return;
+  const groundY = toCanvasY(0);
+
+  // Shield Grid (Level 7+ payload)
+  if (state.aegis.activeShield) {
+    ctx.fillStyle = COLOR_GRID_SHIELD;
+    ctx.fillRect(0, groundY - 4, CANVAS_WIDTH, 4);
+
+    // Hexagonal pattern overlay
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = 0; x < CANVAS_WIDTH; x += 30) {
+      ctx.moveTo(x, groundY);
+      ctx.lineTo(x + 15, groundY - 15);
+      ctx.lineTo(x + 30, groundY);
+    }
+    ctx.stroke();
+  }
+
+  // Subtle ground-line energy bar (visual flair — exact number is in the DOM HUD)
+  if (state.aegis.broken) return;
+  const launcher = state.launcher;
+  const cx = toCanvasX(launcher.x);
+  const barW = 44, barH = 2;
+  const y = groundY - 2;
+
+  // Faint background track
+  ctx.fillStyle = 'rgba(0, 255, 255, 0.08)';
+  ctx.fillRect(cx - barW / 2, y, barW, barH);
+
+  // Cyan fill proportional to energy
+  const frac = state.aegis.energy / AEGIS_MAX;
+  if (frac > 0) {
+    const alpha = 0.25 + frac * 0.45;
+    ctx.fillStyle = `rgba(0, 255, 255, ${alpha})`;
+    ctx.fillRect(cx - barW / 2, y, barW * frac, barH);
+  }
+}
+
