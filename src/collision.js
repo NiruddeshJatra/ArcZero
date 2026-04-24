@@ -29,13 +29,12 @@ import {
   ANGLE_MAX,
   ANGLE_START,
   STREAK_CALLOUTS,
-  BASE_HEALTH,
-  AEGIS_MAX, AEGIS_BASE_HEAL, AEGIS_OVERHEALTH_MAX, AEGIS_EMP_HEAL,
   ENERGY_LOW_ANGLE, ENERGY_HIGH_ALT, ENERGY_GRAZE, ENERGY_COURIER,
   ENERGY_SCRAP, ENERGY_MEDIC, ENERGY_COMBO_3, ENERGY_COMBO_5
 } from './constants.js';
 import { createExplosion } from './state.js';
-import { playIntercept, playDamage, playGraze, playComboUp, playComboPeak, playMilestone, playAegisTrigger, playShieldBreak, playScrapCollect, playEmp } from './audio.js';
+import { playIntercept, playDamage, playGraze, playComboUp, playComboPeak, playMilestone, playShieldBreak, playScrapCollect } from './audio.js';
+import { addAegisEnergy, triggerAegisEmp } from './aegis.js';
 import { NEAR_MISS_THRESHOLD } from './constants.js';
 import { triggerShake, triggerFlash } from './renderer.js';
 import { FLAGS } from './flags.js';
@@ -44,35 +43,6 @@ import { FLAGS } from './flags.js';
 let _streakEl = null;
 function getStreakEl() {
   return _streakEl ?? (_streakEl = document.getElementById('streak-callout'));
-}
-
-export function addAegisEnergy(state, amount, reason) {
-  if (state.aegis.broken) return;
-  
-  state.aegis.energy += amount;
-  
-  if (reason) {
-    state.pendingToasts.push(`${reason} +${amount}`);
-  }
-  
-  if (state.aegis.energy >= AEGIS_MAX) {
-    state.aegis.energy = 0;
-    if (playAegisTrigger) playAegisTrigger();
-    
-    // Level 3+: Base Heal (+ Overhealth at Level 10+)
-    const maxH = state.level >= 10 ? AEGIS_OVERHEALTH_MAX : BASE_HEALTH;
-    state.health = Math.min(maxH, state.health + AEGIS_BASE_HEAL);
-    
-    // Level 7+: Global Grid
-    if (state.level >= 7) {
-      state.aegis.activeShield = true;
-      state.pendingToasts.push(`DEFENSE GRID ONLINE`);
-    } else {
-      state.pendingToasts.push(`AEGIS DEPLOYED: +${AEGIS_BASE_HEAL} HP`);
-    }
-    
-    triggerFlash(state, '#ffffff', 0.1);
-  }
 }
 
 /**
@@ -256,12 +226,8 @@ export function checkMissileGroundHit(state) {
           triggerFlash(state, '#ff3535', FLASH_DAMAGE);
           
           if (state.level >= 10 && state.health <= 0 && state.aegis.energy >= 50 && !state.aegis.broken) {
-            state.health = AEGIS_EMP_HEAL;
-            state.aegis.energy = 0;
-            state.aegis.broken = true;
-            if (playEmp) playEmp();
-            triggerFlash(state, '#ffffff', 0.5);
-            for (const m of state.missiles) { m.alive = false; }
+            triggerAegisEmp(state);
+            break;
           }
         }
       }

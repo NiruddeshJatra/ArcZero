@@ -19,7 +19,7 @@ Energy is gained purely through active and skillful gameplay. The mechanics unlo
 ## Aegis Payloads
 When the gauge reaches 100 Energy, it triggers a payload that evolves as the player progresses:
 - **Level 3+ | Base Heal:** Restores +20 Health.
-- **Level 7+ | Defense Grid:** Along with the heal, deploys a global horizontal shield across the ground. The shield absorbs exactly one missile impact (taking no health damage) before shattering.
+- **Level 7+ | Defense Grid:** Along with the heal, it deploys a global horizontal shield across the ground. The shield absorbs exactly one missile impact (taking no health damage) before shattering.
 - **Level 10+ | Over-Health:** The Base Heal can push the player's health beyond the maximum (100) up to 150. Over-health is displayed in gold.
 - **Level 10+ | EMP Last Stand:** If the player suffers a lethal blow while the Aegis gauge is at least 50% full, the gauge breaks (offline for the rest of the run), all active missiles are destroyed, and the player is revived with 30 Health.
 

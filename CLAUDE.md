@@ -21,6 +21,7 @@ src/
 ├── physics.js       ← position/velocity update, MIRV/splitter splits
 ├── input.js         ← keyboard tracking, fire cooldown
 ├── spawner.js       ← missile spawn timing, event-missile kind selection
+├── aegis.js         ← Aegis energy logic (addAegisEnergy, triggerAegisEmp); all Aegis rules live here
 ├── collision.js     ← distance checks, altitude guard, near-miss, combo scoring
 ├── renderer.js      ← all canvas drawing, HUD, overlays, combo badge, wave indicator
 ├── constants.js     ← single source of truth for all numbers
@@ -185,6 +186,7 @@ npm run lint:fix  # Auto-fix lint issues
 - All randomness via `rng.js` — `Math.random()` banned (ESLint rule)
 - All localStorage via `persistence.js` — direct calls banned (ESLint rule)
 - All constants in `constants.js` — never hardcode numbers elsewhere
+- All Aegis energy mutations via `aegis.js` (`addAegisEnergy`, `triggerAegisEmp`) — never mutate `state.aegis` directly in collision or gameLoop
 - Commit format: `type(phaseN): description`
 
 ## AI Agents Available
