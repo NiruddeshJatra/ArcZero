@@ -13,7 +13,7 @@ import { LEVELS } from './levels.js';
  * Creates a fresh game state for the given level.
  * Pass carryHealth to preserve health across level transitions.
  */
-export function createState(level = 1, carryHealth = BASE_HEALTH, carryScore = 0) {
+export function createState(level = 1, carryHealth = BASE_HEALTH, carryScore = 0, carryAegis = null) {
   return {
     running: true,
     paused: false,
@@ -26,6 +26,8 @@ export function createState(level = 1, carryHealth = BASE_HEALTH, carryScore = 0
     levelStartIntercepts: 0,
     levelStartWaveIndex: 0,
     levelComplete: false,
+    aegis: carryAegis ?? { energy: 0, activeShield: false, broken: false },
+    scrapOrbs: [],
     launcher: {
       x: LAUNCHER_START_X,
       y: 0,

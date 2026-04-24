@@ -23,7 +23,10 @@ ArcZero uses a minimalist, utilitarian interface resembling a military radar or 
 - **Warning / Accent Orange**: `#ff9944` (Used for secondary actions, Daily Challenge highlights, selected elements)
 - **Success / Good**: `#44ffee` (Used for player highlights in leaderboards)
 - **Critical / Danger**: `#ff3535` / `#ff4444` (Used for game over titles, restart buttons)
-- **Gold / Legendary**: `#ffd700` (Used for new personal bests, legendary chain callouts)
+- **Gold / Legendary**: `#ffd700` (Used for new personal bests, legendary chain callouts, over-health bar)
+- **Aegis Cyan**: `#00ffff` (Used for the Aegis Recovery Protocol gauge)
+- **Medic Green**: `#2eb82e` (Used for Medic supply missiles)
+- **Shield Blue**: `rgba(68,170,255,0.4)` (Used for the global defense grid shield)
 
 ## 4. Components & Shapes
 

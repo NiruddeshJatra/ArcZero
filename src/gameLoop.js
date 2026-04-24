@@ -23,6 +23,7 @@ import {
   checkCollisions,
   checkMissileGroundHit,
   checkInterceptorBounds,
+  checkScrapCollection
 } from './collision.js';
 import { render, updateHUD, triggerShake } from './renderer.js';
 import { playGameOver, playWaveWarning, playWaveStart, playLevelClear, startPeakBed, stopPeakBed } from './audio.js';
@@ -207,6 +208,7 @@ function gameTick(state, keys, ctx) {
   // 5. Collision
   checkCollisions(state);
   checkInGameMilestones(state);
+  if (state.level >= 8) checkScrapCollection(state);
 
   // 6. Cleanup — filter dead objects
   state.missiles = state.missiles.filter((m) => m.alive);

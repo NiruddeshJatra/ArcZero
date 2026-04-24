@@ -107,6 +107,11 @@ export function stepPhysics(state) {
       updateInterceptorTrail(interceptor);
     }
   }
+  if (state.scrapOrbs) {
+    for (const orb of state.scrapOrbs) {
+      stepObject(orb);
+    }
+  }
 }
 
 /**

@@ -187,4 +187,25 @@ export const MISSILE_COLORS = {
   courier:  { body: '#e0a820', stroke: '#ffd755', core: '#fff1a0', trail: 'rgba(255,220,100,' },
   splitter: { body: '#8a2ad8', stroke: '#c670ff', core: '#ff88ff', trail: 'rgba(200,120,255,' },
   mirv:     { body: '#d8265a', stroke: '#ff6b9d', core: '#ffa8c0', trail: 'rgba(255,120,170,' },
+  medic:    { body: '#2eb82e', stroke: '#33ff33', core: '#aaffaa', trail: 'rgba(100,255,100,' },
 };
+
+// === Phase 5 — Aegis Recovery Protocol ===
+export const AEGIS_MAX = 100;
+export const AEGIS_BASE_HEAL = 20;
+export const AEGIS_OVERHEALTH_MAX = 150;
+export const AEGIS_EMP_HEAL = 30;
+
+export const ENERGY_LOW_ANGLE = 10;
+export const ENERGY_HIGH_ALT = 5;
+export const ENERGY_GRAZE = 5;
+export const ENERGY_COURIER = 35;
+export const ENERGY_SCRAP = 40;
+export const ENERGY_MEDIC = 100;
+export const ENERGY_COMBO_3 = 10;
+export const ENERGY_COMBO_5 = 25;
+
+export const COLOR_AEGIS_GAUGE = '#00ffff';
+export const COLOR_AEGIS_FLASH = '#ffffff';
+export const COLOR_GRID_SHIELD = 'rgba(68,170,255,0.4)';
+export const COLOR_OVERHEALTH = '#ffd700';

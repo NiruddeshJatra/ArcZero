@@ -51,6 +51,11 @@ const SOUNDS = {
   // UI (sfx bus)
   uiClick:       '/audio/ui_click.wav',
   uiConfirm:     '/audio/ui_confirm.mp3',
+  // Aegis (sfx bus)
+  aegisTrigger:  '/audio/aegis_trigger.mp3',
+  shieldBreak:   '/audio/shield_break.mp3',
+  scrapCollect:  '/audio/scrap_collect.mp3',
+  emp:           '/audio/emp.mp3',
 };
 
 /** Mix gain per slot (0–1). Applied on the source before the bus. */
@@ -77,6 +82,10 @@ const SLOT_GAIN = {
   gameOver:      0.75,
   uiClick:       0.45,
   uiConfirm:     0.55,
+  aegisTrigger:  0.75,
+  shieldBreak:   0.80,
+  scrapCollect:  0.60,
+  emp:           0.90,
 };
 
 /** Max simultaneous playing instances per slot. Oldest cut when exceeded. */
@@ -91,6 +100,7 @@ const POLYPHONY = {
 /** Slots that trigger 400ms duck on ambientLoop + peakWaveBed. */
 const DUCK_TRIGGERS = new Set([
   'intercept', 'damage', 'levelUp', 'levelClear', 'gameOver', 'waveWarning',
+  'aegisTrigger',
 ]);
 
 /** Trim [start, end] in seconds. null = play full buffer. */
@@ -455,6 +465,10 @@ export function playLevelClear()   { _play('levelClear'); }
 export function playGameOver()     { _play('gameOver'); }
 export function playUiClick()      { _play('uiClick'); }
 export function playUiConfirm()    { _play('uiConfirm'); }
+export function playAegisTrigger() { _play('aegisTrigger'); }
+export function playShieldBreak()  { _play('shieldBreak'); }
+export function playScrapCollect() { _play('scrapCollect'); }
+export function playEmp()          { _play('emp'); }
 
 /**
  * Generic escape hatch — plays any registered slot by name.

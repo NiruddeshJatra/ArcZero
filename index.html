@@ -13,6 +13,7 @@
         <div class="hud-item">LEVEL <span id="hud-level">1</span></div>
         <div class="hud-item">SCORE <span id="hud-score">0</span></div>
         <div class="hud-item">HEALTH <span id="hud-health">100</span></div>
+        <div class="hud-item" id="hud-aegis-wrap" style="display:none">AEGIS <span id="hud-aegis" style="color:#00ffff">—</span></div>
         <div class="hud-item">ANGLE <span id="hud-angle">45°</span></div>
         <div class="hud-item">POWER <span id="hud-power">20</span></div>
         <button id="mute-btn" title="[M] Toggle mute">♪</button>
@@ -103,6 +104,16 @@
           • <strong>Clutch:</strong> Low-altitude hits under 35m grant a 1.5× bonus.<br/>
           • <strong>Long Range:</strong> Hitting a target more than 50m away horizontally gives a 1.2× bonus.<br/>
           • <strong>Angle:</strong> Shallower angles score more (1.5× at 30°), while steep angles score less (0.75× at 70°).
+
+          <h4>AEGIS RECOVERY PROTOCOL (LEVEL 3+)</h4>
+          From Level 3 onwards, you gain access to the Aegis Defense Gauge (cyan bar below your launcher). Fill it to 100 Energy to trigger an Aegis Payload, restoring health and deploying defenses. Energy is gained exclusively through active, skillful gameplay:<br/>
+          • <strong>Low-Angle Kills:</strong> Intercepts below 45° angle (+10)<br/>
+          • <strong>High-Altitude Kills (L5+):</strong> Intercepts above 70m (+5)<br/>
+          • <strong>Combos:</strong> Hitting 3x and 5x chain milestones (+10/+25)<br/>
+          • <strong>Grazes (L4+):</strong> Near-misses with interceptors (+5)<br/>
+          • <strong>Scrap Recycling (L8+):</strong> Catch falling Scrap Orbs from 4x combos (+40)<br/>
+          • <strong>Event Missiles:</strong> Courier hits (+35), Medic hits (+100)<br/><br/>
+          <strong>Payloads:</strong> Base heal (+20). At Level 7+, deploying Aegis also activates a global horizontal shield that absorbs one missile impact. At Level 10+, Aegis can overheal you up to 150 (gold health) and acts as an EMP Last Stand to save you from a lethal blow if the gauge is half full.
 
           <h4>LEVEL COMPLETION</h4>
           To complete a level, you must survive the enemy waves and pass three thresholds: a minimum Score, a minimum Intercept count, and a minimum number of Waves survived. The level will only advance once the current wave enters its final "Release" phase and all goals are met.
