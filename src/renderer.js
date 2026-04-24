@@ -25,7 +25,7 @@ import {
   MISSILE_FIN_H,
   MISSILE_DANGER_GLOW_START_M,
   MISSILE_COLORS,
-  AEGIS_MAX, COLOR_GRID_SHIELD, COLOR_OVERHEALTH,
+  AEGIS_MAX, COLOR_GRID_SHIELD, COLOR_OVERHEALTH, COLOR_AEGIS_GAUGE,
 } from './constants.js';
 import { toCanvasX, toCanvasY, simulateTrajectory } from './physics.js';
 
@@ -579,7 +579,7 @@ export function updateHUD(state) {
         aegisEl.style.color = '#ff4444';
       } else {
         aegisEl.textContent = Math.floor(state.aegis.energy);
-        aegisEl.style.color = state.aegis.energy >= 80 ? '#44ffcc' : '#00ffff';
+        aegisEl.style.color = state.aegis.energy >= 80 ? '#44ffcc' : COLOR_AEGIS_GAUGE;
       }
     } else {
       aegisWrap.style.display = 'none';
@@ -647,12 +647,13 @@ export function updateCountdown(n) {
 
 function drawScrapOrbs(ctx, state) {
   if (!state.scrapOrbs) return;
+  const t = performance.now();
   for (const orb of state.scrapOrbs) {
     if (!orb.alive) continue;
     const cx = toCanvasX(orb.x);
     const cy = toCanvasY(orb.y);
-    
-    const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 150);
+
+    const pulse = 0.5 + 0.5 * Math.sin(t / 150);
     ctx.fillStyle = `rgba(200, 255, 100, ${0.7 + 0.3 * pulse})`;
     ctx.beginPath();
     ctx.arc(cx, cy, 4 * SCALE, 0, Math.PI * 2);
