@@ -181,10 +181,12 @@ export function checkMissileGroundHit(state) {
     if (!missile.alive) continue;
     if (missile.y <= 0) {
       missile.alive = false;
-      state.health -= MISSILE_DAMAGE;
-      playDamage();
-      triggerShake(state, SHAKE_AMP_DAMAGE, SHAKE_DUR_DAMAGE);
-      triggerFlash(state, '#ff3535', FLASH_DAMAGE);
+      if (missile.x >= 0 && missile.x <= WORLD_WIDTH) {
+        state.health -= MISSILE_DAMAGE;
+        playDamage();
+        triggerShake(state, SHAKE_AMP_DAMAGE, SHAKE_DUR_DAMAGE);
+        triggerFlash(state, '#ff3535', FLASH_DAMAGE);
+      }
     }
   }
 }
