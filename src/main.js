@@ -458,14 +458,30 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPA
         },
         onGameOver(runResult) {
           stopAmbient();
-          // Persist
-          const lvlBest = currentSave.best.perLevel[runResult.level] ?? 0;
+          // Capture pre-run save for PB comparison and new-unlock detection.
+          const prevUnlocked = currentSave.progress.unlockedStartLevels.slice();
           const prevChainBest = currentSave.best.longestChain ?? 0;
-          const isPB = runResult.score > lvlBest;
+          // isPB: for LEVELRUN compare survival score vs per-level best; for Campaign/Daily compare total score vs all-time.
+          let lvlBest, isPB;
+          if (runResult.rankingMode === RANKING_MODES.LEVELRUN) {
+            lvlBest = currentSave.best.perLevel[runResult.startLevel] ?? 0;
+            isPB = runResult.levelScore > lvlBest;
+          } else {
+            lvlBest = currentSave.best.allTime?.score ?? 0;
+            isPB = runResult.score > lvlBest;
+          }
           const isChainPB = checkIsChainPB(runResult.longestChain, prevChainBest);
-          
+
           // updateBest is called inside gameLoop now; reload save
           currentSave = loadSave();
+
+          // Show unlock toast if a new level was just unlocked via LEVELRUN criteria clear.
+          if (runResult.rankingMode === RANKING_MODES.LEVELRUN && runResult.criteriaCleared) {
+            const nextLevel = runResult.startLevel + 1;
+            if (!prevUnlocked.includes(nextLevel) && currentSave.progress.unlockedStartLevels.includes(nextLevel)) {
+              showToast(`LEVEL ${nextLevel} UNLOCKED`);
+            }
+          }
 
           // Milestone toasts
           const toasts = checkMilestones(state, currentSave);

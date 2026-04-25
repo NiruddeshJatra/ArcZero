@@ -113,28 +113,28 @@ Near-miss: distance ≤ 10m but > 5m → graze sound, spark particle, stats.near
 - Game over: health ≤ 0
 
 ### Game Modes
-- **Campaign** — start L1, non-seeded, fully ranked
-- **Daily** — today's ISO date → seeded RNG, one ranked attempt per day
-- **Practice / Level Select** — mid-campaign start, marked unranked
+- **Campaign** — start L1, non-seeded, fully ranked. Advances through levels; all-time score board.
+- **Daily** — today's ISO date → seeded RNG, one ranked attempt per day. Advances through levels.
+- **Level Select (LEVELRUN)** — start at any unlocked level; endless survival on that level (never advances). Score resets to 0 each run. Per-level leaderboard keyed on `startLevel`. Unlocks next level when all 3 criteria are first met (toast in-game; unlock persists at game over).
 
 ## Level System (10 levels)
 Levels defined in `src/levels.js`. L10 is endless with per-wave escalation.
 
 | Level | Name | Spawn | vy range | vx | Max | Threshold |
 |-------|------|-------|----------|----|-----|-----------|
-| 1 | Orientation | 3.0s | -5 to 0 | 0 | ∞ | 60 |
-| 2 | First Contact | 2.75s | -15 to -5 | 0 | ∞ | 120 |
-| 3 | Crosswinds | 2.5s | -20 to -10 | ±10 | ∞ | 200 |
-| 4 | Saturation | 2.25s | -25 to -10 | ±15 | 7 | 320 |
-| 5 | Couriers | 2.25s | -30 to -15 | ±15 | 8 | 450 |
-| 6 | Splitters | 2.1s | -28 to -12 | ±15 | 9 | 620 |
-| 7 | MIRV Storm | 2.0s | -30 to -15 | ±18 | 10 | 820 |
-| 8 | Blackout | 2.0s | -30 to -15 | ±18 | 10 | 1050 |
-| 9 | Onslaught | 1.9s | -32 to -15 | ±20 | 10 | 1320 |
+| 1 | Orientation | 3.0s | -5 to 0 | 0 | ∞ | 200 |
+| 2 | First Contact | 2.75s | -15 to -5 | 0 | ∞ | 400 |
+| 3 | Crosswinds | 2.5s | -20 to -10 | ±10 | ∞ | 500 |
+| 4 | Saturation | 2.25s | -25 to -10 | ±15 | 7 | 650 |
+| 5 | Couriers | 2.25s | -30 to -15 | ±15 | 8 | 900 |
+| 6 | Splitters | 2.1s | -28 to -12 | ±15 | 9 | 1000 |
+| 7 | MIRV Storm | 2.0s | -30 to -15 | ±18 | 10 | 1200 |
+| 8 | Blackout | 2.0s | -30 to -15 | ±18 | 10 | 1500 |
+| 9 | Onslaught | 1.9s | -32 to -15 | ±20 | 10 | 1800 |
 | 10 | Endless | 1.8s | -35 to -15 | ±22 | 12 | ∞ |
 
 Wave system: BUILD (14s) → PEAK (8s, faster spawns) → RELEASE (8s, slowest) → repeat.
-Level advance only fires during RELEASE phase.
+Level advance (Campaign/Daily): all 3 gates met → 3-second grace (`ADVANCING...` floater) → advance. No phase restriction.
 
 ## Event Missiles (Phase 4, FLAGS.EVENT_MISSILES=true)
 | Kind | Behavior | Color |
@@ -165,7 +165,7 @@ Full volume controls in Settings overlay (master slider, persisted via `persiste
 13. Cleanup
 14. Explosion aging
 15. Passive scoring
-16. Level advancement check (RELEASE only)
+16. Level advancement check (all phases; 3s grace for Campaign/Daily; criteria-cleared tracking for LEVELRUN)
 17. Game over check
 18. Render + HUD
 

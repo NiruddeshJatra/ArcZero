@@ -14,6 +14,7 @@ import {
   LEVEL_CLEAR_BONUS,
   DEFAULT_LEVEL_MIN_INTERCEPTS,
   DEFAULT_LEVEL_MIN_WAVES,
+  LEVEL_ADVANCE_GRACE_S,
 } from './constants.js';
 import { LEVELS } from './levels.js';
 import { stepPhysics } from './physics.js';
@@ -55,6 +56,7 @@ function buildRunResult(state) {
     survivedS: state.totalElapsedS,
     seed: state.mode === RANKING_MODES.DAILY ? state.seed : null,
     dateISO: state.dateISO ?? new Date().toISOString().slice(0, 10),
+    criteriaCleared: state.criteriaCleared ?? false,
   };
 }
 
@@ -223,7 +225,9 @@ function gameTick(state, keys, ctx) {
   state.score += passiveRate * DT;
   state.totalElapsedS += DT;
 
-  // 9. Level advancement — all gates must hold, and only during RELEASE wave phase.
+  // 9. Level advancement — all three gates must hold.
+  //    Campaign/Daily: 3-second grace then advance.
+  //    LEVELRUN: never advance; set criteriaCleared to unlock next level at death.
   const config = LEVELS[state.level];
   const levelScore      = state.score - state.levelStartScore;
   const levelIntercepts = state.stats.intercepts - state.levelStartIntercepts;
@@ -234,16 +238,36 @@ function gameTick(state, keys, ctx) {
   const interceptsDone  = levelIntercepts >= minIntercepts;
   const wavesDone       = wavesCompleted >= minWaves;
   state.levelProgress = { scoreDone, interceptsDone, wavesDone, levelScore, levelIntercepts, wavesCompleted };
-  if (scoreDone && interceptsDone && wavesDone && state.wave.phase === 'RELEASE') {
-    if (FLAGS.SCORE_REBALANCE) {
-      const bonus = LEVEL_CLEAR_BONUS * state.level;
-      state.score += bonus;
-      state.floaters.push({ x: 100, y: 75, text: `+${bonus} LEVEL CLEAR`, mult: 1, age: 0, maxAge: 1.5 });
+  const allGatesMet = scoreDone && interceptsDone && wavesDone;
+
+  if (state.rankingMode === RANKING_MODES.LEVELRUN) {
+    // Endless survival — never advance. Mark criteria cleared to unlock next level on death.
+    if (allGatesMet && !state.criteriaCleared) {
+      state.criteriaCleared = true;
+      const nextLvl = state.level + 1;
+      if (nextLvl < LEVELS.length) {
+        state.pendingToasts.push(`CRITERIA MET · L${nextLvl} UNLOCKS`);
+      }
     }
-    playLevelClear();
-    state.levelComplete = true;
-    state.running = false;
-    return;
+  } else if (allGatesMet && isFinite(config.scoreThreshold)) {
+    // Campaign/Daily: start grace period then advance.
+    if (state.advanceGraceRemaining === null) {
+      state.advanceGraceRemaining = LEVEL_ADVANCE_GRACE_S;
+      state.floaters.push({ x: 100, y: 90, text: 'ADVANCING...', mult: 1, age: 0, maxAge: LEVEL_ADVANCE_GRACE_S + 0.3 });
+    } else {
+      state.advanceGraceRemaining -= DT;
+      if (state.advanceGraceRemaining <= 0) {
+        if (FLAGS.SCORE_REBALANCE) {
+          const bonus = LEVEL_CLEAR_BONUS * state.level;
+          state.score += bonus;
+          state.floaters.push({ x: 100, y: 75, text: `+${bonus} LEVEL CLEAR`, mult: 1, age: 0, maxAge: 1.5 });
+        }
+        playLevelClear();
+        state.levelComplete = true;
+        state.running = false;
+        return;
+      }
+    }
   }
 
   // 10. Game over check

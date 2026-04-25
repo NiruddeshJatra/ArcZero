@@ -1,4 +1,5 @@
 import { SCHEMA_VERSION, RANKING_MODES } from './constants.js';
+import { LEVELS } from './levels.js';
 
 const STORAGE_KEY = 'arczero.save.v1';
 const BOARDS_KEY  = 'arczero.localBoards.v1';
@@ -90,22 +91,37 @@ export function saveSave(data) {
 }
 
 export function updateBest(save, runResult) {
-  // runResult: { score, levelScore, level, startLevel, rankingMode, longestChain, closestMissM, intercepts, survivedS, seed, dateISO }
+  // runResult: { score, levelScore, level, startLevel, rankingMode, longestChain, closestMissM, intercepts, survivedS, seed, dateISO, criteriaCleared }
   const b = save.best;
   let updated = false;
   if (runResult.rankingMode !== RANKING_MODES.LEVELRUN && runResult.score > b.allTime.score) {
     b.allTime = { score: runResult.score, level: runResult.level, date: runResult.dateISO, seed: runResult.seed };
     updated = true;
   }
-  const lvlBest = b.perLevel[runResult.level] ?? 0;
-  if (runResult.levelScore > lvlBest) b.perLevel[runResult.level] = runResult.levelScore;
+  // perLevel best = survival score in level select (LEVELRUN) only.
+  // Campaign scores are cumulative across levels and would pollute per-level boards.
+  if (runResult.rankingMode === RANKING_MODES.LEVELRUN) {
+    const lvlBest = b.perLevel[runResult.startLevel] ?? 0;
+    if (runResult.levelScore > lvlBest) b.perLevel[runResult.startLevel] = runResult.levelScore;
+    // Unlock next level if player cleared all criteria during this endless run.
+    if (runResult.criteriaCleared) {
+      const nextLevel = runResult.startLevel + 1;
+      if (nextLevel < LEVELS.length && !save.progress.unlockedStartLevels.includes(nextLevel)) {
+        save.progress.unlockedStartLevels.push(nextLevel);
+        if (nextLevel > save.progress.highestLevelReached) {
+          save.progress.highestLevelReached = nextLevel;
+        }
+      }
+    }
+  }
   if (runResult.longestChain > b.longestChain) b.longestChain = runResult.longestChain;
   if (runResult.closestMissM != null && runResult.closestMissM < (b.closestMissM ?? Infinity)) b.closestMissM = runResult.closestMissM;
   b.totalIntercepts += runResult.intercepts;
   b.totalSurvivedS  += runResult.survivedS;
   save.progress.sessionsPlayed += 1;
   save.progress.lastSessionAt = Date.now();
-  if (runResult.level > save.progress.highestLevelReached) {
+  // Campaign/Daily: reaching a new level via advance unlocks it for level select.
+  if (runResult.rankingMode !== RANKING_MODES.LEVELRUN && runResult.level > save.progress.highestLevelReached) {
     save.progress.highestLevelReached = runResult.level;
     if (!save.progress.unlockedStartLevels.includes(runResult.level)) {
       save.progress.unlockedStartLevels.push(runResult.level);

@@ -26,6 +26,8 @@ export function createState(level = 1, carryHealth = BASE_HEALTH, carryScore = 0
     levelStartIntercepts: 0,
     levelStartWaveIndex: 0,
     levelComplete: false,
+    advanceGraceRemaining: null, // null = not started; >0 = counting down to advance
+    criteriaCleared: false,      // LEVELRUN: true once all 3 gates first met (unlocks next level at death)
     aegis: carryAegis ?? { energy: 0, activeShield: false, broken: false },
     scrapOrbs: [],
     launcher: {

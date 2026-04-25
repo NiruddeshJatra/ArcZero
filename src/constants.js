@@ -155,13 +155,16 @@ export const WAVE_PEAK_SPAWN_MULT  = 0.6;
 export const WAVE_RELEASE_SPAWN_MULT = 1.8;
 
 // === Level completion gating ===
-// All three must hold (plus phase === RELEASE) before a level completes:
+// Campaign/Daily: all three must hold; then a 3-second grace fires before advancing.
+// LEVELRUN (level select): gates are checked but advance never fires — instead sets
+// criteriaCleared which unlocks the next level on game over.
 //   levelScore >= scoreThreshold
 //   intercepts  >= minIntercepts
 //   wavesCompleted >= minWaves
 // Defaults used if a level config omits minIntercepts / minWaves.
 export const DEFAULT_LEVEL_MIN_INTERCEPTS = 10;
 export const DEFAULT_LEVEL_MIN_WAVES = 2;
+export const LEVEL_ADVANCE_GRACE_S = 3; // seconds of grace after all gates met before advancing
 
 // === Phase 4 — event missiles ===
 export const COURIER_VY_MIN = -50;
