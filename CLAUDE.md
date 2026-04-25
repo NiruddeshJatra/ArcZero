@@ -34,7 +34,9 @@ src/
 ├── milestones.js    ← milestone definitions + checkMilestones + updateStreak
 └── touchInput.js    ← mobile touch controls (drag-to-aim, release-to-fire)
 docs/
-└── backend-api.md   ← v2 REST API scaffold (not implemented)
+├── backend-api.md      ← v2 REST API scaffold (not implemented)
+├── AEGIS_PROTOCOL.md   ← Aegis energy system, payloads, UI, audio
+└── PROGRESSION.md      ← Level unlock, Campaign vs Level Select, per-level scoring, gates
 public/
 └── audio/           ← see Audio section below
 tests/

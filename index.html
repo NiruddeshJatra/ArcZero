@@ -27,7 +27,7 @@
         <div id="menu-subtitle">PHYSICS-BASED MISSILE INTERCEPTION</div>
         <button class="menu-btn primary" id="menu-campaign-btn">▶  PLAY CAMPAIGN<span class="menu-btn-sub">Level 1 → 10 · random spawns · fully ranked</span></button>
         <button class="menu-btn daily"   id="menu-daily-btn">◈  DAILY CHALLENGE<span class="menu-btn-sub">Today's seed · same for every player · one ranked run/day</span></button>
-        <button class="menu-btn"         id="menu-levelselect-btn">≡  LEVEL SELECT<span class="menu-btn-sub">Jump to an unlocked level · ranked on level runs</span></button>
+        <button class="menu-btn"         id="menu-levelselect-btn">≡  LEVEL SELECT<span class="menu-btn-sub">Endless survival on any unlocked level · prove mastery to unlock the next</span></button>
         <button class="menu-btn"         id="menu-leaderboard-btn">⊞  LEADERBOARDS</button>
         <button class="menu-btn"         id="menu-howto-btn">?  HOW TO PLAY</button>
         <button class="menu-btn"         id="menu-settings-btn">⚙  SETTINGS</button>
@@ -37,7 +37,7 @@
       <!-- ── Level select ── -->
       <div id="level-select-overlay" class="overlay">
         <div style="font-size:22px;font-weight:700;letter-spacing:0.1em;color:#44aaff;margin-bottom:8px;">LEVEL SELECT</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:16px;">RUNS START MID-CAMPAIGN — RANKED ON LEVEL RUNS LEADERBOARD</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:16px;">SURVIVE AS LONG AS POSSIBLE · MEET ALL CRITERIA TO UNLOCK THE NEXT LEVEL</div>
         <div id="level-select-list"></div>
         <button class="menu-btn back" id="level-select-back-btn">← BACK</button>
       </div>
@@ -115,13 +115,16 @@
           • <strong>Event Missiles:</strong> Courier hits (+35), Medic hits (+100)<br/><br/>
           <strong>Payloads:</strong> Base heal (+20). At Level 7+, deploying Aegis also activates a global horizontal shield that absorbs one missile impact. At Level 10+, Aegis can overheal you up to 150 (gold health) and acts as an EMP Last Stand to save you from a lethal blow if the gauge is half full.
 
-          <h4>LEVEL COMPLETION</h4>
-          To complete a level, you must survive the enemy waves and pass three thresholds: a minimum Score, a minimum Intercept count, and a minimum number of Waves survived. The level will only advance once the current wave enters its final "Release" phase and all goals are met.
+          <h4>LEVEL COMPLETION (CAMPAIGN &amp; DAILY)</h4>
+          To advance, you must hit three thresholds: a minimum Score, a minimum Intercept count, and a minimum number of Waves survived. Once all three are met, a 3-second countdown begins — then the level clears automatically. No need to wait for a specific wave phase.
+
+          <h4>LEVEL SELECT — ENDLESS SURVIVAL MODE</h4>
+          Level Select works differently from Campaign. You pick an unlocked level and survive <em>indefinitely</em> — there is no advance. Your score climbs as long as you live, and that is your personal best for that level. <strong>To unlock the next level:</strong> meet all three criteria at least once during your run. When you die, the next level unlocks and appears in Level Select. You never need to replay earlier levels just to access a harder one.
 
           <h4>MODES</h4>
           <strong>Campaign</strong> — A full run starting from Level 1 with random spawns. Ranked on the All-Time leaderboard.<br/>
           <strong>Daily Challenge</strong> — Every player faces the exact same deterministic missile pattern for the day. Features daily modifiers (Speedrun, No Radar, or Precision). You get one ranked attempt per day before it locks to unranked practice. Resets at local midnight.<br/>
-          <strong>Level Select</strong> — Practice or start a run from any unlocked level. Ranked on the dedicated Level Runs leaderboard.
+          <strong>Level Select</strong> — Endless survival on any unlocked level. Your best survival score per level is tracked on the Level Runs leaderboard. Meeting all criteria unlocks the next level.
         </div>
         <button class="menu-btn back" id="howto-back-btn">← BACK</button>
       </div>

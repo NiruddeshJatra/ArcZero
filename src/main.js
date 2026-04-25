@@ -483,7 +483,7 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPA
             }
           }
 
-          // Milestone toasts
+          // Milestone toasts — mutate currentSave, requiring a second saveSave (updateBest already wrote once).
           const toasts = checkMilestones(state, currentSave);
           for (const t of toasts) showToast(t);
           saveSave(currentSave);

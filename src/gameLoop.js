@@ -251,6 +251,7 @@ function gameTick(state, keys, ctx) {
     }
   } else if (allGatesMet && isFinite(config.scoreThreshold)) {
     // Campaign/Daily: start grace period then advance.
+    // Init tick sets the timer but doesn't decrement, so actual wait = LEVEL_ADVANCE_GRACE_S + 1 tick (0.05s). Imperceptible.
     if (state.advanceGraceRemaining === null) {
       state.advanceGraceRemaining = LEVEL_ADVANCE_GRACE_S;
       state.floaters.push({ x: 100, y: 90, text: 'ADVANCING...', mult: 1, age: 0, maxAge: LEVEL_ADVANCE_GRACE_S + 0.3 });
