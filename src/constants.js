@@ -209,6 +209,6 @@ export const ENERGY_COMBO_3 = 10;
 export const ENERGY_COMBO_5 = 25;
 
 export const COLOR_AEGIS_GAUGE = '#00ffff';
-export const COLOR_AEGIS_FLASH = '#ffffff';
+export const COLOR_AEGIS_FLASH = '#00ffff';
 export const COLOR_GRID_SHIELD = 'rgba(68,170,255,0.4)';
 export const COLOR_OVERHEALTH = '#ffd700';

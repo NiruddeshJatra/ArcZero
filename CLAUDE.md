@@ -189,6 +189,8 @@ npm run lint:fix  # Auto-fix lint issues
 - All localStorage via `persistence.js` — direct calls banned (ESLint rule)
 - All constants in `constants.js` — never hardcode numbers elsewhere
 - All Aegis energy mutations via `aegis.js` (`addAegisEnergy`, `triggerAegisEmp`) — never mutate `state.aegis` directly in collision or gameLoop
+- `state.pendingToasts` entries are `string | {text, kind}` — use `{text, kind: 'aegis'}` for styled Aegis toasts; `showToast` in `main.js` handles both forms
+- Floaters accept an optional `color` string property — if omitted, defaults to white/gold by combo multiplier
 - Commit format: `type(phaseN): description`
 
 ## AI Agents Available

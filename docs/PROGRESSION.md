@@ -286,3 +286,11 @@ All progression state is persisted via `save.json` in localStorage:
 - Mock `save` objects with `progress: { unlockedStartLevels: [...], highestLevelReached: N }` and `best: { allTime: {...}, perLevel: {...} }`.
 - Test unlock paths separately: Campaign unlock (level > highestLevelReached), LEVELRUN unlock (criteriaCleared = true), and duplicate prevention.
 - Verify per-level best is never updated by Campaign or Daily runs; only LEVELRUN updates `perLevel`.
+
+## Known Fix: Graze Double-Count on Collision (fixed)
+
+**Bug:** When an interceptor collided with a missile, the inner missile loop continued iterating. Any remaining alive missile within `NEAR_MISS_THRESHOLD` (10m) of the now-dead interceptor was incorrectly counted as a graze/near-miss and awarded Aegis energy.
+
+**Fix (collision.js):** `break` out of the inner missile loop immediately after a collision is registered (`interceptor.alive = false`). Since the interceptor is dead, no further missile checks against it are valid.
+
+**Affected stats:** `state.stats.nearMisses`, `state.stats.closestMissM`, Aegis energy via `ENERGY_GRAZE`, and the Level Summary graze count — all were inflated by this bug.

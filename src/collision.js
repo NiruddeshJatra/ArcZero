@@ -157,10 +157,10 @@ export function checkCollisions(state) {
 
           // Aegis checks
           if (state.level >= 3 && launchAngle < 45) {
-            addAegisEnergy(state, ENERGY_LOW_ANGLE, 'LOW ANGLE');
+            addAegisEnergy(state, ENERGY_LOW_ANGLE);
           }
           if (state.level >= 5 && missile.y > 70) {
-            addAegisEnergy(state, ENERGY_HIGH_ALT, 'ALTITUDE');
+            addAegisEnergy(state, ENERGY_HIGH_ALT);
           }
           if (state.level >= 6 && missile.kind === 'courier') {
             addAegisEnergy(state, ENERGY_COURIER, 'COURIER SIPHON');
@@ -178,15 +178,51 @@ export function checkCollisions(state) {
         } else {
           state.score += INTERCEPT_SCORE;
         }
+        break; // interceptor is dead; stop checking remaining missiles
       } else {
         // Near-miss detection
         const d = distance(interceptor, missile);
         if (d <= NEAR_MISS_THRESHOLD && missile.y >= MIN_INTERCEPT_ALTITUDE) {
           interceptor._grazes = interceptor._grazes ?? new Set();
           if (!interceptor._grazes.has(missile.id)) {
+            const rvx = interceptor.vx - missile.vx;
+            const rvy = interceptor.vy - missile.vy;
+            const dx = interceptor.x - missile.x;
+            const dy = interceptor.y - missile.y;
+            const isMovingAway = (dx * rvx + dy * rvy) > 0;
+
+            if (isMovingAway) {
+              interceptor._grazes.add(missile.id);
+              if (interceptor._grazeCandidates) interceptor._grazeCandidates.delete(missile.id);
+              
+              state.stats.nearMisses += 1;
+              if (d < state.stats.closestMissM) state.stats.closestMissM = d;
+              playGraze();
+              state.particles = state.particles ?? [];
+              state.particles.push({
+                x: (interceptor.x + missile.x) / 2,
+                y: (interceptor.y + missile.y) / 2,
+                vx: 0, vy: 0, age: 0, maxAge: 0.25,
+                color: 'rgba(100,220,255,0.9)', kind: 'spark',
+              });
+              if (state.level >= 4) {
+                addAegisEnergy(state, ENERGY_GRAZE);
+              }
+            } else {
+              interceptor._grazeCandidates = interceptor._grazeCandidates ?? new Map();
+              interceptor._grazeCandidates.set(missile.id, d);
+            }
+          }
+        } else if (d > NEAR_MISS_THRESHOLD) {
+          if (interceptor._grazeCandidates && interceptor._grazeCandidates.has(missile.id)) {
+            const minD = interceptor._grazeCandidates.get(missile.id);
+            interceptor._grazeCandidates.delete(missile.id);
+            
+            interceptor._grazes = interceptor._grazes ?? new Set();
             interceptor._grazes.add(missile.id);
+            
             state.stats.nearMisses += 1;
-            if (d < state.stats.closestMissM) state.stats.closestMissM = d;
+            if (minD < state.stats.closestMissM) state.stats.closestMissM = minD;
             playGraze();
             state.particles = state.particles ?? [];
             state.particles.push({
@@ -196,7 +232,7 @@ export function checkCollisions(state) {
               color: 'rgba(100,220,255,0.9)', kind: 'spark',
             });
             if (state.level >= 4) {
-              addAegisEnergy(state, ENERGY_GRAZE, 'GRAZE');
+              addAegisEnergy(state, ENERGY_GRAZE);
             }
           }
         }

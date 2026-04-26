@@ -3,7 +3,7 @@ import {
   BASE_HEALTH, COLOR_AEGIS_FLASH,
 } from './constants.js';
 import { playAegisTrigger, playEmp } from './audio.js';
-import { triggerFlash } from './renderer.js';
+import { triggerFlash, triggerShake } from './renderer.js';
 
 /**
  * Add energy to the Aegis gauge. Returns false if the system is broken (offline).
@@ -24,15 +24,24 @@ export function addAegisEnergy(state, amount, reason) {
 
     const maxH = state.level >= 10 ? AEGIS_OVERHEALTH_MAX : BASE_HEALTH;
     state.health = Math.min(maxH, state.health + AEGIS_BASE_HEAL);
+    state.aegis.justHealed = true;
+
+    state.floaters.push({
+      x: state.launcher.x, y: 20,
+      text: `+${AEGIS_BASE_HEAL} HP`,
+      mult: 1, color: '#00ffff',
+      age: 0, maxAge: 1.2,
+    });
 
     if (state.level >= 7) {
       state.aegis.activeShield = true;
-      state.pendingToasts.push(`DEFENSE GRID ONLINE`);
+      state.pendingToasts.push({ text: 'DEFENSE GRID ONLINE', kind: 'aegis' });
     } else {
-      state.pendingToasts.push(`AEGIS DEPLOYED: +${AEGIS_BASE_HEAL} HP`);
+      state.pendingToasts.push({ text: `AEGIS DEPLOYED · +${AEGIS_BASE_HEAL} HP`, kind: 'aegis' });
     }
 
-    triggerFlash(state, COLOR_AEGIS_FLASH, 0.1);
+    triggerFlash(state, COLOR_AEGIS_FLASH, 0.4);
+    triggerShake(state, 3, 0.25);
   }
 
   return true;

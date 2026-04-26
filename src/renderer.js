@@ -518,7 +518,7 @@ function drawFloaters(ctx, state) {
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.font = `bold ${f.mult > 2 ? 18 : 14}px monospace`;
-    ctx.fillStyle = f.mult >= 2 ? '#ffcc44' : '#ffffff';
+    ctx.fillStyle = f.color ?? (f.mult >= 2 ? '#ffcc44' : '#ffffff');
     ctx.textAlign = 'center';
     ctx.fillText(f.text, toCanvasX(f.x), cy);
     ctx.restore();
@@ -564,6 +564,13 @@ export function updateHUD(state) {
   const healthEl = document.getElementById('hud-health');
   healthEl.textContent = Math.max(0, state.health);
   healthEl.style.color = state.health > 100 ? COLOR_OVERHEALTH : '';
+  if (state.aegis?.justHealed) {
+    state.aegis.justHealed = false;
+    healthEl.classList.remove('aegis-heal-flash');
+    // Force reflow so re-adding the class restarts the animation
+    void healthEl.offsetWidth;
+    healthEl.classList.add('aegis-heal-flash');
+  }
   
   document.getElementById('hud-angle').textContent = Math.round(state.launcher.angle) + '°';
   document.getElementById('hud-power').textContent = Math.round(state.launcher.power);

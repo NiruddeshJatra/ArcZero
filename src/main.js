@@ -46,9 +46,11 @@ function showOnly(overlay) {
 // ── Toast ─────────────────────────────────────────────────────────────────────
 const toastContainer = document.getElementById('toast-container');
 
-function showToast(text) {
+function showToast(msg) {
+  const text = typeof msg === 'string' ? msg : msg.text;
+  const kind = typeof msg === 'string' ? null : msg.kind;
   const el = document.createElement('div');
-  el.className = 'toast';
+  el.className = kind ? `toast toast-${kind}` : 'toast';
   el.textContent = text;
   toastContainer.appendChild(el);
   setTimeout(() => el.remove(), 3000);
