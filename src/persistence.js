@@ -146,7 +146,11 @@ export function loadBoards() {
 }
 
 export function saveBoards(boards) {
-  localStorage.setItem(BOARDS_KEY, JSON.stringify(boards));
+  try {
+    localStorage.setItem(BOARDS_KEY, JSON.stringify(boards));
+  } catch (e) {
+    console.warn('Boards write failed.', e); // eslint-disable-line no-console
+  }
 }
 
 /** Shared helper: push entry into list, sort descending by sortKey, cap at limit. */

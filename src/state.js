@@ -10,17 +10,30 @@ import {
 import { LEVELS } from './levels.js';
 
 /**
+ * Return a fresh escalation snapshot for a level.
+ * Mutable per-run so L10 endless ramp never touches the shared LEVELS array.
+ */
+export function initialEscalation(level) {
+  const cfg = LEVELS[level];
+  return {
+    vyMin: cfg.missileVyMin,
+    spawnInterval: cfg.spawnInterval,
+  };
+}
+
+/**
  * Creates a fresh game state for the given level.
  * Pass carryHealth to preserve health across level transitions.
  */
 export function createState(level = 1, carryHealth = BASE_HEALTH, carryScore = 0, carryAegis = null) {
+  const safeLvl = Math.max(1, level);
   return {
     running: true,
     paused: false,
     tick: 0,
     score: carryScore,
     health: carryHealth,
-    level,
+    level: safeLvl,
     startLevel: 1,
     levelStartScore: carryScore,
     levelStartIntercepts: 0,
@@ -29,6 +42,10 @@ export function createState(level = 1, carryHealth = BASE_HEALTH, carryScore = 0
     advanceGraceRemaining: null, // null = not started; >0 = counting down to advance
     criteriaCleared: false,      // LEVELRUN: true once all 3 gates first met (unlocks next level at death)
     aegis: carryAegis ?? { energy: 0, activeShield: false, broken: false },
+    // Per-run escalation snapshot — isolates L10 ramp from the shared LEVELS array.
+    escalation: initialEscalation(safeLvl),
+    levelMedicSpawned: false,
+    _triggeredMilestones: new Set(),
     scrapOrbs: [],
     launcher: {
       x: LAUNCHER_START_X,
@@ -55,7 +72,7 @@ export function createState(level = 1, carryHealth = BASE_HEALTH, carryScore = 0
     floaters: [],
     warnings: [],
     wave: { phase: 'BUILD', elapsedS: 0, index: 0 },
-    currentSpawnInterval: LEVELS[level].spawnInterval,
+    currentSpawnInterval: LEVELS[safeLvl].spawnInterval,
     totalElapsedS: 0,
     mode: RANKING_MODES.CAMPAIGN,
     seed: null,

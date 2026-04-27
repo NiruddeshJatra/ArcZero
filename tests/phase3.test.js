@@ -35,10 +35,10 @@ describe('buildShareText', () => {
     expect(text).toContain('arczero.app/?seed=2026-04-17');
   });
 
-  it('shows — for Infinity closestMissM', () => {
+  it('shows no near-misses for Infinity closestMissM', () => {
     const run = { score: 0, level: 1, longestChain: 0, closestMissM: Infinity, dateISO: '2026-04-17' };
     const text = buildShareText(run, []);
-    expect(text).toContain('Closest —');
+    expect(text).toContain('Closest no near-misses');
   });
 
   it('grid has exactly 10 emoji', () => {

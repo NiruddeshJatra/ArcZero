@@ -3,7 +3,7 @@ import { initInput } from './input.js';
 import { startGameLoop } from './gameLoop.js';
 import { seed, seedFromDateISO, dailyModifier } from './rng.js';
 import { FLAGS } from './flags.js';
-import { initAudio, playLevelUp, toggleMute, isMuted } from './audio.js';
+import { initAudio, playLevelUp, toggleMute, isMuted, setMasterVolume } from './audio.js';
 import { LEVELS } from './levels.js';
 import { BASE_HEALTH, STREAK_CALLOUTS, RANKING_MODES } from './constants.js';
 import { loadSave, saveSave, loadBoards, submitLocalScore, submitDailyScore, submitLevelRunScore, checkIsChainPB } from './persistence.js';
@@ -217,7 +217,10 @@ function applySettings(save) {
   document.getElementById('setting-name').value = save.player.displayName ?? '';
   document.getElementById('setting-trajectory').checked = save.settings.showTrajectoryPreview;
   document.getElementById('setting-reduce-motion').checked = save.settings.reduceMotion;
-  document.getElementById('setting-volume').value = save.settings.soundVolume;
+  // audioVolumes.master is the authoritative volume (written by setMasterVolume).
+  // Fall back to soundVolume for saves written before this fix.
+  const vol = save.settings.audioVolumes?.master ?? save.settings.soundVolume ?? 1;
+  document.getElementById('setting-volume').value = vol;
 }
 
 function sanitizeName(raw) {
@@ -242,7 +245,9 @@ function bindSettingsControls() {
     saveSave(currentSave);
   });
   document.getElementById('setting-volume').addEventListener('input', (e) => {
-    currentSave.settings.soundVolume = parseFloat(e.target.value);
+    const v = parseFloat(e.target.value);
+    currentSave.settings.soundVolume = v;
+    setMasterVolume(v); // updates audio graph + persists audioVolumes.master
     saveSave(currentSave);
   });
 }

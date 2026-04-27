@@ -183,15 +183,14 @@ function gameTick(state, keys, ctx) {
     if (state.wave.phase === 'RELEASE') stopPeakBed();
     if (state.wave.phase === 'BUILD') {
       state.wave.index += 1;
-      // L10 endless ramp: each completed wave escalates difficulty
-      const lvlCfg = LEVELS[state.level];
-      if (lvlCfg.escalatesPeak) {
-        lvlCfg.missileVyMin = Math.max(-60, lvlCfg.missileVyMin - 1);
-        lvlCfg.spawnInterval = Math.max(1.2, lvlCfg.spawnInterval - 0.02);
+      // L10 endless ramp: escalate per-run snapshot, never the shared LEVELS array.
+      if (LEVELS[state.level].escalatesPeak) {
+        state.escalation.vyMin = Math.max(-60, state.escalation.vyMin - 1);
+        state.escalation.spawnInterval = Math.max(1.2, state.escalation.spawnInterval - 0.02);
       }
     }
   }
-  const baseInt = LEVELS[state.level].spawnInterval;
+  const baseInt = state.escalation.spawnInterval;
   state.currentSpawnInterval = baseInt * SPAWN_MULT[state.wave.phase];
 
   // 1. Input
@@ -209,8 +208,8 @@ function gameTick(state, keys, ctx) {
 
   // 5. Collision
   checkCollisions(state);
-  checkInGameMilestones(state);
   if (state.level >= 8) checkScrapCollection(state);
+  checkInGameMilestones(state);
 
   // 6. Cleanup — filter dead objects
   state.missiles = state.missiles.filter((m) => m.alive);

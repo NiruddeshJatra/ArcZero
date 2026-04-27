@@ -32,11 +32,11 @@ export function updateSpawner(state) {
   if (state.spawnTimer >= interval) {
     state.spawnTimer = 0;
     const x  = randomBetween(SPAWN_X_MIN, SPAWN_X_MAX);
-    const vy = randomBetween(cfg.missileVyMin, cfg.missileVyMax);
+    const vyMin = state.escalation?.vyMin ?? cfg.missileVyMin;
+    const vy = randomBetween(vyMin, cfg.missileVyMax);
     const vx = cfg.missileVxRange ? randomBetween(-cfg.missileVxRange, cfg.missileVxRange) : 0;
     let kind = FLAGS.EVENT_MISSILES ? pickMissileKind(cfg) : 'standard';
     
-    // Aegis: Spawn one Medic missile per level during PEAK phase on Level 9+
     if (state.level >= 9 && state.wave?.phase === 'PEAK' && !state.levelMedicSpawned) {
       kind = 'medic';
       state.levelMedicSpawned = true;

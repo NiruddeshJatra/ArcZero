@@ -83,6 +83,7 @@ export function initInput(onPauseToggle = null) {
     keys.down = false;
     keys.space = false;
     keys.spaceJustReleased = false;
+    keys.spaceWasDown = false;
     keys.flipJustPressed = false;
   };
 

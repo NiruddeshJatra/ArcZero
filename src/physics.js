@@ -77,13 +77,11 @@ export function stepPhysics(state) {
       const speed = Math.hypot(missile.vx, missile.vy);
       for (const offsetDeg of [-MIRV_SPREAD_DEG, 0, +MIRV_SPREAD_DEG]) {
         const a = baseAng + offsetDeg * Math.PI / 180;
-        spawned.push(createMissile(missile.x, missile.vy, missile.vx, 'standard'));
-        // replace last with proper velocity
-        const child = spawned[spawned.length - 1];
+        const child = createMissile(missile.x, 0, 0, 'standard');
         child.vx = Math.cos(a) * speed;
         child.vy = Math.sin(a) * speed;
-        child.x = missile.x;
         child.y = missile.y;
+        spawned.push(child);
       }
       missile.alive = false;
     }

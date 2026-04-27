@@ -33,7 +33,7 @@ Player reaches L3 with 550 score, 24 intercepts, 3 waves completed. All gates me
 **Characteristics:**
 - Seeded RNG using today's ISO date. Every player worldwide sees the same missile spawns for that day.
 - Same advancement mechanics as Campaign (all three gates, 3-second grace).
-- **One ranked attempt per calendar day.** After the first completion, subsequent attempts are marked unranked.
+- **One ranked attempt per calendar day (UTC).** The day boundary is determined by UTC midnight (`new Date().toISOString().slice(0,10)`). After the first completion, subsequent attempts are marked unranked.
 - Best daily score for a given seed is tracked separately from Campaign best.
 - On game over: submitted to the `daily` leaderboard, indexed by seed (date). Also updates the daily streak if applicable (see `milestones.js`).
 
@@ -111,9 +111,11 @@ All per-level values defined in `src/levels.js`. Index 0 is unused (levels are 1
 | 7 | MIRV STORM | 1200 | 48 | 4 | 2.0s | -30 | -15 | 18 | 10 | Watch the sky fracture. (20% MIRV events) |
 | 8 | BLACKOUT | 1500 | 54 | 4 | 2.0s | -30 | -15 | 18 | 10 | Trust the feel. Trajectory OFF. |
 | 9 | ONSLAUGHT | 1800 | 60 | 5 | 1.9s | -32 | -15 | 20 | 10 | All of it. At once. (Mixed events) |
-| 10 | ENDLESS | ∞ | ∞ | ∞ | 1.8s | -35 | -15 | 22 | 12 | How long can you last? (Escalates each wave) |
+| 10 | ENDLESS | ∞ | ∞ | ∞ | 1.8s | -35* | -15 | 22 | 12 | How long can you last? (Escalates each wave) |
 
 **Level 10 Special:** Threshold, minIntercepts, and minWaves are all `Infinity`. No grace period will ever fire, making Level 10 a true endless survival level.
+
+**L10 Escalation:** Each completed wave cycle (BUILD→PEAK→RELEASE), the per-run snapshot `state.escalation.vyMin` decreases by 1 (floor −60) and `state.escalation.spawnInterval` decreases by 0.02s (floor 1.2s). This is stored in `state.escalation` — the shared `LEVELS[10]` object is **never mutated**, so L10 difficulty resets correctly on every new run.
 
 ---
 

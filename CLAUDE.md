@@ -77,9 +77,9 @@ index.html
 ### Launcher Controls
 | Input | Effect |
 |-------|--------|
-| ←/→ | Move x ±50m/s, clamp [0,200] |
-| ↑/↓ | Angle ±30°/s, clamp [20°,80°] |
-| Space hold | Charge power +30/s, clamp [20,80] (blocked during cooldown) |
+| ←/→ | Move x ±55m/s, clamp [0,200] |
+| ↑/↓ | Angle ±30°/s, clamp [30°,70°] |
+| Space hold | Charge power +30/s, clamp [20,60] (blocked during cooldown) |
 | Space release | Fire interceptor, start 1s cooldown, reset power to 20 |
 | Z | Flip launcher facing (left/right) |
 | Touch drag | Aim angle + power; release fires |
@@ -104,8 +104,13 @@ Near-miss: distance ≤ 10m but > 5m → graze sound, spark particle, stats.near
 
 ### Scoring (SCORE_REBALANCE=true)
 - Base intercept: 10 × combo multiplier × skill multipliers
-- Combo: +0.25× per intercept within 3s window, cap 8×, decays over 1s after window
-- Skill multipliers: high-alt (≥100m ×1.25), clutch (≤35m ×1.5), long-range (≥50m ×1.2)
+- Combo: +0.25× per intercept within 3s window, cap ×10, decays over 1s after window
+- Skill multipliers (stacking):
+  - Altitude: continuous 1.0× at 20m → 3.0× at 100m
+  - Angle: 1.5× at 30° (shallow) → 0.75× at 70° (steep)
+  - Clutch: ×1.5 if missile.y ≤ 35m (and ≥ 20m)
+  - Long-range: ×1.2 if |interceptor.x − launcher.x| ≥ 50m
+  - Courier: ×1.5 if missile.kind === 'courier'
 - Passive: +0.25 per second survived
 - Level clear bonus: 50 × level number
 
@@ -116,7 +121,7 @@ Near-miss: distance ≤ 10m but > 5m → graze sound, spark particle, stats.near
 
 ### Game Modes
 - **Campaign** — start L1, non-seeded, fully ranked. Advances through levels; all-time score board.
-- **Daily** — today's ISO date → seeded RNG, one ranked attempt per day. Advances through levels.
+- **Daily** — today's UTC ISO date → seeded RNG, one ranked attempt per day (resets midnight UTC). Advances through levels.
 - **Level Select (LEVELRUN)** — start at any unlocked level; endless survival on that level (never advances). Score resets to 0 each run. Per-level leaderboard keyed on `startLevel`. Unlocks next level when all 3 criteria are first met (toast in-game; unlock persists at game over).
 
 ## Level System (10 levels)
@@ -185,12 +190,14 @@ npm run lint:fix  # Auto-fix lint issues
 - No global state — all state in `state.js`, passed explicitly
 - Physics logic only in `physics.js`
 - Rendering logic only in `renderer.js`
-- All randomness via `rng.js` — `Math.random()` banned (ESLint rule)
+- All randomness via `rng.js` — `Math.random()` banned (ESLint rule); exemptions for visual-only jitter must carry `// eslint-disable-line no-restricted-properties` comment
 - All localStorage via `persistence.js` — direct calls banned (ESLint rule)
 - All constants in `constants.js` — never hardcode numbers elsewhere
 - All Aegis energy mutations via `aegis.js` (`addAegisEnergy`, `triggerAegisEmp`) — never mutate `state.aegis` directly in collision or gameLoop
 - `state.pendingToasts` entries are `string | {text, kind}` — use `{text, kind: 'aegis'}` for styled Aegis toasts; `showToast` in `main.js` handles both forms
 - Floaters accept an optional `color` string property — if omitted, defaults to white/gold by combo multiplier
+- `state.escalation` — per-run snapshot of `{vyMin, spawnInterval}` for L10 ramp; NEVER mutate `LEVELS[n]` directly
+- `state.levelMedicSpawned` and `state._triggeredMilestones` are declared in `createState`; do not add lazy state fields without declaring them there
 - Commit format: `type(phaseN): description`
 
 ## AI Agents Available
