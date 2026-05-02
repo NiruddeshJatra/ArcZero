@@ -21,11 +21,33 @@ export function initialEscalation(level) {
   };
 }
 
+function normalizeRunTotals(totals = {}) {
+  const source = totals ?? {};
+  return {
+    intercepts: source.intercepts ?? 0,
+    survivedS: source.survivedS ?? 0,
+    longestChain: source.longestChain ?? 0,
+    closestMissM: source.closestMissM ?? Infinity,
+    waveStats: Array.isArray(source.waveStats) ? [...source.waveStats] : [],
+  };
+}
+
+export function collectRunTotals(state) {
+  const carried = normalizeRunTotals(state.runTotals);
+  return {
+    intercepts: carried.intercepts + (state.stats?.intercepts ?? 0),
+    survivedS: carried.survivedS + (state.totalElapsedS ?? 0),
+    longestChain: Math.max(carried.longestChain, state.combo?.best ?? 0),
+    closestMissM: Math.min(carried.closestMissM, state.stats?.closestMissM ?? Infinity),
+    waveStats: [...carried.waveStats, ...(state.stats?.waveStats ?? [])],
+  };
+}
+
 /**
  * Creates a fresh game state for the given level.
  * Pass carryHealth to preserve health across level transitions.
  */
-export function createState(level = 1, carryHealth = BASE_HEALTH, carryScore = 0, carryAegis = null) {
+export function createState(level = 1, carryHealth = BASE_HEALTH, carryScore = 0, carryAegis = null, carryRunTotals = null) {
   const safeLvl = Math.max(1, level);
   return {
     running: true,
@@ -67,6 +89,7 @@ export function createState(level = 1, carryHealth = BASE_HEALTH, carryScore = 0
     flash: { color: null, dur: 0, elapsed: 0 },
     hitstopRemainingS: 0,
     stats: { intercepts: 0, shots: 0, nearMisses: 0, closestMissM: Infinity, longestChain: 0, waveStats: [] },
+    runTotals: normalizeRunTotals(carryRunTotals),
     settings: { reduceMotion: false, showTrajectoryPreview: true },
     combo: { count: 0, timerS: 0, multiplier: 1.0, best: 0, decaying: false, lastCalloutAt: 0 },
     floaters: [],
