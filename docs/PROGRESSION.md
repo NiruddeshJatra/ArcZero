@@ -308,4 +308,13 @@ All progression state is persisted via `save.json` in localStorage:
 
 **Fix:** `state.runTotals` carries cumulative record stats between level states. `collectRunTotals(state)` merges prior totals with the current level, and `buildRunResult(state)` uses that aggregate for persistence and leaderboard records.
 
-**Affected stats:** `save.best.longestChain`, `save.best.closestMissM`, `save.best.totalIntercepts`, `save.best.totalSurvivedS`, share `waveStats`, and the Records leaderboard tab.
+**Affected stats:** `save.best.longestChain`, `save.best.closestMissM`, `save.best.totalIntercepts`, `save.best.totalSurvivedS`, shared `waveStats`, and the Records leaderboard tab.
+
+## Code Review Fixes (Records)
+**2026-05-02 — Refined normalizeRunTotals and closestMissM**
+
+- Simplified `normalizeRunTotals` in `state.js` to safely handle `null` initialization and avoid unnecessary `waveStats` copies.
+- Normalized `closestMissM` from `Infinity` to `null` in `buildRunResult` to correctly match documented data models.
+- Cleaned up `showGameOverScreen` call in `main.js` by dropping redundant `waveStats` fallbacks.
+- Corrected typo "share waveStats" to "shared waveStats" in documentation.
+- Expanded testing suite in `regression.test.js` to properly validate `waveStats` aggregation array across campaign level changes.
