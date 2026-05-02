@@ -53,7 +53,7 @@ export function buildRunResult(state) {
     startLevel: state.startLevel,
     rankingMode: state.rankingMode,
     longestChain: runTotals.longestChain,
-    closestMissM: runTotals.closestMissM,
+    closestMissM: runTotals.closestMissM === Infinity ? null : runTotals.closestMissM,
     intercepts: runTotals.intercepts,
     survivedS: runTotals.survivedS,
     waveStats: runTotals.waveStats,

@@ -148,6 +148,10 @@ describe('campaign record aggregation', () => {
     level1.stats.closestMissM = 9;
     level1.combo.best = 7;
     level1.totalElapsedS = 105;
+    level1.stats.waveStats = [
+      { intercepts: 10, spawns: 12 },
+      { intercepts: 18, spawns: 20 },
+    ];
 
     const level3 = createState(3, 100, 1100, null, collectRunTotals(level1));
     level3.rankingMode = RANKING_MODES.CAMPAIGN;
@@ -155,6 +159,9 @@ describe('campaign record aggregation', () => {
     level3.stats.closestMissM = 6;
     level3.combo.best = 2;
     level3.totalElapsedS = 45;
+    level3.stats.waveStats = [
+      { intercepts: 5, spawns: 10 },
+    ];
 
     const result = buildRunResult(level3);
 
@@ -164,6 +171,11 @@ describe('campaign record aggregation', () => {
     expect(result.longestChain).toBe(7);
     expect(result.closestMissM).toBe(6);
     expect(result.survivedS).toBe(150);
+    expect(result.waveStats).toEqual([
+      { intercepts: 10, spawns: 12 },
+      { intercepts: 18, spawns: 20 },
+      { intercepts: 5, spawns: 10 },
+    ]);
   });
 });
 

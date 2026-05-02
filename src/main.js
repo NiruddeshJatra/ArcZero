@@ -523,7 +523,7 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPA
             }
           }
 
-          showGameOverScreen({ ...runResult, waveStats: runResult.waveStats ?? state.stats.waveStats, rankingMode: state.rankingMode }, isPB, lvlBest, isChainPB);
+          showGameOverScreen({ ...runResult, rankingMode: state.rankingMode }, isPB, lvlBest, isChainPB);
         },
       });
     } else {

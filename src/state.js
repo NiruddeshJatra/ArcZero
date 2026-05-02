@@ -21,14 +21,14 @@ export function initialEscalation(level) {
   };
 }
 
-function normalizeRunTotals(totals = {}) {
-  const source = totals ?? {};
+function normalizeRunTotals(totals) {
+  const source = totals || {};
   return {
     intercepts: source.intercepts ?? 0,
     survivedS: source.survivedS ?? 0,
     longestChain: source.longestChain ?? 0,
     closestMissM: source.closestMissM ?? Infinity,
-    waveStats: Array.isArray(source.waveStats) ? [...source.waveStats] : [],
+    waveStats: source.waveStats ?? [],
   };
 }
 
