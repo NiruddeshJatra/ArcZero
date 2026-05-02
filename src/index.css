@@ -221,6 +221,10 @@ body {
   letter-spacing: 0.12em;
   margin: 10px 0 4px;
 }
+#howto-list strong {
+  color: #ffcc66;
+  font-weight: 700;
+}
 #howto-list kbd {
   background: rgba(255,255,255,0.1);
   border: 1px solid rgba(255,255,255,0.2);

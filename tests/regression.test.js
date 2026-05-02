@@ -4,12 +4,13 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createState, initialEscalation } from '../src/state.js';
+import { collectRunTotals, createState, initialEscalation } from '../src/state.js';
 import { LEVELS } from '../src/levels.js';
 import { updateSpawner } from '../src/spawner.js';
 import { seed } from '../src/rng.js';
 import { loadSave, saveBoards, loadBoards } from '../src/persistence.js';
-import { DT } from '../src/constants.js';
+import { DT, RANKING_MODES } from '../src/constants.js';
+import { buildRunResult } from '../src/gameLoop.js';
 
 beforeEach(() => localStorage.clear());
 
@@ -136,6 +137,33 @@ describe('createState completeness', () => {
     expect(s1.health).toBe(60);
     const s2 = createState(2);     // fresh — default 100
     expect(s2.health).toBe(100);
+  });
+});
+
+// ── Campaign record aggregation ───────────────────────────────────────────────
+describe('campaign record aggregation', () => {
+  it('builds final run results from every completed campaign level plus current level', () => {
+    const level1 = createState(1);
+    level1.stats.intercepts = 28;
+    level1.stats.closestMissM = 9;
+    level1.combo.best = 7;
+    level1.totalElapsedS = 105;
+
+    const level3 = createState(3, 100, 1100, null, collectRunTotals(level1));
+    level3.rankingMode = RANKING_MODES.CAMPAIGN;
+    level3.stats.intercepts = 12;
+    level3.stats.closestMissM = 6;
+    level3.combo.best = 2;
+    level3.totalElapsedS = 45;
+
+    const result = buildRunResult(level3);
+
+    expect(result.score).toBe(1100);
+    expect(result.level).toBe(3);
+    expect(result.intercepts).toBe(40);
+    expect(result.longestChain).toBe(7);
+    expect(result.closestMissM).toBe(6);
+    expect(result.survivedS).toBe(150);
   });
 });
 

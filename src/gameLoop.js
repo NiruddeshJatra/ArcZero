@@ -31,6 +31,7 @@ import { playGameOver, playWaveWarning, playWaveStart, playLevelClear, startPeak
 import { FLAGS } from './flags.js';
 import { loadSave, updateBest } from './persistence.js';
 import { RANKING_MODES } from './constants.js';
+import { collectRunTotals } from './state.js';
 
 const PHASE_DUR = { BUILD: WAVE_BUILD_DUR_S, PEAK: WAVE_PEAK_DUR_S, RELEASE: WAVE_RELEASE_DUR_S };
 const NEXT_PHASE = { BUILD: 'PEAK', PEAK: 'RELEASE', RELEASE: 'BUILD' };
@@ -43,17 +44,19 @@ const SPAWN_MULT = { BUILD: WAVE_BUILD_SPAWN_MULT, PEAK: WAVE_PEAK_SPAWN_MULT, R
 /**
  * Build the run-result object passed to onGameOver.
  */
-function buildRunResult(state) {
+export function buildRunResult(state) {
+  const runTotals = collectRunTotals(state);
   return {
     score: Math.floor(state.score),
     levelScore: Math.floor(state.score - state.levelStartScore),
     level: state.level,
     startLevel: state.startLevel,
     rankingMode: state.rankingMode,
-    longestChain: state.combo.best,
-    closestMissM: state.stats.closestMissM,
-    intercepts: state.stats.intercepts,
-    survivedS: state.totalElapsedS,
+    longestChain: runTotals.longestChain,
+    closestMissM: runTotals.closestMissM,
+    intercepts: runTotals.intercepts,
+    survivedS: runTotals.survivedS,
+    waveStats: runTotals.waveStats,
     seed: state.mode === RANKING_MODES.DAILY ? state.seed : null,
     dateISO: state.dateISO ?? new Date().toISOString().slice(0, 10),
     criteriaCleared: state.criteriaCleared ?? false,

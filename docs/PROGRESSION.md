@@ -87,7 +87,7 @@ Once all three gates are true:
 4. When `advanceGraceRemaining <= 0`, the level clears:
    - If `FLAGS.SCORE_REBALANCE = true`, a level clear bonus is awarded: `LEVEL_CLEAR_BONUS * state.level` (50 × level number).
    - A floater displays the bonus: `+{bonus} LEVEL CLEAR`.
-   - The player advances to the next level with score, health, and Aegis state carried over.
+   - The player advances to the next level with score, health, Aegis state, and cumulative run record totals carried over.
    - For Level 10 (Endless), this gate is never triggered (threshold is `Infinity`; the `isFinite` check blocks grace initiation).
 
 ### Why 3 Seconds?
@@ -199,6 +199,7 @@ Each entry includes `levelScore` (the survival score) to ensure correct sorting.
 | `state.advanceGraceRemaining` | number \| null | Active | Null if grace not started. Counts down from 3s. Triggers advance when ≤ 0. Campaign/Daily only. |
 | `state.criteriaCleared` | boolean | Active | Sticky flag. Set once all 3 gates true in LEVELRUN. Persisted in `runResult.criteriaCleared`. |
 | `state.levelProgress` | object | Active | Debug/UI: `{ scoreDone, interceptsDone, wavesDone, levelScore, levelIntercepts, wavesCompleted }`. Recomputed each tick. |
+| `state.runTotals` | object | Active | Cumulative Campaign/Daily record stats already earned in prior level states: `{ intercepts, survivedS, longestChain, closestMissM, waveStats }`. |
 | `state.rankingMode` | string | Active | `'campaign'`, `'daily'`, `'levelrun'`, or `'unranked'`. |
 | `save.progress.unlockedStartLevels` | array | Persistent | Levels player can select in Level Select. |
 | `save.progress.highestLevelReached` | number | Persistent | Highest level ever reached (for display / unlock tracking). |
@@ -263,11 +264,14 @@ When a run ends, `gameLoop.buildRunResult(state)` returns an object passed to `u
   closestMissM,           // Closest near-miss distance in meters (or null)
   intercepts,             // Total intercepts this run
   survivedS,              // Total time survived in seconds
+  waveStats,              // Per-wave accuracy summaries carried across the run
   seed,                   // RNG seed (Campaign: null; Daily/LEVELRUN: seed value)
   dateISO,                // ISO date string at run start
   criteriaCleared,        // Boolean; true if all 3 gates met in LEVELRUN
 }
 ```
+
+For Campaign and Daily, `buildRunResult(state)` uses `collectRunTotals(state)` so the final record includes every completed level plus the current level. Do not read `state.stats` or `state.totalElapsedS` directly for final run records; those fields are per-level because each level transition creates a fresh `state`.
 
 ---
 
@@ -288,6 +292,7 @@ All progression state is persisted via `save.json` in localStorage:
 - Mock `save` objects with `progress: { unlockedStartLevels: [...], highestLevelReached: N }` and `best: { allTime: {...}, perLevel: {...} }`.
 - Test unlock paths separately: Campaign unlock (level > highestLevelReached), LEVELRUN unlock (criteriaCleared = true), and duplicate prevention.
 - Verify per-level best is never updated by Campaign or Daily runs; only LEVELRUN updates `perLevel`.
+- Verify Campaign/Daily records aggregate across level transitions with `collectRunTotals(state)`, especially intercepts, survival time, closest miss, and longest chain.
 
 ## Known Fix: Graze Double-Count on Collision (fixed)
 
@@ -296,3 +301,11 @@ All progression state is persisted via `save.json` in localStorage:
 **Fix (collision.js):** `break` out of the inner missile loop immediately after a collision is registered (`interceptor.alive = false`). Since the interceptor is dead, no further missile checks against it are valid.
 
 **Affected stats:** `state.stats.nearMisses`, `state.stats.closestMissM`, Aegis energy via `ENERGY_GRAZE`, and the Level Summary graze count — all were inflated by this bug.
+
+## Known Fix: Campaign Records Final-Level Only (fixed)
+
+**Bug:** Campaign and Daily level transitions created a fresh state for the next level, carrying only score, health, and Aegis. Personal records on game over read `state.stats`, `state.combo.best`, and `state.totalElapsedS` from the final level only, so records undercounted total intercepts, survival time, and best chain.
+
+**Fix:** `state.runTotals` carries cumulative record stats between level states. `collectRunTotals(state)` merges prior totals with the current level, and `buildRunResult(state)` uses that aggregate for persistence and leaderboard records.
+
+**Affected stats:** `save.best.longestChain`, `save.best.closestMissM`, `save.best.totalIntercepts`, `save.best.totalSurvivedS`, share `waveStats`, and the Records leaderboard tab.

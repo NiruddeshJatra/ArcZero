@@ -1,4 +1,4 @@
-import { createState } from './state.js';
+import { collectRunTotals, createState } from './state.js';
 import { initInput } from './input.js';
 import { startGameLoop } from './gameLoop.js';
 import { seed, seedFromDateISO, dailyModifier } from './rng.js';
@@ -346,7 +346,7 @@ function showGameOverScreen(runResult, isPB, prevLvlBest, isChainPB) {
 }
 
 // ── Core start/loop ───────────────────────────────────────────────────────────
-function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPAIGN, dailySeed = null, carryScore = 0, initialStartLevel = null, carryAegis = null) {
+function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPAIGN, dailySeed = null, carryScore = 0, initialStartLevel = null, carryAegis = null, carryRunTotals = null) {
   playUiConfirm();
   const safeLevel = Math.min(level, LEVELS.length - 1);
   transitionActive = true;
@@ -376,7 +376,7 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPA
     count--;
     if (count <= 0) {
       showOnly(null);
-      const state = createState(safeLevel, carryHealth, carryScore, carryAegis);
+      const state = createState(safeLevel, carryHealth, carryScore, carryAegis, carryRunTotals);
       state.startLevel = initialStartLevel !== null ? initialStartLevel : safeLevel;
       state.mode   = mode;
       state.seed   = dailySeed;
@@ -409,6 +409,7 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPA
           keys.reset();
           playLevelUp();
           const carryScore = (mode === RANKING_MODES.CAMPAIGN || mode === RANKING_MODES.DAILY) ? state.score : 0;
+          const carryRunTotals = (mode === RANKING_MODES.CAMPAIGN || mode === RANKING_MODES.DAILY) ? collectRunTotals(state) : null;
           const pointsEarned = state.score - state.levelStartScore;
           
           transitionActive = true;
@@ -459,7 +460,7 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPA
 
           const onClickNext = () => {
             if (!transitionActive) return;
-            startLevel(completedLevel + 1, BASE_HEALTH, mode, dailySeed, carryScore, state.startLevel, state.aegis);
+            startLevel(completedLevel + 1, BASE_HEALTH, mode, dailySeed, carryScore, state.startLevel, state.aegis, carryRunTotals);
           };
           levelSummaryOverlay.addEventListener('click', onClickNext, { once: true });
         },
@@ -522,7 +523,7 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPA
             }
           }
 
-          showGameOverScreen({ ...runResult, waveStats: state.stats.waveStats, rankingMode: state.rankingMode }, isPB, lvlBest, isChainPB);
+          showGameOverScreen({ ...runResult, waveStats: runResult.waveStats ?? state.stats.waveStats, rankingMode: state.rankingMode }, isPB, lvlBest, isChainPB);
         },
       });
     } else {

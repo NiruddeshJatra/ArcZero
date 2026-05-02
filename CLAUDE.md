@@ -197,6 +197,7 @@ npm run lint:fix  # Auto-fix lint issues
 - `state.pendingToasts` entries are `string | {text, kind}` — use `{text, kind: 'aegis'}` for styled Aegis toasts; `showToast` in `main.js` handles both forms
 - Floaters accept an optional `color` string property — if omitted, defaults to white/gold by combo multiplier
 - `state.escalation` — per-run snapshot of `{vyMin, spawnInterval}` for L10 ramp; NEVER mutate `LEVELS[n]` directly
+- `state.runTotals` — cumulative Campaign/Daily record stats carried across fresh level states; use `collectRunTotals(state)` when building run results or advancing levels
 - `state.levelMedicSpawned` and `state._triggeredMilestones` are declared in `createState`; do not add lazy state fields without declaring them there
 - Commit format: `type(phaseN): description`
 
