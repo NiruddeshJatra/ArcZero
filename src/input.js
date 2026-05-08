@@ -52,7 +52,7 @@ export function initInput(onPauseToggle = null) {
       default: {
         const k = e.key.toLowerCase();
         if (k === FLIP_KEY) keys.flipJustPressed = true;
-        else if (PAUSE_KEYS.includes(k) && e.target.tagName !== 'INPUT') {
+        else if (PAUSE_KEYS.includes(k) && !e.target.isContentEditable && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
           e.preventDefault();
           if (onPauseToggle) onPauseToggle();
         }
