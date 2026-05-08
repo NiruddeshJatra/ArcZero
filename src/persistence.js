@@ -120,12 +120,14 @@ export function updateBest(save, runResult) {
   b.totalSurvivedS  += runResult.survivedS;
   save.progress.sessionsPlayed += 1;
   save.progress.lastSessionAt = Date.now();
-  // Campaign/Daily: reaching a new level via advance unlocks it for level select.
+  // Campaign/Daily: unlock every level the player advanced through, not just the death level.
   if (runResult.rankingMode !== RANKING_MODES.LEVELRUN && runResult.level > save.progress.highestLevelReached) {
-    save.progress.highestLevelReached = runResult.level;
-    if (!save.progress.unlockedStartLevels.includes(runResult.level)) {
-      save.progress.unlockedStartLevels.push(runResult.level);
+    for (let lvl = save.progress.highestLevelReached + 1; lvl <= runResult.level; lvl++) {
+      if (!save.progress.unlockedStartLevels.includes(lvl)) {
+        save.progress.unlockedStartLevels.push(lvl);
+      }
     }
+    save.progress.highestLevelReached = runResult.level;
   }
   saveSave(save);
   return updated;

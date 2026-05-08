@@ -318,3 +318,10 @@ All progression state is persisted via `save.json` in localStorage:
 - Cleaned up `showGameOverScreen` call in `main.js` by dropping redundant `waveStats` fallbacks.
 - Corrected typo "share waveStats" to "shared waveStats" in documentation.
 - Expanded testing suite in `regression.test.js` to properly validate `waveStats` aggregation array across campaign level changes.
+
+## Bug Fixes: Input, Level Unlocks
+**2026-05-08 — Three gameplay bugs fixed**
+
+- `input.js`: Pause key handler (`p`/`Escape`) now guards `e.target.tagName !== 'INPUT'`, preventing `p` from being eaten when typing in the settings name field.
+- `persistence.js`: `updateBest` now loops from `highestLevelReached + 1` to `runResult.level` to unlock all intermediate levels, not just the death level. Previously, clearing L1 and L2 then dying on L3 only unlocked L3 in Level Select.
+- Dev data loss (no code change): Vite port changes between sessions create a new `localStorage` origin; old data is still accessible at the original port in DevTools → Local Storage.
