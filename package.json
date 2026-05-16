@@ -4,7 +4,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run generate-og && npm run generate-favicons && vite build",
+    "generate-og": "yarn node scripts/generate-og.mjs",
+    "generate-favicons": "yarn node scripts/generate-favicons.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",

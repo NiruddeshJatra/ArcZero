@@ -7,7 +7,7 @@ import { initAudio, playLevelUp, toggleMute, isMuted, setMasterVolume } from './
 import { LEVELS } from './levels.js';
 import { BASE_HEALTH, STREAK_CALLOUTS, RANKING_MODES } from './constants.js';
 import { loadSave, saveSave, loadBoards, submitLocalScore, submitDailyScore, submitLevelRunScore, checkIsChainPB } from './persistence.js';
-import { initTouchInput, shouldUseTouchInput } from './touchInput.js';
+import { initTouchInput, initMobileControls, shouldUseTouchInput } from './touchInput.js';
 import { playMilestone, startAmbient, stopAmbient, playUiClick, playUiConfirm } from './audio.js';
 import { buildShareText } from './share.js';
 import { checkMilestones, updateStreak } from './milestones.js';
@@ -398,6 +398,8 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPA
 
       if (shouldUseTouchInput(currentSave.settings)) {
         initTouchInput(canvas, state, keys);
+        initMobileControls(state, keys);
+        document.getElementById('mobile-controls').classList.add('visible');
       }
 
       startAmbient();
@@ -466,6 +468,7 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPA
         },
         onGameOver(runResult) {
           stopAmbient();
+          document.getElementById('mobile-controls').classList.remove('visible');
           // Capture pre-run save for PB comparison and new-unlock detection.
           const prevUnlocked = currentSave.progress.unlockedStartLevels.slice();
           const prevChainBest = currentSave.best.longestChain ?? 0;
@@ -537,6 +540,7 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPA
 
 // ── Menu wiring ───────────────────────────────────────────────────────────────
 function openMenu() {
+  document.getElementById('mobile-controls').classList.remove('visible');
   showOnly(menuOverlay);
 }
 

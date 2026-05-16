@@ -2,8 +2,38 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ArcZero</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+
+    <!-- Primary meta tags -->
+    <title>ArcZero — physics-based missile interception</title>
+    <meta name="description" content="A two-minute physics puzzle disguised as an arcade reflex game. Read a falling parabola, launch a rising parabola, meet them in the air. By nj." />
+    <link rel="canonical" href="https://niruddeshjatra.space/games/arczero/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://niruddeshjatra.space/games/arczero/" />
+    <meta property="og:title" content="ArcZero — physics-based missile interception" />
+    <meta property="og:description" content="A two-minute physics puzzle disguised as an arcade reflex game. Read a falling parabola, launch a rising parabola, meet them in the air." />
+    <meta property="og:image" content="https://niruddeshjatra.space/games/arczero/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="ArcZero" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ArcZero — physics-based missile interception" />
+    <meta name="twitter:description" content="A two-minute physics puzzle disguised as an arcade reflex game." />
+    <meta name="twitter:image" content="https://niruddeshjatra.space/games/arczero/og-image.png" />
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+    <!-- Theme -->
+    <meta name="theme-color" content="#0a0a0f" />
+
     <link rel="stylesheet" href="/src/index.css" />
   </head>
   <body>
@@ -193,11 +223,16 @@
       <!-- ── Toast container ── -->
       <div id="toast-container"></div>
     </div>
-    <div id="portrait-warning">
-      <div>↻</div>
-      <div>ROTATE DEVICE</div>
-      <div style="font-size:12px;color:rgba(255,255,255,0.4);">ArcZero plays in landscape</div>
+
+    <!-- ── Mobile controls ── -->
+    <div id="mobile-controls">
+      <div id="mc-movement">
+        <button id="mc-left" aria-label="Move launcher left">◄</button>
+        <button id="mc-right" aria-label="Move launcher right">►</button>
+      </div>
+      <button id="mc-flip" aria-label="Flip launcher facing">⇄</button>
     </div>
+
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

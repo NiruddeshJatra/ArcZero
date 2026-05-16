@@ -325,3 +325,13 @@ All progression state is persisted via `save.json` in localStorage:
 - `input.js`: Pause key handler (`p`/`Escape`) now guards `e.target.tagName !== 'INPUT'`, preventing `p` from being eaten when typing in the settings name field.
 - `persistence.js`: `updateBest` now loops from `highestLevelReached + 1` to `runResult.level` to unlock all intermediate levels, not just the death level. Previously, clearing L1 and L2 then dying on L3 only unlocked L3 in Level Select.
 - Dev data loss (no code change): Vite port changes between sessions create a new `localStorage` origin; old data is still accessible at the original port in DevTools → Local Storage.
+
+## Mobile UX + SEO Pre-Launch
+**2026-05-16 — Touch redesign, portrait mode, responsive typography, SEO meta**
+
+- `src/touchInput.js` rewritten: canvas drag now sets aim angle + power only (no launcher teleport, no facing flips). New `initMobileControls` export wires `#mc-left`/`#mc-right` hold-to-move buttons and `#mc-flip` tap-to-toggle button.
+- `src/main.js`: imports `initMobileControls`; shows/hides `#mobile-controls` on game start / menu / game over.
+- `index.html`: full SEO `<head>` added (og:title, og:description, og:image, twitter:card, canonical, favicons, theme-color); `#portrait-warning` removed; `#mobile-controls` div added.
+- `src/index.css`: `.overlay` gets `overflow-y: auto` for scrollable menus; `clamp()` responsive sizing on all title elements; full mobile media queries; `#mobile-controls` button styles; portrait orientation allowed (no forced landscape).
+- `scripts/generate-og.mjs` + `scripts/generate-favicons.mjs`: build-time asset generators using sharp (sharp is not a runtime dep).
+- `public/og-image.png` (1200×630), `public/favicon.svg`, `public/favicon-16x16.png`, `public/favicon-32x32.png`, `public/apple-touch-icon.png` committed as static assets.
