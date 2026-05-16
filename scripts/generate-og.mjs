@@ -1,0 +1,48 @@
+import { writeFileSync, mkdirSync } from 'fs';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const PUBLIC_DIR = join(__dirname, '..', 'public');
+
+const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0a0a0f"/>
+
+  <!-- Subtle grid lines -->
+  <g opacity="0.06" stroke="#44aaff" stroke-width="1">
+    <line x1="0" y1="105" x2="1200" y2="105"/>
+    <line x1="0" y1="210" x2="1200" y2="210"/>
+    <line x1="0" y1="315" x2="1200" y2="315"/>
+    <line x1="0" y1="420" x2="1200" y2="420"/>
+    <line x1="0" y1="525" x2="1200" y2="525"/>
+  </g>
+
+  <!-- ARCZERO title -->
+  <text x="600" y="280" text-anchor="middle" font-family="Courier New, monospace" font-size="140" font-weight="700" fill="#44aaff" letter-spacing="8">ARCZERO</text>
+
+  <!-- Subtitle -->
+  <text x="600" y="350" text-anchor="middle" font-family="Courier New, monospace" font-size="32" fill="rgba(255,255,255,0.45)" letter-spacing="6">PHYSICS-BASED MISSILE INTERCEPTION</text>
+
+  <!-- Tagline -->
+  <text x="600" y="490" text-anchor="middle" font-family="Courier New, monospace" font-size="22" fill="rgba(255,255,255,0.55)" letter-spacing="2">Read a falling parabola.</text>
+  <text x="600" y="525" text-anchor="middle" font-family="Courier New, monospace" font-size="22" fill="rgba(255,255,255,0.55)" letter-spacing="2">Launch a rising one.</text>
+
+  <!-- HUD-style decoration -->
+  <rect x="80" y="560" width="1040" height="2" fill="rgba(68,170,255,0.3)"/>
+  <text x="80" y="595" font-family="Courier New, monospace" font-size="13" fill="rgba(68,170,255,0.5)" letter-spacing="4">LEVEL 01</text>
+  <text x="1120" y="595" text-anchor="end" font-family="Courier New, monospace" font-size="13" fill="rgba(68,170,255,0.5)" letter-spacing="4">niruddeshjatra.space/games/arczero</text>
+</svg>`;
+
+mkdirSync(PUBLIC_DIR, { recursive: true });
+writeFileSync(join(PUBLIC_DIR, 'og-image.svg'), svg);
+
+try {
+  const { default: sharp } = await import('sharp');
+  await sharp(Buffer.from(svg))
+    .resize(1200, 630)
+    .png()
+    .toFile(join(PUBLIC_DIR, 'og-image.png'));
+  console.log('Generated public/og-image.png');
+} catch (err) {
+  console.warn('sharp unavailable, SVG written only:', err.message);
+}
