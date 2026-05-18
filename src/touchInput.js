@@ -10,40 +10,29 @@ export function initMobileControls(keys, getActiveState) {
   const controls = document.getElementById('mobile-controls');
   if (!controls) return;
 
-  const left      = document.getElementById('mc-left');
-  const right     = document.getElementById('mc-right');
-  const angleUp   = document.getElementById('mc-angle-up');
-  const angleDown = document.getElementById('mc-angle-down');
-  const fire      = document.getElementById('mc-fire');
+  function bindTouchButton(id, onDown, onUp) {
+    const el = document.getElementById(id);
+    el.addEventListener('touchstart',  (e) => { e.preventDefault(); onDown(); }, { passive: false });
+    el.addEventListener('touchend',    (e) => { e.preventDefault(); onUp(); },   { passive: false });
+    el.addEventListener('touchcancel', () => onUp());
+  }
 
-  left.addEventListener('touchstart',  (e) => { e.preventDefault(); keys.left = true; },  { passive: false });
-  left.addEventListener('touchend',    (e) => { e.preventDefault(); keys.left = false; }, { passive: false });
-  left.addEventListener('touchcancel', () => { keys.left = false; });
+  bindTouchButton('mc-left',       () => { keys.left = true; },  () => { keys.left = false; });
+  bindTouchButton('mc-right',      () => { keys.right = true; }, () => { keys.right = false; });
+  bindTouchButton('mc-angle-up',   () => { keys.up = true; },    () => { keys.up = false; });
+  bindTouchButton('mc-angle-down', () => { keys.down = true; },  () => { keys.down = false; });
 
-  right.addEventListener('touchstart',  (e) => { e.preventDefault(); keys.right = true; },  { passive: false });
-  right.addEventListener('touchend',    (e) => { e.preventDefault(); keys.right = false; }, { passive: false });
-  right.addEventListener('touchcancel', () => { keys.right = false; });
-
-  angleUp.addEventListener('touchstart',  (e) => { e.preventDefault(); keys.up = true; },  { passive: false });
-  angleUp.addEventListener('touchend',    (e) => { e.preventDefault(); keys.up = false; }, { passive: false });
-  angleUp.addEventListener('touchcancel', () => { keys.up = false; });
-
-  angleDown.addEventListener('touchstart',  (e) => { e.preventDefault(); keys.down = true; },  { passive: false });
-  angleDown.addEventListener('touchend',    (e) => { e.preventDefault(); keys.down = false; }, { passive: false });
-  angleDown.addEventListener('touchcancel', () => { keys.down = false; });
-
-  fire.addEventListener('touchstart',  (e) => { e.preventDefault(); keys.space = true; }, { passive: false });
-  fire.addEventListener('touchend',    (e) => {
+  const fire = document.getElementById('mc-fire');
+  fire.addEventListener('touchstart', (e) => { e.preventDefault(); keys.space = true; }, { passive: false });
+  fire.addEventListener('touchend', (e) => {
     e.preventDefault();
     keys.space = false;
     keys.spaceJustReleased = true;
     const s = getActiveState?.();
     if (s) s.inputType = 'touch';
   }, { passive: false });
-  fire.addEventListener('touchcancel', () => {
-    keys.space = false;
-    keys.spaceJustReleased = true;
-  });
+  // touchcancel = OS-interrupted gesture; clear charge but don't fire
+  fire.addEventListener('touchcancel', () => { keys.space = false; });
 }
 
 /** Returns true when touch input should be active based on settings. */

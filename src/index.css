@@ -559,7 +559,7 @@ body {
 
 #mc-left, #mc-right {
   font-size: 24px;
-  width: 56px; /* MOBILE_BTN_MOVEMENT_PX */
+  width: 56px;
   height: 56px;
 }
 
@@ -575,13 +575,13 @@ body {
 }
 
 #mc-angle-up, #mc-angle-down {
-  width: 48px; /* MOBILE_BTN_ANGLE_PX */
+  width: 48px;
   height: 48px;
   font-size: 20px;
 }
 
 #mc-fire {
-  width: 72px; /* MOBILE_BTN_FIRE_PX */
+  width: 72px;
   height: 72px;
   font-size: 28px;
   border-color: #44aaff;

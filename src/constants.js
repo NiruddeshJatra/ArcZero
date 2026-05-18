@@ -212,9 +212,3 @@ export const COLOR_AEGIS_GAUGE = '#00ffff';
 export const COLOR_AEGIS_FLASH = '#00ffff';
 export const COLOR_GRID_SHIELD = 'rgba(68,170,255,0.4)';
 export const COLOR_OVERHEALTH = '#ffd700';
-
-// === Mobile button sizes (px) — mirrors CSS in index.css ===
-export const MOBILE_BTN_MOVEMENT_PX = 56;
-export const MOBILE_BTN_ANGLE_PX = 48;
-export const MOBILE_BTN_FIRE_PX = 72;
-export const MOBILE_HUD_BTN_PX = 40;
