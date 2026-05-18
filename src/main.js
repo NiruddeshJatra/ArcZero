@@ -7,7 +7,7 @@ import { initAudio, playLevelUp, toggleMute, isMuted, setMasterVolume } from './
 import { LEVELS } from './levels.js';
 import { BASE_HEALTH, STREAK_CALLOUTS, RANKING_MODES } from './constants.js';
 import { loadSave, saveSave, loadBoards, submitLocalScore, submitDailyScore, submitLevelRunScore, checkIsChainPB } from './persistence.js';
-import { initTouchInput, initMobileControls, shouldUseTouchInput } from './touchInput.js';
+import { initMobileControls, shouldUseTouchInput } from './touchInput.js';
 import { playMilestone, startAmbient, stopAmbient, playUiClick, playUiConfirm } from './audio.js';
 import { buildShareText } from './share.js';
 import { checkMilestones, updateStreak } from './milestones.js';
@@ -397,8 +397,6 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPA
       }
 
       if (shouldUseTouchInput(currentSave.settings)) {
-        initTouchInput(canvas, state, keys);
-        initMobileControls(state, keys);
         document.getElementById('mobile-controls').classList.add('visible');
       }
 
@@ -668,6 +666,10 @@ function bootstrap() {
   // Pre-warm AudioContext on first keydown
   document.addEventListener('keydown', () => initAudio(), { once: true });
 
+  // Pause button
+  const pauseBtn = document.getElementById('pause-btn');
+  if (pauseBtn) pauseBtn.addEventListener('click', () => { playUiClick(); togglePause(); });
+
   // Mute toggle — button + M key
   const muteBtn = document.getElementById('mute-btn');
   const syncMuteBtn = () => muteBtn.classList.toggle('muted', isMuted());
@@ -679,6 +681,9 @@ function bootstrap() {
   });
 
   keys = initInput(togglePause);
+  if (shouldUseTouchInput(currentSave.settings)) {
+    initMobileControls(keys, () => activeState);
+  }
   bindSettingsControls();
   bindHowToPlay();
   // First-run name prompt, then main menu.
