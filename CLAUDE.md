@@ -32,7 +32,7 @@ src/
 ├── flags.js         ← feature flags (SCORE_REBALANCE, EVENT_MISSILES, etc.)
 ├── share.js         ← daily share payload builder (emoji grid)
 ├── milestones.js    ← milestone definitions + checkMilestones + updateStreak
-└── touchInput.js    ← mobile touch controls: canvas drag = aim/power; initMobileControls = ◄ ► ⇄ buttons
+└── touchInput.js    ← mobile touch controls: 5-button layout (◄ ► movement, ▲ ● ▼ angle/fire); wired once from bootstrap()
 docs/
 ├── backend-api.md      ← v2 REST API scaffold (not implemented)
 ├── AEGIS_PROTOCOL.md   ← Aegis energy system, payloads, UI, audio
@@ -55,7 +55,9 @@ tests/
 ├── physics.test.js
 ├── rng.test.js
 ├── setup.js
-└── spawner.test.js
+├── spawner.test.js
+└── e2e/
+    └── mobile.spec.js   ← Playwright E2E: mobile controls, desktop hide, pause btn
 index.html
 ```
 
@@ -89,7 +91,9 @@ index.html
 | Space hold | Charge power +30/s, clamp [20,60] (blocked during cooldown) |
 | Space release | Fire interceptor, start 1s cooldown, reset power to 20 |
 | Z | Flip launcher facing (left/right) |
-| Touch drag | Aim angle + power; release fires |
+| ◄ ► (touch) | Move launcher left/right (hold) |
+| ▲ ▼ (touch) | Angle up/down (hold) |
+| ● fire (touch) | Hold = charge power; release = fire |
 
 ### Firing
 ```
@@ -201,7 +205,7 @@ npm run lint:fix  # Auto-fix lint issues
 - All localStorage via `persistence.js` — direct calls banned (ESLint rule)
 - All constants in `constants.js` — never hardcode numbers elsewhere
 - All Aegis energy mutations via `aegis.js` (`addAegisEnergy`, `triggerAegisEmp`) — never mutate `state.aegis` directly in collision or gameLoop
-- Mobile touch split: canvas `touchstart/move/end` = aim + fire only (`initTouchInput`); launcher movement and facing live in `#mobile-controls` buttons (`initMobileControls`) — never conflate them
+- Mobile controls: canvas is display-only (no touch handlers); all input via `#mobile-controls` buttons (`initMobileControls`). `initMobileControls` called **once** from `bootstrap()` — never per level (causes listener accumulation)
 - `state.pendingToasts` entries are `string | {text, kind}` — use `{text, kind: 'aegis'}` for styled Aegis toasts; `showToast` in `main.js` handles both forms
 - Floaters accept an optional `color` string property — if omitted, defaults to white/gold by combo multiplier
 - `state.escalation` — per-run snapshot of `{vyMin, spawnInterval}` for L10 ramp; NEVER mutate `LEVELS[n]` directly

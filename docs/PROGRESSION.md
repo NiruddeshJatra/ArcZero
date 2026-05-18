@@ -335,3 +335,14 @@ All progression state is persisted via `save.json` in localStorage:
 - `src/index.css`: `.overlay` gets `overflow-y: auto` for scrollable menus; `clamp()` responsive sizing on all title elements; full mobile media queries; `#mobile-controls` button styles; portrait orientation allowed (no forced landscape).
 - `scripts/generate-og.mjs` + `scripts/generate-favicons.mjs`: build-time asset generators using sharp (sharp is not a runtime dep).
 - `public/og-image.png` (1200×630), `public/favicon.svg`, `public/favicon-16x16.png`, `public/favicon-32x32.png`, `public/apple-touch-icon.png` committed as static assets.
+
+## 5-Button Mobile Controls + Listener Fix
+**2026-05-18 — Keyboard-parity touch layout, pause btn, E2E tests**
+
+- `src/touchInput.js` rewritten: canvas drag removed entirely. New 5-button layout: ◄ ► movement (bottom-left), ▲ ● ▼ angle/fire column (bottom-right). Fire uses touchstart→space=true / touchend→space=false+spaceJustReleased=true, matching keyboard hold-charge semantics exactly.
+- `src/main.js`: `initMobileControls` moved from per-level `startLevel()` to once-only `bootstrap()` — fixes listener accumulation bug (10 calls per Campaign run). Uses `getActiveState: () => activeState` callback so touchend can set `state.inputType = 'touch'` without coupling touchInput.js to main.js internals.
+- `index.html`: `#mc-flip` deleted; `#mc-angle` div added containing `#mc-angle-up`, `#mc-fire`, `#mc-angle-down`; `#pause-btn` added to HUD before `#mute-btn`.
+- `src/index.css`: `#mc-flip` rule removed; button size constants applied (56px movement, 48px angle, 72px fire, 40px HUD); `@media (hover:hover) and (pointer:fine)` hides `#mobile-controls` on desktop.
+- `src/constants.js`: 4 new exports — `MOBILE_BTN_MOVEMENT_PX`, `MOBILE_BTN_ANGLE_PX`, `MOBILE_BTN_FIRE_PX`, `MOBILE_HUD_BTN_PX`.
+- `playwright.config.js`: added `mobile-chrome` project (Pixel 5 viewport).
+- `tests/e2e/mobile.spec.js`: 7 Playwright tests covering controls visibility, angle up/down, fire charge/release, no mc-flip, desktop hide, pause btn.

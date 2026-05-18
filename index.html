@@ -46,6 +46,7 @@
         <div class="hud-item" id="hud-aegis-wrap" style="display:none">AEGIS <span id="hud-aegis" style="color:#00ffff">—</span></div>
         <div class="hud-item">ANGLE <span id="hud-angle">45°</span></div>
         <div class="hud-item">POWER <span id="hud-power">20</span></div>
+        <button id="pause-btn" title="[P] Pause">⏸</button>
         <button id="mute-btn" title="[M] Toggle mute">♪</button>
       </div>
       <div id="hud-progress"></div>
@@ -230,7 +231,11 @@
         <button id="mc-left" aria-label="Move launcher left">◄</button>
         <button id="mc-right" aria-label="Move launcher right">►</button>
       </div>
-      <button id="mc-flip" aria-label="Flip launcher facing">⇄</button>
+      <div id="mc-angle">
+        <button id="mc-angle-up" aria-label="Increase launch angle">▲</button>
+        <button id="mc-fire" aria-label="Hold to charge, release to fire">●</button>
+        <button id="mc-angle-down" aria-label="Decrease launch angle">▼</button>
+      </div>
     </div>
 
     <script type="module" src="/src/main.js"></script>
