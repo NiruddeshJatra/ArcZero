@@ -53,7 +53,6 @@ body {
   position: fixed;
   inset: 0;
   min-height: 100dvh;
-  width: 100vw;
   z-index: 60;
   background: rgba(10, 10, 15, 0.92);
   flex-direction: column;

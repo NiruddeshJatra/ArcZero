@@ -21,7 +21,7 @@ import { loadSave, saveSave } from './persistence.js';
 // Slot definitions
 // ---------------------------------------------------------------------------
 
-const AUDIO_BASE = `${import.meta.env.BASE_URL}audio/`;
+const AUDIO_BASE = new URL('audio/', import.meta.env.BASE_URL).pathname;
 
 /** @type {Record<string, string>} */
 const SOUNDS = {
