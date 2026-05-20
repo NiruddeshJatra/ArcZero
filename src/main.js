@@ -663,8 +663,9 @@ function maybePromptFirstRunName() {
 }
 
 function bootstrap() {
-  // Pre-warm AudioContext on first keydown
+  // Pre-warm AudioContext on first keydown or first touch
   document.addEventListener('keydown', () => initAudio(), { once: true });
+  document.addEventListener('touchstart', () => initAudio(), { once: true });
 
   // Pause button
   const pauseBtn = document.getElementById('pause-btn');

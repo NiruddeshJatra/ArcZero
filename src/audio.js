@@ -21,41 +21,43 @@ import { loadSave, saveSave } from './persistence.js';
 // Slot definitions
 // ---------------------------------------------------------------------------
 
+const AUDIO_BASE = `${import.meta.env.BASE_URL}audio/`;
+
 /** @type {Record<string, string>} */
 const SOUNDS = {
   // Beds (music bus)
-  ambientLoop:   '/audio/ambient_loop.mp3',
-  peakWaveBed:   '/audio/peak_wave_bed.mp3',
-  menuAmbient:   '/audio/menu_ambient.mp3',
+  ambientLoop:   `${AUDIO_BASE}ambient_loop.mp3`,
+  peakWaveBed:   `${AUDIO_BASE}peak_wave_bed.mp3`,
+  menuAmbient:   `${AUDIO_BASE}menu_ambient.mp3`,
   // Player (sfx bus)
-  shoot:         '/audio/shoot.mp3',
-  dryClick:      '/audio/dry_click.mp3',
-  intercept:     '/audio/intercept.mp3',
-  thump:         '/audio/thump.wav',
-  graze:         '/audio/graze.wav',
+  shoot:         `${AUDIO_BASE}shoot.mp3`,
+  dryClick:      `${AUDIO_BASE}dry_click.mp3`,
+  intercept:     `${AUDIO_BASE}intercept.mp3`,
+  thump:         `${AUDIO_BASE}thump.wav`,
+  graze:         `${AUDIO_BASE}graze.wav`,
   // Events (sfx bus)
-  courierAlert:  '/audio/courier_alert.mp3',
-  splitterSplit: '/audio/splitter_split.wav',
-  mirvSplit:     '/audio/mirv_split.mp3',
+  courierAlert:  `${AUDIO_BASE}courier_alert.mp3`,
+  splitterSplit: `${AUDIO_BASE}splitter_split.wav`,
+  mirvSplit:     `${AUDIO_BASE}mirv_split.mp3`,
   // Scoring (sfx bus)
-  comboUp:       '/audio/combo_up.mp3',
-  comboPeak:     '/audio/combo_peak.mp3',
-  milestone:     '/audio/milestone.mp3',
-  damage:        '/audio/damage.mp3',
+  comboUp:       `${AUDIO_BASE}combo_up.mp3`,
+  comboPeak:     `${AUDIO_BASE}combo_peak.mp3`,
+  milestone:     `${AUDIO_BASE}milestone.mp3`,
+  damage:        `${AUDIO_BASE}damage.mp3`,
   // Transitions (sfx bus)
-  waveWarning:   '/audio/wave_warning.wav',
-  waveStart:     '/audio/wave_start.mp3',
-  levelUp:       '/audio/level_up.mp3',
-  levelClear:    '/audio/level_clear.mp3',
-  gameOver:      '/audio/game-over.mp3',
+  waveWarning:   `${AUDIO_BASE}wave_warning.wav`,
+  waveStart:     `${AUDIO_BASE}wave_start.mp3`,
+  levelUp:       `${AUDIO_BASE}level_up.mp3`,
+  levelClear:    `${AUDIO_BASE}level_clear.mp3`,
+  gameOver:      `${AUDIO_BASE}game-over.mp3`,
   // UI (sfx bus)
-  uiClick:       '/audio/ui_click.wav',
-  uiConfirm:     '/audio/ui_confirm.mp3',
+  uiClick:       `${AUDIO_BASE}ui_click.wav`,
+  uiConfirm:     `${AUDIO_BASE}ui_confirm.mp3`,
   // Aegis (sfx bus)
-  aegisTrigger:  '/audio/aegis_trigger.mp3',
-  shieldBreak:   '/audio/shield_break.mp3',
-  scrapCollect:  '/audio/scrap_collect.mp3',
-  emp:           '/audio/emp.mp3',
+  aegisTrigger:  `${AUDIO_BASE}aegis_trigger.mp3`,
+  shieldBreak:   `${AUDIO_BASE}shield_break.mp3`,
+  scrapCollect:  `${AUDIO_BASE}scrap_collect.mp3`,
+  emp:           `${AUDIO_BASE}emp.mp3`,
 };
 
 /** Mix gain per slot (0–1). Applied on the source before the bus. */

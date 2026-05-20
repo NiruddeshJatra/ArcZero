@@ -211,6 +211,10 @@ npm run lint:fix  # Auto-fix lint issues
 - `state.escalation` — per-run snapshot of `{vyMin, spawnInterval}` for L10 ramp; NEVER mutate `LEVELS[n]` directly
 - `state.runTotals` — cumulative Campaign/Daily record stats carried across fresh level states; use `collectRunTotals(state)` when building run results or advancing levels
 - `state.levelMedicSpawned` and `state._triggeredMilestones` are declared in `createState`; do not add lazy state fields without declaring them there
+- Audio asset URLs use `AUDIO_BASE = ${import.meta.env.BASE_URL}audio/` in `audio.js` — never use root-absolute `/audio/` paths (breaks subpath deploys)
+- Overlays are `position: fixed; inset: 0; min-height: 100dvh; z-index: 60` — not `position: absolute`. Scrollable overlays carry class `scrollable`; screen overlays (menu/intro/game-over) are `overflow: hidden`
+- Favicon `<link>` hrefs in `index.html` use relative paths (no leading slash) so Vite rewrites them under the base path
+- `initAudio()` is wired to both `keydown` and `touchstart` in `bootstrap()` — both needed for cross-device audio unlock
 - Commit format: `type(phaseN): description`
 
 ## AI Agents Available

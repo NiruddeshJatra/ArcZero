@@ -346,3 +346,11 @@ All progression state is persisted via `save.json` in localStorage:
 - `src/constants.js`: 4 new exports — `MOBILE_BTN_MOVEMENT_PX`, `MOBILE_BTN_ANGLE_PX`, `MOBILE_BTN_FIRE_PX`, `MOBILE_HUD_BTN_PX`.
 - `playwright.config.js`: added `mobile-chrome` project (Pixel 5 viewport).
 - `tests/e2e/mobile.spec.js`: 7 Playwright tests covering controls visibility, angle up/down, fire charge/release, no mc-flip, desktop hide, pause btn.
+
+## Phase 1 mobile bug fixes — audio path, overlay sizing, touch hints
+**2026-05-20 — Fix audio silence, overlay clipping, and stale control hint on mobile**
+
+- `src/audio.js`: Added `AUDIO_BASE = ${import.meta.env.BASE_URL}audio/`; all 26 SOUNDS values rewritten to use it. Root-absolute `/audio/` paths broke audio on the `/games/arczero/` subpath deploy (server returned HTML with 200, `decodeAudioData` failed silently).
+- `src/main.js`: Added `touchstart → initAudio()` alongside existing `keydown` listener in `bootstrap()` so AudioContext is unlocked on first tap on touch-only devices.
+- `src/index.css`: `.overlay` changed from `position: absolute` to `position: fixed; inset: 0; min-height: 100dvh; width: 100vw; z-index: 60` so overlays fill the full viewport instead of being clipped to `#game-wrapper`. Added `.overlay.scrollable` (flex-start + overflow-y: auto) for leaderboard/howto/settings; screen overlays (menu/intro/game-over) remain `overflow: hidden` with `background: rgba(10,10,15,0.97)` to block HUD bleed. Added `@media (hover: none) and (pointer: coarse)` to hide `#controls-hint` on touch devices.
+- `index.html`: Added `scrollable` class to `#leaderboard-overlay`, `#settings-overlay`, `#howto-overlay`. Favicon hrefs changed from `/favicon.svg` style to `favicon.svg` (no leading slash) so Vite rewrites them under the base path during build.
