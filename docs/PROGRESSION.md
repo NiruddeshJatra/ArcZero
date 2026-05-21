@@ -354,3 +354,12 @@ All progression state is persisted via `save.json` in localStorage:
 - `src/main.js`: Added `touchstart → initAudio()` alongside existing `keydown` listener in `bootstrap()` so AudioContext is unlocked on first tap on touch-only devices.
 - `src/index.css`: `.overlay` changed from `position: absolute` to `position: fixed; inset: 0; min-height: 100dvh; width: 100vw; z-index: 60` so overlays fill the full viewport instead of being clipped to `#game-wrapper`. Added `.overlay.scrollable` (flex-start + overflow-y: auto) for leaderboard/howto/settings; screen overlays (menu/intro/game-over) remain `overflow: hidden` with `background: rgba(10,10,15,0.97)` to block HUD bleed. Added `@media (hover: none) and (pointer: coarse)` to hide `#controls-hint` on touch devices.
 - `index.html`: Added `scrollable` class to `#leaderboard-overlay`, `#settings-overlay`, `#howto-overlay`. Favicon hrefs changed from `/favicon.svg` style to `favicon.svg` (no leading slash) so Vite rewrites them under the base path during build.
+
+## Phase 2a — Portrait world geometry (mobile)
+**2026-05-21 — Device-conditional world: 100×150 on touch, 200×150 on desktop**
+
+- `src/constants.js`: Added `IS_PORTRAIT` export (coarse-pointer media query, guarded for jsdom). Made all horizontal geometry conditional: `WORLD_WIDTH` (100/200), `CANVAS_WIDTH/HEIGHT` (derived, no literals), `LAUNCHER_START_X`, `LAUNCHER_X_MAX`, `LAUNCHER_SPEED` (27.5/55), `SPAWN_X_MIN/MAX` (15–90 / 30–180), `BONUS_LONG_RANGE_M` (25/50), `SPLITTER_CHILD_VX` (7.5/15). Vertical values, timing, and scoring criteria unchanged.
+- `src/levels.js`: Renamed static array to `DESKTOP_LEVELS`. Added `toPortraitLevel` transform (vx ×0.5, maxMissiles halved with floor 4). Exports `LEVELS` as derived portrait array or desktop array based on `IS_PORTRAIT`. Edit `DESKTOP_LEVELS` only — never duplicate tuning.
+- `src/main.js`: Imports `CANVAS_WIDTH/CANVAS_HEIGHT`; sets `canvas.width/height` at top of `bootstrap()` so the buffer matches the active world before first render.
+- `src/index.css`: Portrait canvas uses `width: min(100vw, calc(66dvh * 2/3)); height: auto; max-height: 66dvh` — the `min()` preserves 2:3 aspect ratio when max-height would otherwise clip without reducing width. Scrollable overlay `justify-content` changed from `flex-start` to `center` — fixes leaderboard/settings/howto starting from top of screen instead of vertically centered.
+- All existing tests pass unchanged (jsdom returns `IS_PORTRAIT = false` → desktop values).

@@ -1,11 +1,17 @@
+// Device detection — coarse pointer = touch/portrait world; guard for jsdom/test env
+export const IS_PORTRAIT =
+  typeof window !== 'undefined' &&
+  typeof window.matchMedia === 'function' &&
+  window.matchMedia('(pointer: coarse)').matches;
+
 // World dimensions (meters)
-export const WORLD_WIDTH = 200;
+export const WORLD_WIDTH = IS_PORTRAIT ? 100 : 200;
 export const WORLD_HEIGHT = 150;
 
 // Canvas rendering
 export const SCALE = 5; // px per meter
-export const CANVAS_WIDTH = 1000; // WORLD_WIDTH * SCALE
-export const CANVAS_HEIGHT = 750; // WORLD_HEIGHT * SCALE
+export const CANVAS_WIDTH = WORLD_WIDTH * SCALE;
+export const CANVAS_HEIGHT = WORLD_HEIGHT * SCALE;
 
 // Physics
 export const GRAVITY = -12; // m/s² (negative = downward)
@@ -22,10 +28,10 @@ export const INTERCEPTOR_ART_SCALE = 1.6;     // multiplies arrow dimensions
 export const INTERCEPTOR_HALO_RADIUS_PX = 10; // glow radius
 
 // Launcher
-export const LAUNCHER_START_X = 100; // meters from left
-export const LAUNCHER_SPEED = 55; // m/s lateral
+export const LAUNCHER_START_X = WORLD_WIDTH / 2;
+export const LAUNCHER_SPEED = IS_PORTRAIT ? 27.5 : 55; // m/s lateral
 export const LAUNCHER_X_MIN = 0;
-export const LAUNCHER_X_MAX = 200;
+export const LAUNCHER_X_MAX = WORLD_WIDTH;
 export const ANGLE_MIN = 30; // degrees
 export const ANGLE_MAX = 70; // degrees
 export const ANGLE_START = 45; // degrees
@@ -42,8 +48,8 @@ export const POWER_CHARGE_RATE = 30; // m/s per second
 
 // Spawning
 export const SPAWN_INTERVAL = 4; // seconds between missiles
-export const SPAWN_X_MIN = 30; // meters
-export const SPAWN_X_MAX = 180; // meters
+export const SPAWN_X_MIN = IS_PORTRAIT ? 15 : 30; // meters
+export const SPAWN_X_MAX = IS_PORTRAIT ? 90 : 180; // meters
 
 // Scoring & Health
 export const INTERCEPT_SCORE = 15;
@@ -135,7 +141,7 @@ export const BONUS_ALT_MAX_MULT = 3.0;
 export const BONUS_ALT_PRACTICAL_MAX_M = 100; // realistic max intercept altitude; capped here
 export const BONUS_CLUTCH_M = 35;            // intercept y below this (but above MIN_INTERCEPT_ALTITUDE)
 export const BONUS_CLUTCH_MULT = 1.5;
-export const BONUS_LONG_RANGE_M = 50;        // |impactX - launcherX|
+export const BONUS_LONG_RANGE_M = IS_PORTRAIT ? 25 : 50; // |impactX - launcherX|
 export const BONUS_LONG_RANGE_MULT = 1.2;
 // Angle multiplier: low angle (ANGLE_MIN 30°) gives MORE points; high angle (ANGLE_MAX 70°) gives fewer
 // BONUS_ANGLE_LOW_MULT / BONUS_ANGLE_HIGH_MULT = 2 (30° scores 2× vs 70°)
@@ -171,7 +177,7 @@ export const COURIER_VY_MIN = -50;
 export const COURIER_VY_MAX = -35;
 export const COURIER_SCORE_MULT = 1.5;
 export const SPLITTER_SPLIT_Y = 60;          // when y < this and still alive, split
-export const SPLITTER_CHILD_VX = 15;
+export const SPLITTER_CHILD_VX = IS_PORTRAIT ? 7.5 : 15;
 export const SPLITTER_CHILD_VY = -5;
 export const MIRV_SPLIT_AFTER_S = 1.5;
 export const MIRV_SPREAD_DEG = 20;
