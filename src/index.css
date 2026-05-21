@@ -1,3 +1,7 @@
+:root {
+  --mobile-controls-height: 240px;
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -522,7 +526,7 @@ body {
 
 /* ── Portrait mode — allow play ── */
 @media (max-width: 768px) and (orientation: portrait) {
-  #game-canvas { width: 100vw; height: auto; max-width: calc((100dvh - 240px) * 2 / 3); max-height: none; }
+  #game-canvas { width: 100vw; height: auto; max-width: calc((100dvh - var(--mobile-controls-height)) * 2 / 3); max-height: none; }
 }
 
 /* ── Mobile controls ── */
