@@ -198,9 +198,9 @@
 
       <!-- ── Level summary ── -->
       <div id="level-summary-overlay" class="overlay" style="cursor:pointer;gap:16px;">
-        <div id="level-summary-title" style="font-size:56px;font-weight:700;color:#44aaff;letter-spacing:0.08em;margin-top:-60px;animation:slideDown 0.3s ease-out">LEVEL COMPLETE</div>
+        <div id="level-summary-title" style="font-size:clamp(28px, 7vw, 56px);font-weight:700;color:#44aaff;letter-spacing:0.08em;margin-top:-60px;animation:slideDown 0.3s ease-out">LEVEL COMPLETE</div>
         <div>
-           <div id="level-summary-score" style="font-size:72px;font-weight:700;text-align:center">0</div>
+           <div id="level-summary-score" style="font-size:clamp(38px, 11vw, 72px);font-weight:700;text-align:center">0</div>
            <div style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:0.1em;text-align:center;margin-top:-10px">SCORE THIS LEVEL</div>
         </div>
         <div id="level-summary-achievement" style="font-size:14px;color:#ffd700;letter-spacing:0.1em;min-height:18px"></div>
@@ -227,14 +227,17 @@
 
     <!-- ── Mobile controls ── -->
     <div id="mobile-controls">
-      <div id="mc-movement">
-        <button id="mc-left" aria-label="Move launcher left">◄</button>
-        <button id="mc-right" aria-label="Move launcher right">►</button>
+      <div id="mc-dpad">
+        <button id="mc-angle-up" class="mc-arrow" aria-label="Aim up">▲</button>
+        <div id="mc-dpad-row">
+          <button id="mc-left" class="mc-arrow" aria-label="Move left">◄</button>
+          <button id="mc-angle-down" class="mc-arrow" aria-label="Aim down">▼</button>
+          <button id="mc-right" class="mc-arrow" aria-label="Move right">►</button>
+        </div>
       </div>
-      <div id="mc-angle">
-        <button id="mc-angle-up" aria-label="Increase launch angle">▲</button>
-        <button id="mc-fire" aria-label="Hold to charge, release to fire">●</button>
-        <button id="mc-angle-down" aria-label="Decrease launch angle">▼</button>
+      <div id="mc-actions">
+        <button id="mc-flip" class="mc-action" aria-label="Flip facing">⇄</button>
+        <button id="mc-fire" class="mc-action" aria-label="Hold to charge, release to fire">●</button>
       </div>
     </div>
 

@@ -1,3 +1,5 @@
+import { FACING_LEFT, FACING_RIGHT } from './constants.js';
+
 /**
  * Wire on-screen mobile controls to key flags.
  * Canvas touch is passive (display-only); all input flows through buttons.
@@ -33,6 +35,15 @@ export function initMobileControls(keys, getActiveState) {
   }, { passive: false });
   // touchcancel = OS-interrupted gesture; clear charge but don't fire
   fire.addEventListener('touchcancel', () => { keys.space = false; });
+
+  const flip = document.getElementById('mc-flip');
+  if (flip) {
+    flip.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const s = getActiveState?.();
+      if (s) s.launcher.facing = s.launcher.facing === FACING_RIGHT ? FACING_LEFT : FACING_RIGHT;
+    }, { passive: false });
+  }
 }
 
 /** Returns true when touch input should be active based on settings. */

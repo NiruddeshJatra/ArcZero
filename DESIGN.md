@@ -63,13 +63,14 @@ ArcZero uses a minimalist, utilitarian interface resembling a military radar or 
 ### Portrait Canvas Sizing
 On touch/coarse-pointer devices (`IS_PORTRAIT = true`), the canvas buffer is 500×750 (2:3 aspect ratio, matching a phone's portrait orientation). CSS sizing:
 ```css
-width: min(100vw, calc(66dvh * 2 / 3));
+width: 100vw;
 height: auto;
-max-height: 66dvh;
+max-width: calc((100dvh - 240px) * 2 / 3);
+max-height: none;
 ```
-- `min()` ensures width shrinks proportionally when height would exceed 66dvh, preserving the 2:3 aspect ratio without distortion.
-- The remaining ~34dvh is reserved for the HUD strip and mobile control buttons below the canvas.
-- Do **not** use `width: 100vw; height: auto; max-height: X` alone — when `max-height` clips, `width: 100vw` stays fixed, squishing the canvas.
+- The `max-width` calculation ensures the canvas never exceeds the available screen height minus a fixed 240px bottom band, preserving the 2:3 aspect ratio perfectly.
+- The fixed 240px band is reserved for the HUD strip and the mobile controls (inverted-T dpad and action buttons) to prevent overlap on any phone height.
+- The base `max-height: 80vh` rule is overridden with `max-height: none` to prevent the canvas from being squashed vertically on taller screens while allowing `height: auto` to naturally respect the aspect ratio.
 
 ### Scrollable Overlays
 Overlays that contain scrollable content (leaderboard, settings, how-to-play) carry the `scrollable` CSS class:

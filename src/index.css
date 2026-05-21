@@ -522,33 +522,21 @@ body {
 
 /* ── Portrait mode — allow play ── */
 @media (max-width: 768px) and (orientation: portrait) {
-  #game-canvas { width: min(100vw, calc(66dvh * 2 / 3)); height: auto; max-height: 66dvh; }
-  #mc-angle { right: 16px; }
-  #mc-movement { left: 16px; }
+  #game-canvas { width: 100vw; height: auto; max-width: calc((100dvh - 240px) * 2 / 3); max-height: none; }
 }
 
 /* ── Mobile controls ── */
 #mobile-controls {
   display: none;
   position: fixed;
-  bottom: 12px;
-  left: 0;
-  right: 0;
+  inset: 0;
   pointer-events: none;
   z-index: 50;
 }
 #mobile-controls.visible { display: block; }
 
-#mc-movement {
-  position: absolute;
-  bottom: 0;
-  left: 12px;
-  display: flex;
-  gap: 8px;
-  pointer-events: auto;
-}
 
-#mc-left, #mc-right, #mc-angle-up, #mc-angle-down, #mc-fire {
+.mc-arrow, .mc-action {
   background: rgba(20, 20, 30, 0.7);
   border: 1px solid rgba(68, 170, 255, 0.35);
   color: #44aaff;
@@ -560,37 +548,36 @@ body {
   touch-action: none;
   transition: background 0.08s;
 }
-#mc-left:active, #mc-right:active, #mc-angle-up:active, #mc-angle-down:active, #mc-fire:active {
-  background: rgba(68, 170, 255, 0.3);
-}
+.mc-arrow:active, .mc-action:active { background: rgba(68, 170, 255, 0.3); }
 
-#mc-left, #mc-right {
-  font-size: 24px;
-  width: 56px;
-  height: 56px;
-}
-
-#mc-angle {
+#mc-dpad {
   position: absolute;
-  bottom: 0;
-  right: 12px;
+  bottom: 12px;
+  left: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
   pointer-events: auto;
 }
+#mc-dpad-row { display: flex; gap: 6px; }
+.mc-arrow { width: 52px; height: 52px; font-size: 22px; }
 
-#mc-angle-up, #mc-angle-down {
-  width: 48px;
-  height: 48px;
-  font-size: 20px;
+#mc-actions {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
 }
-
+#mc-flip { width: 48px; height: 48px; font-size: 22px; }
 #mc-fire {
-  width: 72px;
-  height: 72px;
-  font-size: 28px;
+  width: 68px;
+  height: 68px;
+  font-size: 26px;
   border-color: #44aaff;
   background: rgba(68, 170, 255, 0.18);
 }

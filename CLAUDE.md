@@ -32,7 +32,7 @@ src/
 ├── flags.js         ← feature flags (SCORE_REBALANCE, EVENT_MISSILES, etc.)
 ├── share.js         ← daily share payload builder (emoji grid)
 ├── milestones.js    ← milestone definitions + checkMilestones + updateStreak
-└── touchInput.js    ← mobile touch controls: 5-button layout (◄ ► movement, ▲ ● ▼ angle/fire); wired once from bootstrap()
+└── touchInput.js    ← mobile touch controls: 6-button inverted-T + actions layout (◄ ► movement, ▲ ▼ angle, ● fire, ⇄ flip); wired once from bootstrap()
 docs/
 ├── backend-api.md      ← v2 REST API scaffold (not implemented)
 ├── AEGIS_PROTOCOL.md   ← Aegis energy system, payloads, UI, audio
@@ -67,7 +67,7 @@ index.html
 - World: **desktop** 200m × 150m; **portrait mobile** 100m × 150m — controlled by `IS_PORTRAIT` in `constants.js`
 - `IS_PORTRAIT = window.matchMedia('(pointer: coarse)').matches` — evaluated once at module load; guarded for jsdom (returns false → desktop values in all tests)
 - Canvas: scale 5px/m → `CANVAS_WIDTH × CANVAS_HEIGHT` (derived: desktop 1000×750, portrait 500×750); set on `canvas` element in `bootstrap()`
-- CSS: portrait canvas displays at `width: min(100vw, calc(66dvh * 2/3)); height: auto` to preserve 2:3 aspect under both constraints
+- CSS: portrait canvas displays at `width: 100vw; height: auto; max-width: calc((100dvh - 240px) * 2 / 3); max-height: none` to reserve a 240px bottom band and preserve 2:3 aspect without distortion
 - Gravity: g = -12 m/s²
 - Timestep: dt = 0.05s (fixed, 20 ticks/sec)
 - Physics update per tick:
@@ -96,6 +96,7 @@ index.html
 | ◄ ► (touch) | Move launcher left/right (hold) |
 | ▲ ▼ (touch) | Angle up/down (hold) |
 | ● fire (touch) | Hold = charge power; release = fire |
+| ⇄ flip (touch) | Flip launcher facing (left/right) |
 
 ### Firing
 ```
