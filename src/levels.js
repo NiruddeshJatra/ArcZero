@@ -1,4 +1,4 @@
-import { IS_PORTRAIT } from './constants.js';
+import { IS_PORTRAIT, PORTRAIT_VX_SCALE, PORTRAIT_MAX_MISSILES_SCALE, PORTRAIT_MAX_MISSILES_FLOOR } from './constants.js';
 
 /**
  * Level configuration. All per-level tuning lives here.
@@ -49,8 +49,10 @@ function toPortraitLevel(cfg) {
   const max = cfg.maxMissiles;
   return {
     ...cfg,
-    missileVxRange: cfg.missileVxRange * 0.5,
-    maxMissiles: Number.isFinite(max) ? Math.max(4, Math.round(max * 0.5)) : max,
+    missileVxRange: cfg.missileVxRange * PORTRAIT_VX_SCALE,
+    maxMissiles: Number.isFinite(max)
+      ? Math.max(PORTRAIT_MAX_MISSILES_FLOOR, Math.round(max * PORTRAIT_MAX_MISSILES_SCALE))
+      : max,
   };
 }
 
