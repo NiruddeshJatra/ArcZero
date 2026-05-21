@@ -67,7 +67,7 @@ index.html
 - World: **desktop** 200m × 150m; **portrait mobile** 100m × 150m — controlled by `IS_PORTRAIT` in `constants.js`
 - `IS_PORTRAIT = window.matchMedia('(pointer: coarse)').matches` — evaluated once at module load; guarded for jsdom (returns false → desktop values in all tests)
 - Canvas: scale 5px/m → `CANVAS_WIDTH × CANVAS_HEIGHT` (derived: desktop 1000×750, portrait 500×750); set on `canvas` element in `bootstrap()`
-- CSS: portrait canvas displays at `width: 100vw; height: auto; max-width: calc((100dvh - 240px) * 2 / 3); max-height: none` to reserve a 240px bottom band and preserve 2:3 aspect without distortion
+- CSS: portrait canvas displays at `width: 100vw; height: auto; max-width: calc((100dvh - var(--mobile-controls-height)) * 2 / 3); max-height: none` to reserve a bottom band for controls/HUD and preserve 2:3 aspect without distortion
 - Gravity: g = -12 m/s²
 - Timestep: dt = 0.05s (fixed, 20 ticks/sec)
 - Physics update per tick:

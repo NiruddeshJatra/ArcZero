@@ -65,11 +65,11 @@ On touch/coarse-pointer devices (`IS_PORTRAIT = true`), the canvas buffer is 500
 ```css
 width: 100vw;
 height: auto;
-max-width: calc((100dvh - 240px) * 2 / 3);
+max-width: calc((100dvh - var(--mobile-controls-height)) * 2 / 3);
 max-height: none;
 ```
-- The `max-width` calculation ensures the canvas never exceeds the available screen height minus a fixed 240px bottom band, preserving the 2:3 aspect ratio perfectly.
-- The fixed 240px band is reserved for the HUD strip and the mobile controls (inverted-T dpad and action buttons) to prevent overlap on any phone height.
+- The `max-width` calculation ensures the canvas never exceeds the available screen height minus a fixed bottom band (defined by `var(--mobile-controls-height)`), preserving the 2:3 aspect ratio perfectly.
+- This fixed band is reserved for the HUD strip and the mobile controls (inverted-T dpad and action buttons) to prevent overlap on any phone height.
 - The base `max-height: 80vh` rule is overridden with `max-height: none` to prevent the canvas from being squashed vertically on taller screens while allowing `height: auto` to naturally respect the aspect ratio.
 
 ### Scrollable Overlays
