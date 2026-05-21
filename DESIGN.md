@@ -57,3 +57,31 @@ ArcZero uses a minimalist, utilitarian interface resembling a military radar or 
 - **Flexbox**: Extensively used for aligning menu items, HUD stats, and leaderboard rows.
 - **No Clutter**: Elements are given space to breathe. Minimal lines, maximum contrast.
 - **Alignment**: Center-aligned for menus, space-between for rows (like leaderboards and HUD).
+
+## 6. Responsive & Mobile Layout
+
+### Portrait Canvas Sizing
+On touch/coarse-pointer devices (`IS_PORTRAIT = true`), the canvas buffer is 500×750 (2:3 aspect ratio, matching a phone's portrait orientation). CSS sizing:
+```css
+width: min(100vw, calc(66dvh * 2 / 3));
+height: auto;
+max-height: 66dvh;
+```
+- `min()` ensures width shrinks proportionally when height would exceed 66dvh, preserving the 2:3 aspect ratio without distortion.
+- The remaining ~34dvh is reserved for the HUD strip and mobile control buttons below the canvas.
+- Do **not** use `width: 100vw; height: auto; max-height: X` alone — when `max-height` clips, `width: 100vw` stays fixed, squishing the canvas.
+
+### Scrollable Overlays
+Overlays that contain scrollable content (leaderboard, settings, how-to-play) carry the `scrollable` CSS class:
+```css
+.overlay.scrollable { justify-content: center; overflow-y: auto; }
+```
+Content lists within these overlays use `max-height: 50vh; overflow-y: auto` to handle internal overflow. The outer overlay stays centered. **Do not set `justify-content: flex-start`** on scrollable overlays — it causes content to top-align on all screen sizes.
+
+### Screen Overlays
+Full-screen blocking overlays (menu, level intro, game over) use `overflow: hidden` and `background: rgba(10,10,15,0.97)` to prevent HUD bleed-through.
+
+### HUD on Mobile
+- HUD font/padding reduced via `@media (max-width: 768px)`.
+- Mute and pause buttons sized to 40×40px touch targets (`MOBILE_HUD_BTN_PX`).
+- `#controls-hint` (keyboard hint text) hidden on touch devices via `@media (hover:none) and (pointer:coarse)`.

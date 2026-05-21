@@ -5,7 +5,7 @@ import { seed, seedFromDateISO, dailyModifier } from './rng.js';
 import { FLAGS } from './flags.js';
 import { initAudio, playLevelUp, toggleMute, isMuted, setMasterVolume } from './audio.js';
 import { LEVELS } from './levels.js';
-import { BASE_HEALTH, STREAK_CALLOUTS, RANKING_MODES } from './constants.js';
+import { BASE_HEALTH, STREAK_CALLOUTS, RANKING_MODES, CANVAS_WIDTH, CANVAS_HEIGHT } from './constants.js';
 import { loadSave, saveSave, loadBoards, submitLocalScore, submitDailyScore, submitLevelRunScore, checkIsChainPB } from './persistence.js';
 import { initMobileControls, shouldUseTouchInput } from './touchInput.js';
 import { playMilestone, startAmbient, stopAmbient, playUiClick, playUiConfirm } from './audio.js';
@@ -663,6 +663,9 @@ function maybePromptFirstRunName() {
 }
 
 function bootstrap() {
+  canvas.width  = CANVAS_WIDTH;
+  canvas.height = CANVAS_HEIGHT;
+
   // Pre-warm AudioContext on first keydown or first touch (whichever fires first)
   const _initAudioOnce = () => {
     initAudio();

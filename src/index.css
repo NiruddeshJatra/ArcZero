@@ -469,7 +469,7 @@ body {
   padding: 24px 16px;
 }
 .overlay > * { flex-shrink: 0; }
-.overlay.scrollable { justify-content: flex-start; overflow-y: auto; }
+.overlay.scrollable { justify-content: center; overflow-y: auto; }
 
 #menu-overlay, #level-intro-overlay, #game-over-overlay { background: rgba(10, 10, 15, 0.97); }
 
@@ -522,7 +522,7 @@ body {
 
 /* ── Portrait mode — allow play ── */
 @media (max-width: 768px) and (orientation: portrait) {
-  #game-canvas { max-height: 50vh; width: 100vw; }
+  #game-canvas { width: min(100vw, calc(66dvh * 2 / 3)); height: auto; max-height: 66dvh; }
   #mc-angle { right: 16px; }
   #mc-movement { left: 16px; }
 }

@@ -24,8 +24,8 @@ src/
 ├── aegis.js         ← Aegis energy logic (addAegisEnergy, triggerAegisEmp); all Aegis rules live here
 ├── collision.js     ← distance checks, altitude guard, near-miss, combo scoring
 ├── renderer.js      ← all canvas drawing, HUD, overlays, combo badge, wave indicator
-├── constants.js     ← single source of truth for all numbers
-├── levels.js        ← per-level config array (L1–L10)
+├── constants.js     ← single source of truth for all numbers; exports IS_PORTRAIT for device-conditional world geometry
+├── levels.js        ← per-level config array (L1–L10); derives portrait configs from desktop array when IS_PORTRAIT
 ├── audio.js         ← sound effects (loads public/audio/*.mp3|wav)
 ├── rng.js           ← seeded PRNG (mulberry32); all randomness routes here
 ├── persistence.js   ← localStorage save/load; all localStorage access routes here
@@ -64,8 +64,10 @@ index.html
 ## Game Spec
 
 ### World & Physics
-- World: 200m × 150m, origin bottom-left, y increases upward
-- Canvas: scale 5px/m → 1000×750px, CSS-responsive (mobile letterbox)
+- World: **desktop** 200m × 150m; **portrait mobile** 100m × 150m — controlled by `IS_PORTRAIT` in `constants.js`
+- `IS_PORTRAIT = window.matchMedia('(pointer: coarse)').matches` — evaluated once at module load; guarded for jsdom (returns false → desktop values in all tests)
+- Canvas: scale 5px/m → `CANVAS_WIDTH × CANVAS_HEIGHT` (derived: desktop 1000×750, portrait 500×750); set on `canvas` element in `bootstrap()`
+- CSS: portrait canvas displays at `width: min(100vw, calc(66dvh * 2/3)); height: auto` to preserve 2:3 aspect under both constraints
 - Gravity: g = -12 m/s²
 - Timestep: dt = 0.05s (fixed, 20 ticks/sec)
 - Physics update per tick:
@@ -204,6 +206,9 @@ npm run lint:fix  # Auto-fix lint issues
 - All randomness via `rng.js` — `Math.random()` banned (ESLint rule); exemptions for visual-only jitter must carry `// eslint-disable-line no-restricted-properties` comment
 - All localStorage via `persistence.js` — direct calls banned (ESLint rule)
 - All constants in `constants.js` — never hardcode numbers elsewhere
+- World geometry is device-conditional via `IS_PORTRAIT` (exported from `constants.js`) — never call `window.matchMedia` in other files; never thread a "world object" through simulation files (physics/collision/spawner/renderer read constants directly)
+- `CANVAS_WIDTH` and `CANVAS_HEIGHT` are derived (`WORLD_WIDTH * SCALE`, `WORLD_HEIGHT * SCALE`) — never write literals like `1000` or `750` for canvas dimensions
+- Portrait mobile level configs are derived from the desktop `LEVELS` array in `levels.js` — never duplicate level tuning; edit `DESKTOP_LEVELS` only
 - All Aegis energy mutations via `aegis.js` (`addAegisEnergy`, `triggerAegisEmp`) — never mutate `state.aegis` directly in collision or gameLoop
 - Mobile controls: canvas is display-only (no touch handlers); all input via `#mobile-controls` buttons (`initMobileControls`). `initMobileControls` called **once** from `bootstrap()` — never per level (causes listener accumulation)
 - `state.pendingToasts` entries are `string | {text, kind}` — use `{text, kind: 'aegis'}` for styled Aegis toasts; `showToast` in `main.js` handles both forms

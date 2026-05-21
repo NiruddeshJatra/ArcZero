@@ -1,3 +1,5 @@
+import { IS_PORTRAIT } from './constants.js';
+
 /**
  * Level configuration. All per-level tuning lives here.
  * Index 0 is unused — levels are 1-based.
@@ -17,7 +19,7 @@
  *   forceTrajectoryOff — if true, disable trajectory preview regardless of settings
  *   escalatesPeak    — if true (L10), ramp difficulty each wave
  */
-export const LEVELS = [
+const DESKTOP_LEVELS = [
   null, // index 0 unused
 
   // L1 — Orientation
@@ -41,3 +43,17 @@ export const LEVELS = [
   // L10 — Endless
   { label: 'LEVEL 10 — ENDLESS',      spawnInterval: 1.8,  missileVyMin: -35, missileVyMax: -15, missileVxRange: 22, maxMissiles: 12,       scoreThreshold: Infinity, minIntercepts: Infinity, minWaves: Infinity, tint: '#000', intro: 'How long can you last?', eventWeights: { courier: 0.18, splitter: 0.18, mirv: 0.12 }, escalatesPeak: true },
 ];
+
+function toPortraitLevel(cfg) {
+  if (cfg === null) return null;
+  const max = cfg.maxMissiles;
+  return {
+    ...cfg,
+    missileVxRange: cfg.missileVxRange * 0.5,
+    maxMissiles: Number.isFinite(max) ? Math.max(4, Math.round(max * 0.5)) : max,
+  };
+}
+
+export const LEVELS = IS_PORTRAIT
+  ? DESKTOP_LEVELS.map(toPortraitLevel)
+  : DESKTOP_LEVELS;
