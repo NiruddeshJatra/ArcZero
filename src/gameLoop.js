@@ -15,6 +15,7 @@ import {
   DEFAULT_LEVEL_MIN_INTERCEPTS,
   DEFAULT_LEVEL_MIN_WAVES,
   LEVEL_ADVANCE_GRACE_S,
+  WORLD_WIDTH,
 } from './constants.js';
 import { LEVELS } from './levels.js';
 import { stepPhysics } from './physics.js';
@@ -256,14 +257,14 @@ function gameTick(state, keys, ctx) {
     // Init tick sets the timer but doesn't decrement, so actual wait = LEVEL_ADVANCE_GRACE_S + 1 tick (0.05s). Imperceptible.
     if (state.advanceGraceRemaining === null) {
       state.advanceGraceRemaining = LEVEL_ADVANCE_GRACE_S;
-      state.floaters.push({ x: 100, y: 90, text: 'ADVANCING...', mult: 1, age: 0, maxAge: LEVEL_ADVANCE_GRACE_S + 0.3 });
+      state.floaters.push({ x: WORLD_WIDTH / 2, y: 90, text: 'ADVANCING...', mult: 1, age: 0, maxAge: LEVEL_ADVANCE_GRACE_S + 0.3 });
     } else {
       state.advanceGraceRemaining -= DT;
       if (state.advanceGraceRemaining <= 0) {
         if (FLAGS.SCORE_REBALANCE) {
           const bonus = LEVEL_CLEAR_BONUS * state.level;
           state.score += bonus;
-          state.floaters.push({ x: 100, y: 75, text: `+${bonus} LEVEL CLEAR`, mult: 1, age: 0, maxAge: 1.5 });
+          state.floaters.push({ x: WORLD_WIDTH / 2, y: 75, text: `+${bonus} LEVEL CLEAR`, mult: 1, age: 0, maxAge: 1.5 });
         }
         playLevelClear();
         state.levelComplete = true;
