@@ -31,7 +31,7 @@ Player reaches L3 with 550 score, 24 intercepts, 3 waves completed. All gates me
 **`rankingMode = 'daily'`** — Seeded daily challenge.
 
 **Characteristics:**
-- Seeded RNG using today's ISO date. Every player worldwide sees the same missile spawns for that day.
+- Seeded RNG using today's ISO date. Every player worldwide sees the same missile spawns for that day. **Cross-player score comparison requires the CrazyGames leaderboard (portal build only) — own-domain builds store daily scores in local localStorage only, so leaderboards are device-local.**
 - Same advancement mechanics as Campaign (all three gates, 3-second grace).
 - **One ranked attempt per calendar day (UTC).** The day boundary is determined by UTC midnight (`new Date().toISOString().slice(0,10)`). After the first completion, subsequent attempts are marked unranked.
 - Best daily score for a given seed is tracked separately from Campaign best.
@@ -277,6 +277,8 @@ For Campaign and Daily, `buildRunResult(state)` uses `collectRunTotals(state)` s
 
 ## Persistence
 
+> **Aggregation note:** `save.best.totalIntercepts` and `save.best.totalSurvivedS` accumulate across ALL run modes (Campaign, Daily, and LEVELRUN) — they are lifetime counters, not per-mode. This is intentional.
+
 All progression state is persisted via `save.json` in localStorage:
 
 - **On game start:** `loadSave()` reads existing save or initializes defaults.
@@ -341,7 +343,7 @@ All progression state is persisted via `save.json` in localStorage:
 
 - `src/touchInput.js` rewritten: canvas drag removed entirely. New 5-button layout: ◄ ► movement (bottom-left), ▲ ● ▼ angle/fire column (bottom-right). Fire uses touchstart→space=true / touchend→space=false+spaceJustReleased=true, matching keyboard hold-charge semantics exactly.
 - `src/main.js`: `initMobileControls` moved from per-level `startLevel()` to once-only `bootstrap()` — fixes listener accumulation bug (10 calls per Campaign run). Uses `getActiveState: () => activeState` callback so touchend can set `state.inputType = 'touch'` without coupling touchInput.js to main.js internals.
-- `index.html`: `#mc-flip` deleted; `#mc-angle` div added containing `#mc-angle-up`, `#mc-fire`, `#mc-angle-down`; `#pause-btn` added to HUD before `#mute-btn`.
+- `index.html`: `#mc-flip` deleted; `#mc-angle` div added containing `#mc-angle-up`, `#mc-fire`, `#mc-angle-down`; `#pause-btn` added to HUD before `#mute-btn`. *(Correction: `#mc-flip` was re-added in Phase 2a/2b and is present in current code as the ⇄ launcher-flip button. The 5-button layout in this entry reflects an intermediate state; the final layout is 6 buttons: ◄ ► movement, ▲ ▼ angle, ● fire, ⇄ flip.)*
 - `src/index.css`: `#mc-flip` rule removed; button size constants applied (56px movement, 48px angle, 72px fire, 40px HUD); `@media (hover:hover) and (pointer:fine)` hides `#mobile-controls` on desktop.
 - `src/constants.js`: 4 new exports — `MOBILE_BTN_MOVEMENT_PX`, `MOBILE_BTN_ANGLE_PX`, `MOBILE_BTN_FIRE_PX`, `MOBILE_HUD_BTN_PX`.
 - `playwright.config.js`: added `mobile-chrome` project (Pixel 5 viewport).
@@ -363,3 +365,11 @@ All progression state is persisted via `save.json` in localStorage:
 - `src/main.js`: Imports `CANVAS_WIDTH/CANVAS_HEIGHT`; sets `canvas.width/height` at top of `bootstrap()` so the buffer matches the active world before first render.
 - `src/index.css`: Portrait canvas uses `width: min(100vw, calc(66dvh * 2/3)); height: auto; max-height: 66dvh` — the `min()` preserves 2:3 aspect ratio when max-height would otherwise clip without reducing width. Scrollable overlay `justify-content` changed from `flex-start` to `center` — fixes leaderboard/settings/howto starting from top of screen instead of vertically centered.
 - All existing tests pass unchanged (jsdom returns `IS_PORTRAIT = false` → desktop values).
+
+## Final Review — Determinism unit tests + E2E blocker fixes + smoke flows
+**2026-05-25 — Test layer complete: determinism pinned, blockers fixed, smoke flows added**
+
+- `tests/determinism.test.js` (new): 4 Vitest unit tests — same seed→same 20 spawns, `seedFromDateISO` stable across two calls, different ISO dates diverge, all desktop spawn x ∈ [SPAWN_X_MIN, SPAWN_X_MAX]. Portrait SPAWN_X [15, 90] not testable in jsdom (IS_PORTRAIT always false; flagged; canvas-sizing E2E confirms IS_PORTRAIT active on Pixel 5).
+- `tests/e2e/game.spec.js`: Root cause of all `score increases over time` failures was first-run name overlay blocking `#menu-campaign-btn` (fresh Playwright context = empty localStorage → `maybePromptFirstRunName()` fires). Fixed by `page.addInitScript` pre-seeding `arczero.save.v1` with `displayName` set in `beforeEach`. Added smoke flows: `pause freezes score`, `daily replay shows unranked toast`, `volume setting persists in localStorage`. Two fixme'd: campaign→game-over→leaderboard and level-select unlock (both require ~70s natural game over; no health-injection path without src/ change).
+- `tests/e2e/mobile.spec.js`: Same first-run fix applied. `#mc-flip` test converted from negative to positive assertion (visible + not disabled + tappable without crash). Fixed two pre-existing bugs in original spec: `#mc-angle` selector didn't exist in DOM (correct: `#mc-angle-up`); angle parsing used `Number('45°')` = NaN (fix: strip `°` before parse). `canvas renders on load` made viewport-conditional: Pixel 5 → width=500, desktop → width=1000.
+- Unit suite: 124 pass (up from 120). E2E: 28 pass / 10 skip (2 fixme × 2 projects + 6 pre-existing) / 0 fail.
