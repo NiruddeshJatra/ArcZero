@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run generate-og && npm run generate-favicons && vite build",
+    "build": "yarn generate-og && yarn generate-favicons && vite build",
+    "build:portal": "yarn generate-og && yarn generate-favicons && vite build --mode portal",
     "generate-og": "yarn node scripts/generate-og.mjs",
     "generate-favicons": "yarn node scripts/generate-favicons.mjs",
     "preview": "vite preview",
@@ -18,8 +19,10 @@
     "@eslint/js": "^9.9.0",
     "@playwright/test": "^1.47.0",
     "eslint": "^9.9.0",
+    "happy-dom": "^15.0.0",
     "jsdom": "^29.0.2",
     "prettier": "^3.3.0",
+    "sharp": "^0.33.0",
     "vite": "^5.4.0",
     "vitest": "^2.1.0"
   },
