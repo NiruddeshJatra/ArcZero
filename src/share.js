@@ -8,6 +8,8 @@
  * @param {Array<{ intercepts: number, spawns: number } | undefined>} waveStats - index 0–9 for waves 1–10
  * @returns {string}
  */
+const GAME_URL = import.meta.env.VITE_SHARE_URL ?? 'https://arczero.app';
+
 export function buildShareText(runResult, waveStats) {
   const grid = Array.from({ length: 10 }, (_, i) => {
     const w = waveStats[i];
@@ -28,6 +30,6 @@ export function buildShareText(runResult, waveStats) {
     `ArcZero · Daily ${runResult.dateISO}`,
     `Score ${runResult.score} · Lv ${runResult.level} · Chain ×${runResult.longestChain} · Closest ${closest}`,
     grid,
-    `arczero.app/?seed=${runResult.dateISO}`,
+    `${GAME_URL}/?seed=${runResult.dateISO}`,
   ].join('\n');
 }

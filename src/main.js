@@ -1,16 +1,29 @@
 import { collectRunTotals, createState } from './state.js';
+import { initCrazyGames, cgLoadingStart, cgLoadingStop, cgGameplayStart, cgGameplayStop, cgSubmitDailyScore, cgRequestMidgameAd } from './crazygames.js';
 import { initInput } from './input.js';
 import { startGameLoop } from './gameLoop.js';
 import { seed, seedFromDateISO, dailyModifier } from './rng.js';
 import { FLAGS } from './flags.js';
 import { initAudio, playLevelUp, toggleMute, isMuted, setMasterVolume } from './audio.js';
 import { LEVELS } from './levels.js';
-import { BASE_HEALTH, STREAK_CALLOUTS, RANKING_MODES, CANVAS_WIDTH, CANVAS_HEIGHT } from './constants.js';
+import { BASE_HEALTH, STREAK_CALLOUTS, RANKING_MODES, CANVAS_WIDTH, CANVAS_HEIGHT, IS_PORTRAIT } from './constants.js';
 import { loadSave, saveSave, loadBoards, submitLocalScore, submitDailyScore, submitLevelRunScore, checkIsChainPB } from './persistence.js';
 import { initMobileControls, shouldUseTouchInput } from './touchInput.js';
 import { playMilestone, startAmbient, stopAmbient, playUiClick, playUiConfirm } from './audio.js';
 import { buildShareText } from './share.js';
 import { checkMilestones, updateStreak } from './milestones.js';
+
+// ── Ad audio helpers ──────────────────────────────────────────────────────────
+let _adWasMuted = false;
+function adMuteForAd() {
+  _adWasMuted = isMuted();
+  if (!_adWasMuted) toggleMute();
+}
+function adRestoreAfterAd() {
+  if (!_adWasMuted) toggleMute();
+  const muteBtn = document.getElementById('mute-btn');
+  if (muteBtn) muteBtn.classList.toggle('muted', isMuted());
+}
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 const canvas            = document.getElementById('game-canvas');
@@ -248,7 +261,7 @@ function bindSettingsControls() {
     const v = parseFloat(e.target.value);
     currentSave.settings.soundVolume = v;
     setMasterVolume(v); // updates audio graph + persists audioVolumes.master
-    saveSave(currentSave);
+    currentSave = loadSave();
   });
 }
 
@@ -401,10 +414,12 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPA
       }
 
       startAmbient();
+      cgGameplayStart();
 
       loop = startGameLoop(ctx, state, keys, {
         onToast(text) { showToast(text); playMilestone(); },
         onLevelComplete(completedLevel) {
+          cgGameplayStop();
           loop.stop();
           keys.reset();
           playLevelUp();
@@ -463,8 +478,12 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPA
             startLevel(completedLevel + 1, BASE_HEALTH, mode, dailySeed, carryScore, state.startLevel, state.aegis, carryRunTotals);
           };
           levelSummaryOverlay.addEventListener('click', onClickNext, { once: true });
+          if (mode === RANKING_MODES.CAMPAIGN) {
+            cgRequestMidgameAd({ onStart: adMuteForAd, onComplete: adRestoreAfterAd });
+          }
         },
         onGameOver(runResult) {
+          cgGameplayStop();
           stopAmbient();
           document.getElementById('mobile-controls').classList.remove('visible');
           // Capture pre-run save for PB comparison and new-unlock detection.
@@ -513,6 +532,7 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPA
             }
             if (state.rankingMode === RANKING_MODES.DAILY && runResult.seed) {
               submitDailyScore(boards, runResult.seed, baseEntry);
+              cgSubmitDailyScore(runResult.score);
               currentSave.daily.lastCompletedDateISO = state.dateISO;
               currentSave.daily.lastScore = runResult.score;
               currentSave.daily.lastSeed = dailySeed;
@@ -525,6 +545,7 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPA
           }
 
           showGameOverScreen({ ...runResult, rankingMode: state.rankingMode }, isPB, lvlBest, isChainPB);
+          cgRequestMidgameAd({ onStart: adMuteForAd, onComplete: adRestoreAfterAd });
         },
       });
     } else {
@@ -635,6 +656,8 @@ function togglePause() {
   if (!activeState || !activeState.running) return;
   activeState.paused = !activeState.paused;
   if (keys && keys.reset) keys.reset();
+  if (activeState.paused) cgGameplayStop();
+  else cgGameplayStart();
 }
 
 function maybePromptFirstRunName() {
@@ -663,8 +686,11 @@ function maybePromptFirstRunName() {
 }
 
 function bootstrap() {
+  cgLoadingStart(); // no-op here (SDK not ready); real loadingStart fires in initCrazyGames()
+  initCrazyGames(); // fire-and-forget; portal-only, non-blocking
   canvas.width  = CANVAS_WIDTH;
   canvas.height = CANVAS_HEIGHT;
+  if (IS_PORTRAIT) document.body.setAttribute('data-portrait', 'true');
 
   // Pre-warm AudioContext on first keydown or first touch (whichever fires first)
   const _initAudioOnce = () => {
@@ -695,6 +721,7 @@ function bootstrap() {
   }
   bindSettingsControls();
   bindHowToPlay();
+  cgLoadingStop();
   // First-run name prompt, then main menu.
   if (!currentSave.player.displayName) maybePromptFirstRunName();
   else showOnly(menuOverlay);
