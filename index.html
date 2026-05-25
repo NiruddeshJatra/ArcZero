@@ -38,7 +38,7 @@
   </head>
   <body>
     <div id="game-wrapper">
-      <canvas id="game-canvas" width="1000" height="750"></canvas>
+      <canvas id="game-canvas" width="1000" height="750" aria-label="ArcZero game canvas"></canvas>
       <div id="hud">
         <div class="hud-item">LEVEL <span id="hud-level">1</span></div>
         <div class="hud-item">SCORE <span id="hud-score">0</span></div>
@@ -53,7 +53,7 @@
       <div id="streak-callout"></div>
 
       <!-- ── Main menu ── -->
-      <div id="menu-overlay" class="overlay visible">
+      <div id="menu-overlay" class="overlay visible" role="dialog" aria-modal="true">
         <div id="menu-title">ARCZERO</div>
         <div id="menu-subtitle">PHYSICS-BASED MISSILE INTERCEPTION</div>
         <button class="menu-btn primary" id="menu-campaign-btn">▶  PLAY CAMPAIGN<span class="menu-btn-sub">Level 1 → 10 · random spawns · fully ranked</span></button>
@@ -66,7 +66,7 @@
       </div>
 
       <!-- ── Level select ── -->
-      <div id="level-select-overlay" class="overlay">
+      <div id="level-select-overlay" class="overlay" role="dialog" aria-modal="true">
         <div style="font-size:22px;font-weight:700;letter-spacing:0.1em;color:#44aaff;margin-bottom:8px;">LEVEL SELECT</div>
         <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:16px;">SURVIVE AS LONG AS POSSIBLE · MEET ALL CRITERIA TO UNLOCK THE NEXT LEVEL</div>
         <div id="level-select-list"></div>
@@ -74,7 +74,7 @@
       </div>
 
       <!-- ── Leaderboard ── -->
-      <div id="leaderboard-overlay" class="overlay scrollable">
+      <div id="leaderboard-overlay" class="overlay scrollable" role="dialog" aria-modal="true">
         <div style="font-size:22px;font-weight:700;letter-spacing:0.1em;color:#44aaff;margin-bottom:8px;">LEADERBOARDS</div>
         <div id="leaderboard-tabs">
           <button class="tab-btn" data-tab="allTime" title="ALL-TIME">ALL-TIME</button>
@@ -89,7 +89,7 @@
       </div>
 
       <!-- ── Settings ── -->
-      <div id="settings-overlay" class="overlay scrollable">
+      <div id="settings-overlay" class="overlay scrollable" role="dialog" aria-modal="true">
         <div style="font-size:22px;font-weight:700;letter-spacing:0.1em;color:#44aaff;margin-bottom:16px;">SETTINGS</div>
         <div id="settings-list">
           <div class="setting-row">
@@ -113,7 +113,7 @@
       </div>
 
       <!-- ── How to Play ── -->
-      <div id="howto-overlay" class="overlay scrollable">
+      <div id="howto-overlay" class="overlay scrollable" role="dialog" aria-modal="true">
         <div style="font-size:22px;font-weight:700;letter-spacing:0.1em;color:#44aaff;margin-bottom:8px;">HOW TO PLAY</div>
         <div id="howto-list">
           <h4>OBJECTIVE</h4>
@@ -161,7 +161,7 @@
       </div>
 
       <!-- ── First-run name prompt ── -->
-      <div id="first-run-overlay" class="overlay">
+      <div id="first-run-overlay" class="overlay" role="dialog" aria-modal="true">
         <div id="first-run-title">WELCOME, PILOT</div>
         <div id="first-run-sub">PICK A NAME FOR THE LEADERBOARDS</div>
         <input type="text" id="first-run-name" maxlength="16" placeholder="YOUR CALLSIGN" autocomplete="off" />
@@ -170,7 +170,7 @@
       </div>
 
       <!-- ── Credits ── -->
-      <div id="credits-overlay" class="overlay">
+      <div id="credits-overlay" class="overlay" role="dialog" aria-modal="true">
         <div style="font-size:22px;font-weight:700;letter-spacing:0.1em;color:#44aaff;margin-bottom:16px;">CREDITS</div>
         <div style="font-size:13px;color:rgba(255,255,255,0.55);text-align:center;line-height:2em;">
           ArcZero — physics-based missile interception<br/>
@@ -181,7 +181,7 @@
       </div>
 
       <!-- ── Game over ── -->
-      <div id="game-over-overlay" class="overlay">
+      <div id="game-over-overlay" class="overlay" role="dialog" aria-modal="true">
         <div id="game-over-title">GAME OVER</div>
         <div id="final-score">SCORE: <span id="final-score-value">0</span></div>
         <div id="pb-line"></div>
@@ -197,7 +197,7 @@
       </div>
 
       <!-- ── Level summary ── -->
-      <div id="level-summary-overlay" class="overlay" style="cursor:pointer;gap:16px;">
+      <div id="level-summary-overlay" class="overlay" role="dialog" aria-modal="true" style="cursor:pointer;gap:16px;">
         <div id="level-summary-title" style="font-size:clamp(28px, 7vw, 56px);font-weight:700;color:#44aaff;letter-spacing:0.08em;margin-top:-60px;animation:slideDown 0.3s ease-out">LEVEL COMPLETE</div>
         <div>
            <div id="level-summary-score" style="font-size:clamp(38px, 11vw, 72px);font-weight:700;text-align:center">0</div>
@@ -215,7 +215,7 @@
       </div>
 
       <!-- ── Level intro ── -->
-      <div id="level-intro-overlay" class="overlay">
+      <div id="level-intro-overlay" class="overlay" role="dialog" aria-modal="true">
         <div id="level-intro-title">LEVEL 1</div>
         <div id="level-intro-text" style="font-size:16px;color:rgba(255,255,255,0.55);letter-spacing:0.06em;margin-top:-8px;"></div>
         <div id="level-intro-countdown">3</div>
