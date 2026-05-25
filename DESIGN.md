@@ -61,12 +61,17 @@ ArcZero uses a minimalist, utilitarian interface resembling a military radar or 
 ## 6. Responsive & Mobile Layout
 
 ### Portrait Canvas Sizing
-On touch/coarse-pointer devices (`IS_PORTRAIT = true`), the canvas buffer is 500×750 (2:3 aspect ratio, matching a phone's portrait orientation). CSS sizing:
+On touch/coarse-pointer devices (`IS_PORTRAIT = true`), the canvas buffer is 500×750 (2:3 aspect ratio, matching a phone's portrait orientation).
+
+`bootstrap()` in `main.js` emits `data-portrait="true"` on `<body>` when `IS_PORTRAIT` is true. Portrait canvas sizing keys off this attribute selector in `index.css`:
+
 ```css
-width: 100vw;
-height: auto;
-max-width: calc((100dvh - var(--mobile-controls-height)) * 2 / 3);
-max-height: none;
+body[data-portrait="true"] #game-canvas {
+  width: 100vw;
+  height: auto;
+  max-width: calc((100dvh - var(--mobile-controls-height)) * 2 / 3);
+  max-height: none;
+}
 ```
 - The `max-width` calculation ensures the canvas never exceeds the available screen height minus a fixed bottom band (defined by `var(--mobile-controls-height)`), preserving the 2:3 aspect ratio perfectly.
 - This fixed band is reserved for the HUD strip and the mobile controls (inverted-T dpad and action buttons) to prevent overlap on any phone height.

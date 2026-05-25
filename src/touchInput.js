@@ -51,5 +51,5 @@ export function shouldUseTouchInput(settings) {
   const mode = settings?.mobileTouchMode ?? 'auto';
   if (mode === 'on') return true;
   if (mode === 'off') return false;
-  return 'ontouchstart' in window;
+  return typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
 }

@@ -525,8 +525,19 @@ body {
 }
 
 /* ── Portrait mode — allow play ── */
-@media (max-width: 768px) and (orientation: portrait) {
-  #game-canvas { width: 100vw; height: auto; max-width: calc((100dvh - var(--mobile-controls-height)) * 2 / 3); max-height: none; }
+body[data-portrait="true"] #game-canvas {
+  width: 100vw;
+  height: auto;
+  max-width: calc((100dvh - var(--mobile-controls-height)) * 2 / 3);
+  max-height: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* ── Mobile controls ── */
