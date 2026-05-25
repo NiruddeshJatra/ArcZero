@@ -373,3 +373,41 @@ All progression state is persisted via `save.json` in localStorage:
 - `tests/e2e/game.spec.js`: Root cause of all `score increases over time` failures was first-run name overlay blocking `#menu-campaign-btn` (fresh Playwright context = empty localStorage → `maybePromptFirstRunName()` fires). Fixed by `page.addInitScript` pre-seeding `arczero.save.v1` with `displayName` set in `beforeEach`. Added smoke flows: `pause freezes score`, `daily replay shows unranked toast`, `volume setting persists in localStorage`. Two fixme'd: campaign→game-over→leaderboard and level-select unlock (both require ~70s natural game over; no health-injection path without src/ change).
 - `tests/e2e/mobile.spec.js`: Same first-run fix applied. `#mc-flip` test converted from negative to positive assertion (visible + not disabled + tappable without crash). Fixed two pre-existing bugs in original spec: `#mc-angle` selector didn't exist in DOM (correct: `#mc-angle-up`); angle parsing used `Number('45°')` = NaN (fix: strip `°` before parse). `canvas renders on load` made viewport-conditional: Pixel 5 → width=500, desktop → width=1000.
 - Unit suite: 124 pass (up from 120). E2E: 28 pass / 10 skip (2 fixme × 2 projects + 6 pre-existing) / 0 fail.
+
+## CrazyGames SDK integration + portal dual build
+**2026-05-25 — Portal build with SDK lifecycle, score submission, and ad hooks**
+
+- `src/crazygames.js` (new): fire-and-forget SDK loader; all CG calls gated by `MODE === 'portal'`; exports `cgLoadingStart/Stop`, `cgGameplayStart/Stop`, `cgSubmitDailyScore`, `cgRequestMidgameAd`, `encryptScore`. Own-domain build is entirely unaffected.
+- `src/main.js`: wired CG lifecycle (loading→gameplay start/stop on level enter/exit/pause, midgame ad request on level complete and game over, daily score submit). Added `adMuteForAd`/`adRestoreAfterAd` helpers that save+restore mute state around ads. Added `data-portrait="true"` attribute set in `bootstrap()` when `IS_PORTRAIT` is true (required for CSS attribute selector).
+- `src/share.js`: share URL reads from `VITE_SHARE_URL` env var with fallback to `https://arczero.app`.
+- `vite.config.js`: converted to function form; `MODE === 'portal'` uses relative base (`./`) and outputs to `dist-portal/`; default build unchanged (`/games/arczero/` base, `dist/`).
+- `package.json`: added `build:portal` script (`vite build --mode portal`); added `sharp` and `happy-dom` dev deps.
+- `netlify.toml` + `playwright.config.js`: `npm run` → `yarn`.
+- `.gitignore`: added `dist-portal/`.
+
+## Portrait CSS attribute selector + reduced-motion + touch detection fix
+**2026-05-25 — Replace orientation media query with data-portrait attribute; fix shouldUseTouchInput**
+
+- `src/index.css`: portrait canvas rule moved from `@media (max-width: 768px) and (orientation: portrait)` to `body[data-portrait="true"] #game-canvas` — decoupled from viewport size, works correctly on wide-screen touch devices. Added `@media (prefers-reduced-motion: reduce)` global rule cutting animation/transition durations.
+- `src/touchInput.js`: `shouldUseTouchInput` auto-mode changed from `'ontouchstart' in window` to `window.matchMedia('(pointer: coarse)').matches` — aligns with the same media query used for `IS_PORTRAIT`, fixing false positives on hybrid pointer devices.
+- `CLAUDE.md` + `DESIGN.md`: documented the `data-portrait` attribute pattern as the authoritative portrait CSS trigger; convention added to prevent future regression to media queries.
+
+## Accessibility pass on overlay dialogs
+**2026-05-25 — role=dialog aria-modal on all overlays, aria-label on canvas**
+
+- `index.html`: added `role="dialog" aria-modal="true"` to all 9 overlay divs (menu, level-select, leaderboard, settings, howto, first-run, credits, game-over, level-summary, level-intro). Added `aria-label="ArcZero game canvas"` to `#game-canvas`.
+
+## Contract + golden scoring tests; phase2 advancement rewrite
+**2026-05-25 — Pin API surface and scoring formulas; fix stale advancement gating tests**
+
+- `tests/contract.test.js` (new): pins `buildRunResult` field set (exactly 13 keys), flags physicsVersion gap, pins `DEFAULT_SAVE` shape, and pins CG submit-payload structure.
+- `tests/scoring.golden.test.js` (new): pins scoring formula outputs — altitude multiplier, angle multiplier, clutch, long-range, combo cap, passive rate, level-clear bonus, Aegis energy gains.
+- `tests/phase2.test.js`: rewrote `level advancement gating` describe — old tests checked for RELEASE-phase gate (removed in Phase 2b); new tests verify the 3-second grace model: `null → LEVEL_ADVANCE_GRACE_S` on first all-gates-clear, and `levelComplete = true` after `LEVEL_ADVANCE_GRACE_S / DT` ticks.
+- `docs/DECISIONS.md` (new): locked decisions doc — world geometry, level config source of truth, leaderboard architecture, dual build, asset paths.
+- `docs/backend-api.md`: field-drift corrections (`chainBest→longestChain`, `durationS→survivedS`); added missing fields (`startLevel`, `levelScore`, `rankingMode`, `intercepts`, `waveStats`, `criteriaCleared`); physicsVersion gap note; daily seed validation note.
+- `docs/AEGIS_PROTOCOL.md`: corrected Scrap Orb description (cyan pulsing orbs, arc trajectory); corrected 'OFFLINE' → `'OFF'` display string.
+
+## Build tooling — vitest happy-dom + yarn normalization
+**2026-05-25 — Switch vitest env from jsdom to happy-dom; normalize yarn across tooling**
+
+- `vitest.config.js`: `environment: 'jsdom'` → `environment: 'happy-dom'` (faster, better browser API coverage; `package.json` lists `happy-dom` as dev dep). `playwright.config.js` and `netlify.toml` updated to use `yarn` consistently.

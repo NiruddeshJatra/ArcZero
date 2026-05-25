@@ -24,8 +24,8 @@ When the gauge reaches 100 Energy, it triggers a payload that evolves as the pla
 - **Level 10+ | EMP Last Stand:** If the player suffers a lethal blow while the Aegis gauge is at least 50% full, the gauge breaks (offline for the rest of the run), all active missiles are destroyed, and the player is revived with 30 Health.
 
 ## UI & Audio
-- **Gauge:** Located directly under the launcher, filling with a cyan gradient. Displays 'OFFLINE' in red if broken by the EMP Last Stand.
+- **Gauge:** Located directly under the launcher, filling with a cyan gradient. Displays `'OFF'` in red if broken by the EMP Last Stand.
 - **Shield:** A translucent blue hexagonal grid overlaid on the ground.
-- **Scrap Orbs:** Pulsing green orbs falling from the sky.
+- **Scrap Orbs:** Pulsing cyan orbs spawned at the interception point with `vy = -15 m/s` (moving up), then falling under gravity — a brief arc before descending to launcher height for collection.
 - **Medic Missiles:** Green-bodied missiles with a bright green trail.
 - **Audio Cues:** Distinct sounds for Aegis Trigger, Shield Shatter, Scrap Collection, and EMP Last Stand.
