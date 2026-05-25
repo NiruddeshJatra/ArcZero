@@ -11,6 +11,9 @@ import {
   WAVE_PEAK_DUR_S,
   WAVE_RELEASE_DUR_S,
   DT,
+  DEFAULT_LEVEL_MIN_INTERCEPTS,
+  DEFAULT_LEVEL_MIN_WAVES,
+  LEVEL_ADVANCE_GRACE_S,
 } from '../src/constants.js';
 
 // ---- LEVELS array ----
@@ -146,31 +149,62 @@ describe('telegraph warnings', () => {
   });
 });
 
-// ---- Level complete only during RELEASE ----
+// ---- Level advancement: 3-second grace (no wave-phase gate) ----
 describe('level advancement gating', () => {
-  it('does not advance during BUILD or PEAK', () => {
-    const state = createState();
+  function allGatesMet(state) {
+    const cfg = LEVELS[state.level];
+    const scoreDone = (state.score - state.levelStartScore) >= cfg.scoreThreshold;
+    const interceptsDone = (state.stats.intercepts - state.levelStartIntercepts) >= (cfg.minIntercepts ?? DEFAULT_LEVEL_MIN_INTERCEPTS);
+    const wavesDone = (state.wave.index - state.levelStartWaveIndex) >= (cfg.minWaves ?? DEFAULT_LEVEL_MIN_WAVES);
+    return scoreDone && interceptsDone && wavesDone;
+  }
+
+  function meetAllGates(state) {
     state.score = 9999;
     state.levelStartScore = 0;
+    state.stats.intercepts = 100;
+    state.levelStartIntercepts = 0;
+    state.wave.index = 100;
+    state.levelStartWaveIndex = 0;
+  }
 
-    for (const phase of ['BUILD', 'PEAK']) {
-      state.wave.phase = phase;
-      const cfg = LEVELS[state.level];
-      const levelScore = state.score - state.levelStartScore;
-      const shouldAdvance = levelScore >= cfg.scoreThreshold && state.wave.phase === 'RELEASE';
-      expect(shouldAdvance).toBe(false);
+  it('grace engages in BUILD phase — no wave-phase gate', () => {
+    const state = createState(1);
+    meetAllGates(state);
+    state.wave.phase = 'BUILD';
+    expect(allGatesMet(state)).toBe(true);
+
+    // Simulate first-tick grace init
+    if (allGatesMet(state) && state.advanceGraceRemaining === null) {
+      state.advanceGraceRemaining = LEVEL_ADVANCE_GRACE_S;
     }
+    expect(state.advanceGraceRemaining).toBe(LEVEL_ADVANCE_GRACE_S);
   });
 
-  it('advances during RELEASE when score threshold met', () => {
-    const state = createState();
-    state.score = 9999;
-    state.levelStartScore = 0;
-    state.wave.phase = 'RELEASE';
-    const cfg = LEVELS[state.level];
-    const levelScore = state.score - state.levelStartScore;
-    const shouldAdvance = levelScore >= cfg.scoreThreshold && state.wave.phase === 'RELEASE';
-    expect(shouldAdvance).toBe(true);
+  it('advanceGraceRemaining starts null, initialises to LEVEL_ADVANCE_GRACE_S on first all-gates-clear', () => {
+    const state = createState(1);
+    expect(state.advanceGraceRemaining).toBeNull();
+    meetAllGates(state);
+    // First crossing: null → LEVEL_ADVANCE_GRACE_S
+    if (state.advanceGraceRemaining === null) state.advanceGraceRemaining = LEVEL_ADVANCE_GRACE_S;
+    expect(state.advanceGraceRemaining).toBe(3); // LEVEL_ADVANCE_GRACE_S constant value
+    // Second crossing: already set, no reset
+    if (state.advanceGraceRemaining === null) state.advanceGraceRemaining = LEVEL_ADVANCE_GRACE_S;
+    expect(state.advanceGraceRemaining).toBe(LEVEL_ADVANCE_GRACE_S);
+  });
+
+  it('levelComplete becomes true after LEVEL_ADVANCE_GRACE_S worth of DT ticks', () => {
+    const state = createState(1);
+    state.advanceGraceRemaining = LEVEL_ADVANCE_GRACE_S;
+    const maxTicks = Math.ceil(LEVEL_ADVANCE_GRACE_S / DT) + 2;
+    for (let i = 0; i < maxTicks; i++) {
+      state.advanceGraceRemaining -= DT;
+      if (state.advanceGraceRemaining <= 0) {
+        state.levelComplete = true;
+        break;
+      }
+    }
+    expect(state.levelComplete).toBe(true);
   });
 });
 
