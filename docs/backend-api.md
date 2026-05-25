@@ -29,17 +29,28 @@ Submit a run score.
   "anonId": "az_...",
   "name": "player",
   "score": 847,
+  "levelScore": 350,
   "level": 5,
-  "chainBest": 11,
+  "startLevel": 1,
+  "rankingMode": "campaign",
+  "longestChain": 11,
   "closestMissM": 2.3,
-  "durationS": 183,
+  "survivedS": 183,
+  "intercepts": 42,
+  "waveStats": [],
+  "criteriaCleared": false,
   "seed": "arczero_2026-04-17",
   "dateISO": "2026-04-17",
   "inputType": "kbd",
-  "modifiers": [],
-  "physicsVersion": 1
+  "modifiers": []
 }
 ```
+
+> **Field-name drift corrected (2026-05-24):** `chainBest` → `longestChain`; `durationS` → `survivedS`. These match `buildRunResult` in `gameLoop.js` exactly. Added missing fields: `startLevel`, `levelScore`, `rankingMode`, `intercepts`, `waveStats`, `criteriaCleared`.
+
+> **physicsVersion gap (FUTURE STEP — not yet implemented):** `PHYSICS_VERSION = 1` exists in `constants.js` but is NOT part of `buildRunResult`. Before any real backend submission, add it via a `toApiPayload(runResult)` mapper that appends `physicsVersion` from the constant. Do NOT add it to `buildRunResult` directly — that struct is the integration boundary for local persistence and must stay additive-only per workflow rules. Track this in docs/DECISIONS.md.
+
+> **Daily seed validation:** The seed function (`seedFromDateISO`) is public client JS and trivially readable. A backend MUST independently derive the seed server-side from the submitted `dateISO` and compare — never trust the client-submitted seed value.
 
 **Response:** `201 Created` with the leaderboard rank.
 
@@ -90,7 +101,7 @@ Sync milestone state from client. Server deduplicates.
 
 ## Notes
 
-- `physicsVersion` must match the server-side constant; mismatched submissions are rejected (prevents exploits from modified physics).
-- Daily seeds are derived server-side via `seedFromDateISO` — clients cannot forge them.
+- `physicsVersion` must match the server-side constant; mismatched submissions are rejected (prevents exploits from modified physics). **See the physicsVersion gap note above — this field must be added via `toApiPayload` before backend integration.**
+- Daily seeds are derived server-side via `seedFromDateISO` — the client-submitted `seed` must be validated by re-deriving from `dateISO` on the server, never trusted directly.
 - Rate limit: 10 submissions/hour per anonId.
 - All data is anonymous by default; `name` is a display alias set by the player (max 16 chars, no PII).
