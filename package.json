@@ -15,6 +15,9 @@
     "lint": "eslint src --max-warnings 0",
     "lint:fix": "eslint src --fix"
   },
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
+  },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
     "@playwright/test": "^1.47.0",

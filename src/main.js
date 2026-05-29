@@ -1,3 +1,4 @@
+import { inject } from '@vercel/analytics';
 import { collectRunTotals, createState } from './state.js';
 import { initCrazyGames, cgLoadingStart, cgLoadingStop, cgGameplayStart, cgGameplayStop, cgSubmitDailyScore, cgRequestMidgameAd } from './crazygames.js';
 import { initInput } from './input.js';
@@ -12,6 +13,9 @@ import { initMobileControls, shouldUseTouchInput } from './touchInput.js';
 import { playMilestone, startAmbient, stopAmbient, playUiClick, playUiConfirm } from './audio.js';
 import { buildShareText } from './share.js';
 import { checkMilestones, updateStreak } from './milestones.js';
+
+// ── Initialize Vercel Analytics ───────────────────────────────────────────────
+inject();
 
 // ── Ad audio helpers ──────────────────────────────────────────────────────────
 let _adWasMuted = false;
