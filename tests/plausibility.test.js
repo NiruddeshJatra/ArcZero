@@ -20,11 +20,14 @@ describe('checkPlausibility', () => {
   });
 
   it('accepts score = ABSOLUTE_CEILING', () => {
-    expect(checkPlausibility({ score: PLAUSIBILITY.ABSOLUTE_CEILING, duration_ms: 2_000_000 })).toEqual({ ok: true });
+    // duration must satisfy the rate check: score / (duration_ms / 1000) <= MAX_SCORE_PER_SEC
+    const minDuration = (PLAUSIBILITY.ABSOLUTE_CEILING / PLAUSIBILITY.MAX_SCORE_PER_SEC) * 1000;
+    expect(checkPlausibility({ score: PLAUSIBILITY.ABSOLUTE_CEILING, duration_ms: minDuration })).toEqual({ ok: true });
   });
 
   it('rejects score > ABSOLUTE_CEILING', () => {
-    const r = checkPlausibility({ score: PLAUSIBILITY.ABSOLUTE_CEILING + 1, duration_ms: 2_000_000 });
+    const minDuration = ((PLAUSIBILITY.ABSOLUTE_CEILING + 1) / PLAUSIBILITY.MAX_SCORE_PER_SEC) * 1000;
+    const r = checkPlausibility({ score: PLAUSIBILITY.ABSOLUTE_CEILING + 1, duration_ms: minDuration });
     expect(r).toEqual({ ok: false, reason: 'implausible_score' });
   });
 

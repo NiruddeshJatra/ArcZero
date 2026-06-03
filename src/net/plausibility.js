@@ -1,7 +1,7 @@
 // Mirror of server-side constants in supabase/functions/submit_score/index.ts — keep in sync.
 export const PLAUSIBILITY = {
-  ABSOLUTE_CEILING:    1_000_00,
-  MIN_DURATION_MS:     5_00,
+  ABSOLUTE_CEILING:    1_000_000,
+  MIN_DURATION_MS:     5_000,
   MAX_SCORE_PER_SEC:   50,
   MAX_RUN_DURATION_MS: 30 * 60 * 1000,
 };

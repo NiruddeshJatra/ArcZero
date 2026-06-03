@@ -93,6 +93,63 @@ let _pendingDeviceType = 'desktop';
 let currentLbTab = 'online-today';
 let currentDeviceFilter = 'all';
 
+function renderEmptyState(list, main, sub) {
+  const div = document.createElement('div');
+  div.style.cssText = 'color:rgba(255,255,255,0.3);padding:20px;text-align:center;font-size:13px;line-height:1.5em';
+  div.textContent = main;
+  if (sub) {
+    const subEl = document.createElement('span');
+    subEl.style.cssText = 'font-size:11px;opacity:0.5;display:block;';
+    subEl.textContent = sub;
+    div.appendChild(subEl);
+  }
+  list.appendChild(div);
+}
+
+async function renderOnlineLeaderboard(list, deviceFilterEl) {
+  deviceFilterEl.style.display = 'block';
+  list.innerHTML = '<div style="color:rgba(255,255,255,0.3);padding:20px;text-align:center;font-size:13px;">loading...</div>';
+  let rows = [];
+  try {
+    rows = currentLbTab === 'online-today' ? await getDailyTop(100) : await getAllTimeTop(100);
+  } catch { /* network unavailable */ }
+  list.innerHTML = '';
+
+  const myOnlineId = getOrCreatePlayerId();
+  const filtered = currentDeviceFilter === 'all' ? rows : rows.filter(r => r.device === currentDeviceFilter);
+
+  if (filtered.length === 0) {
+    const main = rows.length === 0
+      ? (currentLbTab === 'online-today' ? 'no scores today yet' : 'no online scores yet')
+      : `no ${currentDeviceFilter} scores`;
+    const sub = rows.length === 0 ? 'play a run to appear here' : 'try a different filter';
+    renderEmptyState(list, main, sub);
+    return;
+  }
+
+  filtered.forEach((e) => {
+    const row = document.createElement('div');
+    row.className = 'lb-row' + (e.player_id === myOnlineId ? ' me' : '');
+    const rank = document.createElement('span');
+    rank.className = 'lb-rank';
+    rank.textContent = String(e.rank ?? '?');
+    const name = document.createElement('span');
+    name.className = 'lb-name';
+    name.textContent = e.handle ?? '???';
+    const deviceTag = document.createElement('span');
+    deviceTag.style.cssText = 'color:rgba(255,255,255,0.3);font-size:10px;margin-right:8px;min-width:14px;text-align:right;';
+    deviceTag.textContent = e.device === 'mobile' ? 'M' : 'D';
+    const score = document.createElement('span');
+    score.className = 'lb-score';
+    score.textContent = String(e.score);
+    row.appendChild(rank);
+    row.appendChild(name);
+    row.appendChild(deviceTag);
+    row.appendChild(score);
+    list.appendChild(row);
+  });
+}
+
 async function renderLeaderboard() {
   const boards = loadBoards();
   const list = document.getElementById('leaderboard-list');
@@ -104,52 +161,7 @@ async function renderLeaderboard() {
 
   // ── Online tabs ──────────────────────────────────────────────────────────────
   if (currentLbTab === 'online-today' || currentLbTab === 'online-alltime') {
-    deviceFilterEl.style.display = 'block';
-    list.innerHTML = '<div style="color:rgba(255,255,255,0.3);padding:20px;text-align:center;font-size:13px;">loading...</div>';
-    let rows = [];
-    try {
-      rows = currentLbTab === 'online-today' ? await getDailyTop(100) : await getAllTimeTop(100);
-    } catch { /* network unavailable */ }
-    list.innerHTML = '';
-
-    const myOnlineId = getOrCreatePlayerId();
-    const filtered = currentDeviceFilter === 'all' ? rows : rows.filter(r => r.device === currentDeviceFilter);
-
-    if (filtered.length === 0) {
-      const emptyDiv = document.createElement('div');
-      emptyDiv.style.cssText = 'color:rgba(255,255,255,0.3);padding:20px;text-align:center;font-size:13px;line-height:1.5em';
-      emptyDiv.textContent = rows.length === 0
-        ? (currentLbTab === 'online-today' ? 'no scores today yet' : 'no online scores yet')
-        : `no ${currentDeviceFilter} scores`;
-      const sub = document.createElement('span');
-      sub.style.cssText = 'font-size:11px;opacity:0.5;display:block;';
-      sub.textContent = rows.length === 0 ? 'play a run to appear here' : 'try a different filter';
-      emptyDiv.appendChild(sub);
-      list.appendChild(emptyDiv);
-      return;
-    }
-
-    filtered.forEach((e) => {
-      const row = document.createElement('div');
-      row.className = 'lb-row' + (e.player_id === myOnlineId ? ' me' : '');
-      const rank = document.createElement('span');
-      rank.className = 'lb-rank';
-      rank.textContent = String(e.rank ?? '?');
-      const name = document.createElement('span');
-      name.className = 'lb-name';
-      name.textContent = e.handle ?? '???';
-      const deviceTag = document.createElement('span');
-      deviceTag.style.cssText = 'color:rgba(255,255,255,0.3);font-size:10px;margin-right:8px;min-width:14px;text-align:right;';
-      deviceTag.textContent = e.device === 'mobile' ? 'M' : 'D';
-      const score = document.createElement('span');
-      score.className = 'lb-score';
-      score.textContent = String(e.score);
-      row.appendChild(rank);
-      row.appendChild(name);
-      row.appendChild(deviceTag);
-      row.appendChild(score);
-      list.appendChild(row);
-    });
+    await renderOnlineLeaderboard(list, deviceFilterEl);
     return;
   }
 
@@ -202,14 +214,7 @@ async function renderLeaderboard() {
   // ── Local all-time (tab: 'allTime') ──────────────────────────────────────────
   const entries = boards.allTime ?? [];
   if (entries.length === 0) {
-    const emptyDiv = document.createElement('div');
-    emptyDiv.style.cssText = 'color:rgba(255,255,255,0.3);padding:20px;text-align:center;font-size:13px;line-height:1.5em';
-    emptyDiv.textContent = 'no runs yet';
-    const sub = document.createElement('span');
-    sub.style.cssText = 'font-size:11px;opacity:0.5;display:block;';
-    sub.textContent = 'play a campaign to get on the board';
-    emptyDiv.appendChild(sub);
-    list.appendChild(emptyDiv);
+    renderEmptyState(list, 'no runs yet', 'play a campaign to get on the board');
     return;
   }
   const myAnonId = currentSave.player.anonId;
@@ -302,6 +307,12 @@ function renderLevelSelect() {
 }
 
 // ── Online game-over flow ─────────────────────────────────────────────────────
+// eslint-disable-next-line no-control-regex
+const HANDLE_BAD_RE = /[\x00-\x1f\x7f\n\r]/;
+function validateHandle(h) {
+  return typeof h === 'string' && h.length >= 1 && h.length <= 20 && !HANDLE_BAD_RE.test(h);
+}
+
 async function showGameOverOnlineFlow(runResult) {
   const rankLine = document.getElementById('online-rank-line');
   const handlePrompt = document.getElementById('handle-prompt');
@@ -328,8 +339,11 @@ async function showGameOverOnlineFlow(runResult) {
     if (result.ok && result.accepted) {
       rankLine.textContent = `Daily: #${result.rank_daily ?? '?'} · All-time: #${result.rank_alltime ?? '?'}`;
       rankLine.style.display = 'block';
+    } else if (result.ok && result.reason === 'bad_handle') {
+      const errEl = document.getElementById('handle-error');
+      if (errEl) { errEl.textContent = 'name: 1–20 chars, no special chars'; errEl.style.display = 'block'; }
     }
-    // On rejection: show nothing — don't reveal to potential cheaters that the check fired
+    // Other rejections: show nothing — don't reveal to potential cheaters that the check fired
   }
 
   const existingHandle = getHandle();
@@ -339,10 +353,17 @@ async function showGameOverOnlineFlow(runResult) {
     handlePrompt.style.display = 'block';
     const input = document.getElementById('handle-input');
     const btn = document.getElementById('handle-submit');
+    const errEl = document.getElementById('handle-error');
     input.value = '';
     const commit = async () => {
       const raw = input.value.trim().slice(0, 20);
       if (!raw) { input.focus(); return; }
+      if (!validateHandle(raw)) {
+        if (errEl) { errEl.textContent = 'name: 1–20 chars, no special chars'; errEl.style.display = 'block'; }
+        input.focus();
+        return;
+      }
+      if (errEl) errEl.style.display = 'none';
       handlePrompt.style.display = 'none';
       setHandle(raw);
       await doSubmit(raw);
