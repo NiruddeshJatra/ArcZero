@@ -13,6 +13,9 @@ import { initMobileControls, shouldUseTouchInput } from './touchInput.js';
 import { playMilestone, startAmbient, stopAmbient, playUiClick, playUiConfirm } from './audio.js';
 import { buildShareText } from './share.js';
 import { checkMilestones, updateStreak } from './milestones.js';
+import { startRun, submitScore, getDailyTop, getAllTimeTop } from './net/leaderboard.js';
+import { getOrCreatePlayerId, getHandle, setHandle } from './net/identity.js';
+import { detectDevice } from './net/device.js';
 
 // ── Initialize Vercel Analytics ───────────────────────────────────────────────
 inject();
@@ -79,18 +82,77 @@ let loop = null;
 let currentSave = loadSave();
 let activeState = null; // current game state, set in startLevel — used by pause handler
 
-// ── Leaderboard rendering ─────────────────────────────────────────────────────
-let currentLbTab = 'daily';
-let currentLbLevel = null;
+// ── Online run-token state ────────────────────────────────────────────────────
+let _pendingRunToken = null;  // set by startRun at run start; consumed at game-over
+let _pendingDeviceType = 'desktop';
 
-function renderLeaderboard() {
+// ── Leaderboard rendering ─────────────────────────────────────────────────────
+let currentLbTab = 'online-today';
+let currentDeviceFilter = 'all';
+
+async function renderLeaderboard() {
   const boards = loadBoards();
   const list = document.getElementById('leaderboard-list');
   const controls = document.getElementById('leaderboard-controls');
+  const deviceFilterEl = document.getElementById('lb-device-filter');
   list.innerHTML = '';
   controls.style.display = 'none';
+  deviceFilterEl.style.display = 'none';
+
+  // ── Online tabs ──────────────────────────────────────────────────────────────
+  if (currentLbTab === 'online-today' || currentLbTab === 'online-alltime') {
+    deviceFilterEl.style.display = 'block';
+    list.innerHTML = '<div style="color:rgba(255,255,255,0.3);padding:20px;text-align:center;font-size:13px;">loading...</div>';
+    let rows = [];
+    try {
+      rows = currentLbTab === 'online-today' ? await getDailyTop(100) : await getAllTimeTop(100);
+    } catch { /* network unavailable */ }
+    list.innerHTML = '';
+
+    const myOnlineId = getOrCreatePlayerId();
+    const filtered = currentDeviceFilter === 'all' ? rows : rows.filter(r => r.device === currentDeviceFilter);
+
+    if (filtered.length === 0) {
+      const emptyDiv = document.createElement('div');
+      emptyDiv.style.cssText = 'color:rgba(255,255,255,0.3);padding:20px;text-align:center;font-size:13px;line-height:1.5em';
+      emptyDiv.textContent = rows.length === 0
+        ? (currentLbTab === 'online-today' ? 'no scores today yet' : 'no online scores yet')
+        : `no ${currentDeviceFilter} scores`;
+      const sub = document.createElement('span');
+      sub.style.cssText = 'font-size:11px;opacity:0.5;display:block;';
+      sub.textContent = rows.length === 0 ? 'play a run to appear here' : 'try a different filter';
+      emptyDiv.appendChild(sub);
+      list.appendChild(emptyDiv);
+      return;
+    }
+
+    filtered.forEach((e) => {
+      const row = document.createElement('div');
+      row.className = 'lb-row' + (e.player_id === myOnlineId ? ' me' : '');
+      const rank = document.createElement('span');
+      rank.className = 'lb-rank';
+      rank.textContent = String(e.rank ?? '?');
+      const name = document.createElement('span');
+      name.className = 'lb-name';
+      name.textContent = e.handle ?? '???';
+      const deviceTag = document.createElement('span');
+      deviceTag.style.cssText = 'color:rgba(255,255,255,0.3);font-size:10px;margin-right:8px;min-width:14px;text-align:right;';
+      deviceTag.textContent = e.device === 'mobile' ? 'M' : 'D';
+      const score = document.createElement('span');
+      score.className = 'lb-score';
+      score.textContent = String(e.score);
+      row.appendChild(rank);
+      row.appendChild(name);
+      row.appendChild(deviceTag);
+      row.appendChild(score);
+      list.appendChild(row);
+    });
+    return;
+  }
+
+  // ── Achievements / Records ───────────────────────────────────────────────────
   if (currentLbTab === 'achievements') {
-    currentSave = loadSave(); // ensure we have the freshest data (e.g. just finished a run)
+    currentSave = loadSave(); // ensure freshest data (e.g. just finished a run)
     const b = currentSave.best;
     const ch = b.longestChain;
     const cl = (b.closestMissM == null || b.closestMissM === Infinity) ? '—' : b.closestMissM.toFixed(1) + 'm';
@@ -105,7 +167,7 @@ function renderLeaderboard() {
       return;
     }
     const statsData = [
-      ['Longest Chain',    `\u00d7${ch}`,     '#ffd700'],
+      ['Longest Chain',    `×${ch}`,     '#ffd700'],
       ['Closest Miss',     cl,               '#ff9944'],
       ['Total Intercepts', String(inter),    '#44aaff'],
       ['Total Survived',   surv,             '#44ffee'],
@@ -113,7 +175,7 @@ function renderLeaderboard() {
     ];
     const note = document.createElement('div');
     note.style.cssText = 'text-align:center;color:rgba(255,255,255,0.3);margin-bottom:12px;font-size:11px;';
-    note.textContent = 'Personal Records — vs. others coming in v2';
+    note.textContent = 'Personal Records — lifetime stats';
     list.appendChild(note);
     const grid = document.createElement('div');
     grid.style.cssText = 'font-size:13px;line-height:2.2em;margin-top:6px;width:100%;';
@@ -134,96 +196,41 @@ function renderLeaderboard() {
     return;
   }
 
-  let entries = [];
-  if (currentLbTab === 'daily') {
-    const todayISO = new Date().toISOString().slice(0, 10);
-    const todaySeed = seedFromDateISO(todayISO);
-    entries = boards.daily[todaySeed] ?? [];
-  } else if (currentLbTab === 'weekly') {
-    // Aggregate last 7 days
-    const agg = {};
-    for (let d = 0; d < 7; d++) {
-      const date = new Date(Date.now() - d * 86400000).toISOString().slice(0, 10);
-      const s = seedFromDateISO(date);
-      for (const e of boards.daily[s] ?? []) {
-        if (!agg[e.anonId] || e.score > agg[e.anonId].score) agg[e.anonId] = e;
-      }
-    }
-    entries = Object.values(agg).sort((a, b) => b.score - a.score).slice(0, 20);
-  } else if (currentLbTab === 'levelrun') {
-    controls.style.display = 'block';
-    if (currentLbLevel === null) currentLbLevel = currentSave.progress.highestLevelReached ?? 1;
-    let selectHtml = `<select id="lb-level-select" aria-label="Select starting level for Level Runs leaderboard" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.18); color: #fff; font-family: 'Courier New', monospace; font-size: 12px; border-radius: 3px; padding: 4px 8px">`;
-    for(let i = 1; i < LEVELS.length; i++) {
-      selectHtml += `<option value="${i}" ${i === currentLbLevel ? 'selected' : ''}>LEVEL ${i}</option>`;
-    }
-    selectHtml += `</select>`;
-    controls.innerHTML = selectHtml;
-    document.getElementById('lb-level-select').addEventListener('change', (e) => {
-      currentLbLevel = parseInt(e.target.value, 10);
-      renderLeaderboard();
-    });
-    entries = boards.levelRuns[currentLbLevel] ?? [];
-  } else {
-    entries = boards.allTime;
-  }
-
+  // ── Local all-time (tab: 'allTime') ──────────────────────────────────────────
+  const entries = boards.allTime ?? [];
   if (entries.length === 0) {
     const emptyDiv = document.createElement('div');
     emptyDiv.style.cssText = 'color:rgba(255,255,255,0.3);padding:20px;text-align:center;font-size:13px;line-height:1.5em';
-    const msgs = {
-      allTime:  ['no runs yet', 'play a campaign to get on the board'],
-      daily:    ['no attempts today', "today's challenge resets at midnight"],
-      weekly:   ['no daily runs this week', 'play the daily challenge to appear here'],
-      levelrun: ['no level runs yet', 'start from level select to rank here'],
-    };
-    const [main, sub] = msgs[currentLbTab] ?? ['no entries', ''];
-    emptyDiv.textContent = main;
-    if (sub) {
-      const subEl = document.createElement('span');
-      subEl.style.cssText = 'font-size:11px;opacity:0.5;display:block;';
-      subEl.textContent = sub;
-      emptyDiv.appendChild(subEl);
-    }
+    emptyDiv.textContent = 'no runs yet';
+    const sub = document.createElement('span');
+    sub.style.cssText = 'font-size:11px;opacity:0.5;display:block;';
+    sub.textContent = 'play a campaign to get on the board';
+    emptyDiv.appendChild(sub);
     list.appendChild(emptyDiv);
     return;
   }
-
-  const myId = currentSave.player.anonId;
+  const myAnonId = currentSave.player.anonId;
   entries.forEach((e, i) => {
     const row = document.createElement('div');
-    row.className = 'lb-row' + (e.anonId === myId ? ' me' : '');
-
+    row.className = 'lb-row' + (e.anonId === myAnonId ? ' me' : '');
     const rank = document.createElement('span');
     rank.className = 'lb-rank';
     rank.textContent = String(i + 1);
-
     const name = document.createElement('span');
     name.className = 'lb-name';
     name.textContent = e.name ?? 'you';
-
+    if (e.modifier && e.modifier !== 'standard') {
+      const modTag = document.createElement('span');
+      modTag.style.cssText = 'font-size:9px;color:rgba(255,255,255,0.4)';
+      modTag.title = e.modifier;
+      modTag.textContent = ` ${e.modifier.slice(0, 3).toUpperCase()}`;
+      name.appendChild(modTag);
+    }
     const score = document.createElement('span');
     score.className = 'lb-score';
-
+    score.textContent = String(e.score);
     row.appendChild(rank);
-    if (currentLbTab === 'levelrun') {
-      const lvlTag = document.createElement('span');
-      lvlTag.style.cssText = 'color:rgba(255,255,255,0.5);font-size:11px;margin-right:12px';
-      lvlTag.textContent = `L${e.startLevel ?? '?'}`;
-      row.appendChild(name);
-      row.appendChild(lvlTag);
-      score.textContent = String(e.levelScore ?? 0);
-    } else {
-      if (e.modifier && e.modifier !== 'standard') {
-        const modTag = document.createElement('span');
-        modTag.style.cssText = 'font-size:9px;color:rgba(255,255,255,0.4)';
-        modTag.title = e.modifier;
-        modTag.textContent = ` ${e.modifier.slice(0, 3).toUpperCase()}`;
-        name.appendChild(modTag);
-      }
-      row.appendChild(name);
-      score.textContent = String(e.score);
-    }
+    row.appendChild(name);
     row.appendChild(score);
     list.appendChild(row);
   });
@@ -288,6 +295,58 @@ function renderLevelSelect() {
       });
     }
     list.appendChild(btn);
+  }
+}
+
+// ── Online game-over flow ─────────────────────────────────────────────────────
+async function showGameOverOnlineFlow(runResult) {
+  const rankLine = document.getElementById('online-rank-line');
+  const handlePrompt = document.getElementById('handle-prompt');
+  if (!rankLine || !handlePrompt) return;
+
+  const token = _pendingRunToken;
+  _pendingRunToken = null;
+  if (!token) return; // no token means startRun failed — skip silently
+
+  const playerId = getOrCreatePlayerId();
+  const deviceType = _pendingDeviceType;
+  const durationMs = Math.round((runResult.survivedS ?? 0) * 1000);
+
+  async function doSubmit(handle) {
+    const result = await submitScore({
+      score: runResult.score,
+      token,
+      durationMs,
+      device: deviceType,
+      handle,
+      seed: String(runResult.seed ?? 0),
+      playerId,
+    });
+    if (result.ok && result.accepted) {
+      rankLine.textContent = `Daily: #${result.rank_daily ?? '?'} · All-time: #${result.rank_alltime ?? '?'}`;
+      rankLine.style.display = 'block';
+    }
+    // On rejection: show nothing — don't reveal to potential cheaters that the check fired
+  }
+
+  const existingHandle = getHandle();
+  if (existingHandle) {
+    doSubmit(existingHandle);
+  } else {
+    handlePrompt.style.display = 'block';
+    const input = document.getElementById('handle-input');
+    const btn = document.getElementById('handle-submit');
+    input.value = '';
+    const commit = async () => {
+      const raw = input.value.trim().slice(0, 20);
+      if (!raw) { input.focus(); return; }
+      handlePrompt.style.display = 'none';
+      setHandle(raw);
+      await doSubmit(raw);
+    };
+    btn.onclick = commit;
+    input.onkeydown = (e) => { if (e.key === 'Enter') commit(); };
+    input.focus();
   }
 }
 
@@ -359,6 +418,12 @@ function showGameOverScreen(runResult, isPB, prevLvlBest, isChainPB) {
   }
   shareConfirm.textContent = '';
 
+  // Reset online elements for this game-over
+  const rankLineEl = document.getElementById('online-rank-line');
+  const handlePromptEl = document.getElementById('handle-prompt');
+  if (rankLineEl) rankLineEl.style.display = 'none';
+  if (handlePromptEl) handlePromptEl.style.display = 'none';
+
   showOnly(gameOverOverlay);
 }
 
@@ -403,6 +468,13 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPA
       state.dailyModifier = (mode === RANKING_MODES.DAILY && FLAGS.DAILY_MODIFIERS) ? dailyModifier(state.dateISO) : 'standard';
       
       activeState = state;
+
+      // Fire startRun in background — store token for online submit at game-over
+      _pendingRunToken = null;
+      _pendingDeviceType = detectDevice();
+      startRun({ seed: dailySeed ?? Date.now(), device: _pendingDeviceType, playerId: getOrCreatePlayerId() })
+        .then(r => { if (r.ok) _pendingRunToken = r.token; });
+
       state.settings.showTrajectoryPreview = currentSave.settings.showTrajectoryPreview;
       state.settings.reduceMotion = currentSave.settings.reduceMotion;
       
@@ -549,6 +621,8 @@ function startLevel(level, carryHealth = BASE_HEALTH, mode = RANKING_MODES.CAMPA
           }
 
           showGameOverScreen({ ...runResult, rankingMode: state.rankingMode }, isPB, lvlBest, isChainPB);
+          // Online submit — non-blocking; degrades silently if network unavailable
+          showGameOverOnlineFlow({ ...runResult, rankingMode: state.rankingMode });
           cgRequestMidgameAd({ onStart: adMuteForAd, onComplete: adRestoreAfterAd });
         },
       });
@@ -593,8 +667,8 @@ document.getElementById('level-select-back-btn').addEventListener('click', () =>
 
 document.getElementById('menu-leaderboard-btn').addEventListener('click', () => {
   playUiClick();
-  currentLbTab = 'daily';
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === 'daily'));
+  currentLbTab = 'online-today';
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === 'online-today'));
   renderLeaderboard();
   showOnly(leaderboardOverlay);
 });
@@ -725,6 +799,14 @@ function bootstrap() {
   }
   bindSettingsControls();
   bindHowToPlay();
+  // Device filter chips for online leaderboard tabs
+  document.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      currentDeviceFilter = chip.dataset.device;
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('active', c === chip));
+      renderLeaderboard();
+    });
+  });
   cgLoadingStop();
   // First-run name prompt, then main menu.
   if (!currentSave.player.displayName) maybePromptFirstRunName();

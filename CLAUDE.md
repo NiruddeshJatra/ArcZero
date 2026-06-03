@@ -46,13 +46,31 @@ public/
 scripts/
 ├── generate-og.mjs      ← generates public/og-image.svg + public/og-image.png via sharp
 └── generate-favicons.mjs ← generates public/favicon*.png + public/apple-touch-icon.png via sharp
+src/net/
+├── config.js        ← Supabase URL + anon key (intentionally committed; anon key is public)
+├── identity.js      ← UUID v4 player_id + handle in localStorage (arczero.player_id / arczero.handle)
+├── device.js        ← detectDevice() → 'mobile'|'desktop'
+├── plausibility.js  ← pure plausibility check; mirrors constants in submit_score Edge Function
+├── supabase.js      ← singleton Supabase client
+└── leaderboard.js   ← startRun, submitScore, getDailyTop, getAllTimeTop, getPlayerRankToday
+supabase/
+├── schema.sql                          ← scores table + RLS + leaderboard_daily/alltime views
+├── README.md                           ← human setup steps (project create → schema → deploy → config)
+└── functions/
+    ├── deno.d.ts                       ← Deno namespace stubs for VS Code TS LSP (no Deno extension needed)
+    ├── tsconfig.json                   ← TS config scoped to the functions directory
+    ├── start_run/index.ts              ← Edge Function: HMAC-SHA256 token issuance
+    └── submit_score/index.ts           ← Edge Function: token verify + plausibility + insert + rank
 tests/
 ├── collision.test.js
+├── identity.test.js     ← UUID stability, handle round-trip
+├── leaderboard.test.js  ← fetch-mocked startRun/submitScore contract tests
 ├── persistence.test.js
 ├── phase2.test.js
 ├── phase3.test.js
 ├── phase4.test.js
 ├── physics.test.js
+├── plausibility.test.js ← boundary tests for all plausibility rules
 ├── rng.test.js
 ├── setup.js
 ├── spawner.test.js
@@ -222,6 +240,8 @@ npm run lint:fix  # Auto-fix lint issues
 - Overlays are `position: fixed; inset: 0; min-height: 100dvh; z-index: 60` — not `position: absolute`. Scrollable overlays carry class `scrollable`; screen overlays (menu/intro/game-over) are `overflow: hidden`
 - Favicon `<link>` hrefs in `index.html` use relative paths (no leading slash) so Vite rewrites them under the base path
 - `initAudio()` is wired to both `keydown` and `touchstart` in `bootstrap()` — both needed for cross-device audio unlock
+- All online leaderboard network calls route through `src/net/leaderboard.js` — never call Supabase directly from `main.js` or game modules
+- Plausibility constants live in two places that must stay in sync: `src/net/plausibility.js` (client, tested) and `supabase/functions/submit_score/index.ts` (server). Change both together; redeploy the Edge Function after server-side changes.
 - Commit format: `type(phaseN): description`
 
 ## AI Agents Available

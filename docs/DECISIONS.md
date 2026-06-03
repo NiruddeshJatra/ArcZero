@@ -72,3 +72,33 @@ The Daily seed is derived from the UTC calendar date and is immutable for that d
 
 - `closestMissM` round-trips `Infinity → null` through `buildRunResult` (intentional: JSON can't encode Infinity). `updateBest` in `persistence.js` treats `null` as "no data" and skips comparison. `DEFAULT_SAVE` stores `Infinity` in memory; `JSON.stringify` converts it to `null` in localStorage. This is correct behavior.
 - `PHYSICS_VERSION` is not in `buildRunResult` — documented above as a future step.
+
+---
+
+## Online Leaderboard v1 — Locked Decisions (2026-06-03)
+
+### Stack
+- **Supabase** (Postgres + REST views + Edge Functions). Client uses `@supabase/supabase-js` installed as an npm dep; Vite bundles it.
+- Edge Functions accessed via `fetch` with the anon key in `Authorization`. Anon key is intentionally public; service_role key never leaves Supabase.
+
+### Identity
+- Device-bound anonymous UUID v4 stored in `localStorage` as `arczero.player_id`. Separate from the existing local `anonId` (`az_...` format) in `save.player.anonId`. Both coexist; no migration needed.
+- Handle stored in `arczero.handle`. Prompted once at first online submit; stored and reused thereafter. Not globally unique — collisions are surfaced visually (own row highlighted), not blocked.
+
+### Leaderboard Scope
+- One global online board. Each row tagged `device='mobile'|'desktop'`. Client-side device filter chip (ALL / MOBILE / DESKTOP) over the top-100 fetched rows.
+- Views: `leaderboard_daily` (partitioned by `day_key` UTC+6), `leaderboard_alltime`. Both SELECT-only for anon.
+
+### Anti-Cheat (v1 — speed-bump only)
+- `start_run` Edge Function issues an HMAC-SHA256 signed token (payload: `player_id`, `seed`, `device`, `issued_at`, `nonce`). Token expires after 30 minutes.
+- `submit_score` verifies signature, freshness, device consistency, and plausibility (score ≥ 0, score ≤ 1M, duration ≥ 5s, score/sec ≤ 500). Inserts via service_role (bypasses RLS). Direct anon inserts are blocked.
+- Not motivated-cheater-proof. Replay validation, score signing, and `physicsVersion` enforcement are deferred to v2.
+
+### Daily Reset Boundary
+- UTC+6 (Bangladesh Standard Time). `day_key` column stores `YYYY-MM-DD` in UTC+6. Client derives the key the same way in `leaderboard.js`.
+
+### Leaderboard Menu
+- Tabs restructured to: **TODAY** (online daily) | **ALL-TIME** (online all-time) | **LOCAL** (local allTime board) | **RECORDS** (personal achievements). Old local daily/weekly/levelrun tabs removed from UI but data stays in `arczero.localBoards.v1`.
+
+### Graceful Degradation
+- All network calls have a 5-second `AbortController` timeout. Failures return `{ ok: false }` — the game-over modal silently skips the rank line. The local leaderboard is never affected by network state.
