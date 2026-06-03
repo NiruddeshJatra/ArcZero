@@ -9,8 +9,8 @@ const CORS = {
 // ── Plausibility constants ────────────────────────────────────────────────────
 // Tune these once real run data is available; defaults are generous to avoid
 // rejecting legitimate runs. Mirror logic lives in src/net/plausibility.js.
-const ABSOLUTE_CEILING   = 1_000_00;
-const MIN_DURATION_MS    = 5_00;
+const ABSOLUTE_CEILING   = 1_000_000;
+const MIN_DURATION_MS    = 5_000;
 const MAX_SCORE_PER_SEC  = 50;
 const MAX_RUN_DURATION_MS = 30 * 60 * 1000; // 30 minutes
 
@@ -92,6 +92,10 @@ serve(async (req: Request) => {
 
   const { token, score, duration_ms, device, handle, seed } = body as Record<string, unknown>;
 
+  // ── Device validation ───────────────────────────────────────────────────────
+  if (device !== 'mobile' && device !== 'desktop') return reject('bad_token');
+  const validatedDevice = device as 'mobile' | 'desktop';
+
   // ── Token verification ──────────────────────────────────────────────────────
   if (typeof token !== 'string' || !token.includes('.')) return reject('bad_token');
 
@@ -137,7 +141,7 @@ serve(async (req: Request) => {
     player_id: playerId,
     handle: handle as string,
     score: sc,
-    device: String(device),
+    device: validatedDevice,
     duration_ms: dur,
     seed: String(seed ?? payload.seed ?? ''),
     day_key: dk,

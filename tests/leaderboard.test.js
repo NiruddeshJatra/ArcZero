@@ -10,7 +10,28 @@ vi.stubGlobal('AbortController', class {
   abort() {}
 });
 
-import { startRun, submitScore } from '../src/net/leaderboard.js';
+import { startRun, submitScore, getDailyTop, getAllTimeTop, getPlayerRankToday } from '../src/net/leaderboard.js';
+
+// ── Supabase client mock ──────────────────────────────────────────────────────
+let _supabaseResult = { data: [], error: null };
+vi.mock('../src/net/supabase.js', () => ({
+  getSupabaseClient: () => makeSupabaseChain(),
+}));
+
+function makeSupabaseChain() {
+  const result = _supabaseResult;
+  const chain = {
+    from: () => chain,
+    select: () => chain,
+    eq: () => chain,
+    order: () => chain,
+    limit: () => chain,
+    maybeSingle: () => Promise.resolve(result),
+    then: (res, rej) => Promise.resolve(result).then(res, rej),
+    catch: (rej) => Promise.resolve(result).catch(rej),
+  };
+  return chain;
+}
 
 function makeResponse(body, ok = true) {
   return Promise.resolve({
@@ -109,6 +130,67 @@ describe('leaderboard client', () => {
         device: 'desktop', handle: 'X', seed: '0', playerId: 'uuid',
       });
       expect(result.ok).toBe(false);
+    });
+  });
+
+  describe('getDailyTop', () => {
+    it('returns rows from leaderboard_daily', async () => {
+      const rows = [
+        { rank: 1, player_id: 'p1', handle: 'Ace', score: 1000, device: 'desktop', day_key: '2026-06-03' },
+        { rank: 2, player_id: 'p2', handle: 'Bob', score: 800, device: 'mobile', day_key: '2026-06-03' },
+      ];
+      _supabaseResult = { data: rows, error: null };
+      const result = await getDailyTop(100);
+      expect(result).toEqual(rows);
+    });
+
+    it('returns empty array on supabase error', async () => {
+      _supabaseResult = { data: null, error: { message: 'db error' } };
+      const result = await getDailyTop(100);
+      expect(result).toEqual([]);
+    });
+
+    it('returns empty array on null data', async () => {
+      _supabaseResult = { data: null, error: null };
+      const result = await getDailyTop(100);
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('getAllTimeTop', () => {
+    it('returns rows from leaderboard_alltime', async () => {
+      const rows = [
+        { rank: 1, player_id: 'p1', handle: 'Legend', score: 9999, device: 'desktop' },
+      ];
+      _supabaseResult = { data: rows, error: null };
+      const result = await getAllTimeTop(100);
+      expect(result).toEqual(rows);
+    });
+
+    it('returns empty array on supabase error', async () => {
+      _supabaseResult = { data: null, error: { message: 'timeout' } };
+      const result = await getAllTimeTop(100);
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('getPlayerRankToday', () => {
+    it('returns rank when player has a score today', async () => {
+      _supabaseResult = { data: { rank: 5 }, error: null };
+      const result = await getPlayerRankToday('player-uuid');
+      expect(result).toBe(5);
+    });
+
+    it('returns null when player has no score today', async () => {
+      _supabaseResult = { data: null, error: null };
+      const result = await getPlayerRankToday('player-uuid');
+      expect(result).toBeNull();
+    });
+
+    it('returns null on supabase error', async () => {
+      _supabaseResult = { data: null, error: { message: 'not found' } };
+      const result = await getPlayerRankToday('player-uuid');
+      expect(result).toBeNull();
     });
   });
 });
