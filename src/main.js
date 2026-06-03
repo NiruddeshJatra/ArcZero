@@ -22,12 +22,15 @@ inject();
 
 // ── Ad audio helpers ──────────────────────────────────────────────────────────
 let _adWasMuted = false;
+let _adMutedByUs = false; // true only when WE muted for an ad; prevents spurious unmute
 function adMuteForAd() {
   _adWasMuted = isMuted();
-  if (!_adWasMuted) toggleMute();
+  _adMutedByUs = !_adWasMuted;
+  if (_adMutedByUs) toggleMute();
 }
 function adRestoreAfterAd() {
-  if (!_adWasMuted) toggleMute();
+  if (_adMutedByUs) toggleMute();
+  _adMutedByUs = false;
   const muteBtn = document.getElementById('mute-btn');
   if (muteBtn) muteBtn.classList.toggle('muted', isMuted());
 }
@@ -751,6 +754,7 @@ function maybePromptFirstRunName() {
   const commit = (name) => {
     currentSave.player.displayName = name;
     saveSave(currentSave);
+    if (name) setHandle(name); // also persist as online handle so game-over won't re-prompt
     showOnly(menuOverlay);
   };
   btn.onclick = () => {

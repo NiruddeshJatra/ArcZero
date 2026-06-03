@@ -452,3 +452,10 @@ All progression state is persisted via `save.json` in localStorage:
 - `.vscode/settings.json` created with `deno.enablePaths` pointing at `supabase/functions` — activates Deno extension type-checking if the extension is installed.
 - JSDoc blocks removed from `src/net/leaderboard.js` and `src/net/plausibility.js` per no-comment convention.
 - `tests/plausibility.test.js` — last test case updated: `100_000 / 1_000_000ms = 100 pts/sec` exceeded user-tuned `MAX_SCORE_PER_SEC = 50`; changed to `10_000` score which passes at `10 pts/sec`.
+
+## Online leaderboard — bug fixes (auto-mute, token expiry, handle identity)
+**2026-06-03 — Three backend-integration bugs fixed; all 151 unit tests pass**
+
+- `src/main.js` — `adRestoreAfterAd` muted game on every level complete outside CrazyGames portal. Root cause: `_adWasMuted` defaulted `false`; `cgRequestMidgameAd` calls `onComplete` immediately when `available=false`, skipping `onStart`. Fix: added `_adMutedByUs` flag; `adRestoreAfterAd` only toggles mute when `adMuteForAd` actually ran.
+- `supabase/functions/submit_score/index.ts` + `src/net/plausibility.js` — `MAX_RUN_DURATION_MS = 30 * 60 * 100 = 180,000ms (3 min)` instead of `30 * 60 * 1000 = 1,800,000ms (30 min)`. Any run longer than 3 minutes got `expired_token` → silent rejection → score appeared in local board only, not online. Both files fixed. **Edge Function must be redeployed.**
+- `src/main.js` — `maybePromptFirstRunName` saved name to `currentSave.player.displayName` (persistence.js) but never to `arczero.handle` (identity.js). Game-over re-prompted for handle on every run. Fix: `commit()` now also calls `setHandle(name)`.

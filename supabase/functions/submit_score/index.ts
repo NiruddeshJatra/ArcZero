@@ -12,7 +12,7 @@ const CORS = {
 const ABSOLUTE_CEILING   = 1_000_00;
 const MIN_DURATION_MS    = 5_00;
 const MAX_SCORE_PER_SEC  = 50;
-const MAX_RUN_DURATION_MS = 30 * 60 * 100; // 30 minutes
+const MAX_RUN_DURATION_MS = 30 * 60 * 1000; // 30 minutes
 
 type Reason =
   | 'bad_token'

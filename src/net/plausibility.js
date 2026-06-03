@@ -3,7 +3,7 @@ export const PLAUSIBILITY = {
   ABSOLUTE_CEILING:    1_000_00,
   MIN_DURATION_MS:     5_00,
   MAX_SCORE_PER_SEC:   50,
-  MAX_RUN_DURATION_MS: 30 * 60 * 100,
+  MAX_RUN_DURATION_MS: 30 * 60 * 1000,
 };
 
 export function checkPlausibility({ score, duration_ms }) {
