@@ -411,3 +411,44 @@ All progression state is persisted via `save.json` in localStorage:
 **2026-05-25 — Switch vitest env from jsdom to happy-dom; normalize yarn across tooling**
 
 - `vitest.config.js`: `environment: 'jsdom'` → `environment: 'happy-dom'` (faster, better browser API coverage; `package.json` lists `happy-dom` as dev dep). `playwright.config.js` and `netlify.toml` updated to use `yarn` consistently.
+
+## Online leaderboard v1
+**2026-06-03 — Supabase-backed global leaderboard with speed-bump anti-cheat**
+
+**What landed:**
+- `supabase/schema.sql` — `scores` table + RLS (no direct anon inserts) + `leaderboard_daily` and `leaderboard_alltime` views.
+- `supabase/functions/start_run/index.ts` — HMAC-SHA256 token issuance (Deno Web Crypto; no external deps).
+- `supabase/functions/submit_score/index.ts` — Token verification + plausibility check + service_role insert + rank lookup.
+- `supabase/README.md` — exact human setup steps (project create → schema → secrets → deploy → config.js).
+- `src/net/config.js` — URL + anon key placeholders (intentionally committed; anon key is public).
+- `src/net/identity.js` — UUID v4 `arczero.player_id` + `arczero.handle` in localStorage. Separate from existing `anonId`.
+- `src/net/device.js` — `detectDevice()` via `userAgentData` → pointer coarse fallback.
+- `src/net/plausibility.js` — Pure function, mirrors server constants. Tested by `tests/plausibility.test.js`.
+- `src/net/supabase.js` — Singleton Supabase client.
+- `src/net/leaderboard.js` — `startRun`, `submitScore`, `getDailyTop`, `getAllTimeTop`, `getPlayerRankToday`. All calls timeout at 5s via `AbortController`.
+- `src/main.js` — `startRun` fired at game start (background, token stored in `_pendingRunToken`). `showGameOverOnlineFlow` called at game-over: prompts for handle if missing, calls `submitScore`, shows rank line. `renderLeaderboard` made `async` with online tab handling and device filter.
+- `index.html` — game-over overlay: `#online-rank-line` + `#handle-prompt` elements. Leaderboard overlay: tab restructure (TODAY / ALL-TIME / LOCAL / RECORDS) + `#lb-device-filter` chips.
+- `src/index.css` — `.filter-chip` and `.filter-chip.active` styles.
+- New tests: `tests/identity.test.js`, `tests/plausibility.test.js`, `tests/leaderboard.test.js`.
+
+**v1 boundaries (by design):**
+- Not motivated-cheater-proof: no replay validation, no `physicsVersion` enforcement, no score signing of game state. Casual devtools `fetch` cheats are defeated; determined cheaters are not. Deferred to v2.
+- Plausibility constants are placeholders (max 500 pts/sec, min 5s, ceiling 1M) — tune from real data after launch.
+- Handle is not globally unique — collisions appear visually but are not blocked.
+- Service_role key stays in Supabase secrets only; client code never touches it.
+
+**Open items for v2:**
+- Add `physicsVersion` to submission and reject mismatches server-side.
+- Replay-level score validation.
+- Per-level online boards (Level Select mode).
+- Motivated-cheater defenses (rate limiting per player, score-sequence signing).
+
+## Online leaderboard v1 — cleanup + TS fix
+**2026-06-03 — Post-ship cleanup: comments, lock file, Deno TS errors, plausibility test**
+
+- `package-lock.json` deleted — was created by `npm add`; project uses yarn. `yarn.lock` already had `@supabase/supabase-js` from a separate `yarn add`.
+- `supabase/functions/start_run/index.ts` migrated from `serve` import (deno.land/std URL) to `Deno.serve` — removes an unresolvable URL import.
+- `supabase/functions/deno.d.ts` + `supabase/functions/tsconfig.json` added — provides minimal Deno namespace stubs so VS Code's built-in TS LSP stops flagging `Deno.serve` / `Deno.env` without requiring the Deno VS Code extension.
+- `.vscode/settings.json` created with `deno.enablePaths` pointing at `supabase/functions` — activates Deno extension type-checking if the extension is installed.
+- JSDoc blocks removed from `src/net/leaderboard.js` and `src/net/plausibility.js` per no-comment convention.
+- `tests/plausibility.test.js` — last test case updated: `100_000 / 1_000_000ms = 100 pts/sec` exceeded user-tuned `MAX_SCORE_PER_SEC = 50`; changed to `10_000` score which passes at `10 pts/sec`.

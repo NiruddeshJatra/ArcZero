@@ -148,6 +148,20 @@ body {
 }
 .tab-btn.active { border-color: #44aaff; color: #44aaff; }
 
+.filter-chip {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.4);
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  padding: 3px 12px;
+  cursor: pointer;
+  border-radius: 3px;
+  margin: 0 3px;
+}
+.filter-chip.active { border-color: rgba(68,170,255,0.5); color: #44aaff; }
+
 #leaderboard-list {
   width: 380px;
   max-height: 380px;

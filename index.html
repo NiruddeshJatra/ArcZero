@@ -77,11 +77,15 @@
       <div id="leaderboard-overlay" class="overlay scrollable" role="dialog" aria-modal="true">
         <div style="font-size:22px;font-weight:700;letter-spacing:0.1em;color:#44aaff;margin-bottom:8px;">LEADERBOARDS</div>
         <div id="leaderboard-tabs">
-          <button class="tab-btn" data-tab="allTime" title="ALL-TIME">ALL-TIME</button>
-          <button class="tab-btn active" data-tab="daily" title="DAILY">DAILY</button>
-          <button class="tab-btn" data-tab="weekly" title="THIS WEEK">THIS WEEK</button>
-          <button class="tab-btn" data-tab="levelrun" title="LEVEL RUNS">RUNS</button>
-          <button class="tab-btn" data-tab="achievements" title="ACHIEVEMENTS">RECORDS</button>
+          <button class="tab-btn active" data-tab="online-today" title="TODAY (ONLINE)">TODAY</button>
+          <button class="tab-btn" data-tab="online-alltime" title="ALL-TIME (ONLINE)">ALL-TIME</button>
+          <button class="tab-btn" data-tab="allTime" title="LOCAL ALL-TIME">LOCAL</button>
+          <button class="tab-btn" data-tab="achievements" title="PERSONAL RECORDS">RECORDS</button>
+        </div>
+        <div id="lb-device-filter" style="display:none;margin:6px 0 4px;text-align:center;">
+          <button class="filter-chip active" data-device="all">ALL</button>
+          <button class="filter-chip" data-device="mobile">MOBILE</button>
+          <button class="filter-chip" data-device="desktop">DESKTOP</button>
         </div>
         <div id="leaderboard-controls" style="display:none; margin-bottom: 8px; text-align: center;"></div>
         <div id="leaderboard-list"></div>
@@ -188,6 +192,14 @@
         <div id="run-stats">
           <span id="stat-chain">CHAIN —</span>
           <span id="stat-closest">CLOSEST —</span>
+        </div>
+        <div id="online-rank-line" style="display:none;font-size:13px;color:rgba(255,255,255,0.6);letter-spacing:0.06em;margin-top:4px;"></div>
+        <div id="handle-prompt" style="display:none;margin-top:8px;display:none;">
+          <div style="font-size:11px;color:rgba(255,255,255,0.45);letter-spacing:0.08em;margin-bottom:6px;">SUBMIT TO ONLINE LEADERBOARD</div>
+          <div style="display:flex;gap:8px;justify-content:center;align-items:center;">
+            <input id="handle-input" type="text" maxlength="20" placeholder="YOUR NAME" autocomplete="off" style="background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.2);color:#fff;font-family:'Courier New',monospace;font-size:13px;padding:6px 10px;border-radius:3px;width:140px;" />
+            <button id="handle-submit" style="font-family:'Courier New',monospace;font-size:12px;padding:6px 12px;background:rgba(68,170,255,0.15);border:1px solid rgba(68,170,255,0.4);color:#44aaff;border-radius:3px;cursor:pointer;letter-spacing:0.06em;">SUBMIT</button>
+          </div>
         </div>
         <button id="restart-btn">PLAY AGAIN</button>
         <button id="share-btn">SHARE RESULT</button>
