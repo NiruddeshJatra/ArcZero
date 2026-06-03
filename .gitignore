@@ -6,3 +6,5 @@ dist/
 *Brief*.md
 .gstack/
 dist-portal/
+supabase/.temp/
+package-lock.json
