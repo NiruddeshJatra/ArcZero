@@ -131,6 +131,19 @@ describe('leaderboard client', () => {
       });
       expect(result.ok).toBe(false);
     });
+
+    it('propagates null ranks when server returns them (dedup view returns one row so this is the graceful-degradation path)', async () => {
+      _fetchMock.mockReturnValueOnce(makeResponse({
+        accepted: true,
+        rank_daily: null,
+        rank_alltime: null,
+      }));
+      const result = await submitScore({
+        score: 100, token: 'tok.sig', durationMs: 10_000,
+        device: 'desktop', handle: 'X', seed: '0', playerId: 'uuid',
+      });
+      expect(result).toMatchObject({ ok: true, accepted: true, rank_daily: null, rank_alltime: null });
+    });
   });
 
   describe('getDailyTop', () => {

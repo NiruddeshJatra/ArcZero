@@ -55,8 +55,10 @@ src/net/
 ├── supabase.js      ← singleton Supabase client
 └── leaderboard.js   ← startRun, submitScore, getDailyTop, getAllTimeTop, getPlayerRankToday
 supabase/
-├── schema.sql                          ← scores table + RLS + leaderboard_daily/alltime views
+├── schema.sql                          ← scores table + RLS + leaderboard_daily/alltime views (deduped, one row per player)
 ├── README.md                           ← human setup steps (project create → schema → deploy → config)
+├── migrations/
+│   └── 0002_dedup_views.sql            ← idempotent migration: dedup both leaderboard views; paste into SQL editor to apply
 └── functions/
     ├── deno.d.ts                       ← Deno namespace stubs for VS Code TS LSP (no Deno extension needed)
     ├── tsconfig.json                   ← TS config scoped to the functions directory

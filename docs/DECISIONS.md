@@ -102,3 +102,11 @@ The Daily seed is derived from the UTC calendar date and is immutable for that d
 
 ### Graceful Degradation
 - All network calls have a 5-second `AbortController` timeout. Failures return `{ ok: false }` — the game-over modal silently skips the rank line. The local leaderboard is never affected by network state.
+
+### Online Leaderboard Deduplication (2026-06-04)
+- Both `leaderboard_daily` and `leaderboard_alltime` views collapse to **one row per player** (per `(player_id, day_key)` for daily; per `player_id` for all-time).
+- Row chosen: the player's **best-scoring run** for the period. Tie-break: earliest `played_at` (first to reach that score keeps the rank).
+- The displayed `handle` and `device` are those of the best-scoring run, not the most recent run. A player who changes their handle mid-day keeps the handle they had at their best run.
+- The base `scores` table is **unchanged** — all history is preserved for the LOCAL board, future v2 anti-cheat/replay validation, and analytics. Dedup is view-layer only.
+- **Device filter chip semantics:** the chip filters players by the device of their best run. A player whose best was on desktop won't appear under "Mobile" even if they also have mobile scores. Acceptable v1 simplification; revisit in v2 if it becomes a real complaint.
+- **`#?` rank bug root cause:** `.maybeSingle()` in supabase-js v2 uses `Accept: application/vnd.pgrst.object+json`. PostgREST validates row count on the filtered result set before applying the client-requested LIMIT; with 11 rows for a player on a given day, it returned `PGRST116` (multiple rows) even with `.limit(1)` in the chain. `.maybeSingle()` swallows `PGRST116` as `{ data: null }` → `rank_daily: null` → `#?`. Dedup at the view layer means the filtered set now has at most 1 row, so `.maybeSingle()` returns the object correctly. No change to the Edge Function rank-lookup query needed.
