@@ -1,10 +1,7 @@
-// Mirror of server-side constants in supabase/functions/submit_score/index.ts — keep in sync.
-export const PLAUSIBILITY = {
-  ABSOLUTE_CEILING:    1_000_000,  // 1,000,000
-  MIN_DURATION_MS:     5_000,      // 5 seconds
-  MAX_SCORE_PER_SEC:   500,
-  MAX_RUN_DURATION_MS: 1_800_000,  // 30 minutes
-};
+// Single source of truth: src/net/plausibility-constants.json
+// Run `npm run sync-plausibility` after changing constants to update the Edge Function.
+import CONSTANTS from './plausibility-constants.json';
+export const PLAUSIBILITY = CONSTANTS;
 
 export function checkPlausibility({ score, duration_ms }) {
   if (!Number.isInteger(score) || score < 0 || score > PLAUSIBILITY.ABSOLUTE_CEILING) {
