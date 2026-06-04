@@ -19,6 +19,9 @@ create table public.scores (
 
 create index scores_day_score  on public.scores (day_key, score desc);
 create index scores_score_desc on public.scores (score desc);
+-- Composite indexes for the DISTINCT ON queries in the deduped leaderboard views.
+create index if not exists scores_player_day_best  on public.scores (player_id, day_key, score desc, played_at asc);
+create index if not exists scores_player_best      on public.scores (player_id, score desc, played_at asc);
 
 alter table public.scores enable row level security;
 
@@ -57,7 +60,7 @@ create or replace view public.leaderboard_daily as
     order by player_id, day_key, score desc, played_at asc
   )
   select
-    row_number() over (partition by day_key order by score desc, played_at asc) as rank,
+    row_number() over (partition by day_key order by score desc, played_at asc, player_id) as rank,
     player_id, handle, score, device, day_key, played_at
   from best_per_player_day;
 
@@ -72,7 +75,7 @@ create or replace view public.leaderboard_alltime as
     order by player_id, score desc, played_at asc
   )
   select
-    row_number() over (order by score desc, played_at asc) as rank,
+    row_number() over (order by score desc, played_at asc, player_id) as rank,
     player_id, handle, score, device, played_at
   from best_per_player;
 
