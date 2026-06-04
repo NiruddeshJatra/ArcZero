@@ -10,14 +10,26 @@
 --
 -- Fix: Replace both views with CTE + DISTINCT ON variants that surface exactly
 -- one row per player (per day for daily, ever for all-time). The row chosen is
--- the player's best-scoring run for the period; tie-break by earliest played_at
--- so the first player to reach a score keeps the better rank.
+-- the player's best-scoring run for the period; tie-break by earliest played_at,
+-- then player_id for full determinism when score and played_at are equal.
+--
+-- Also adds two composite indexes to keep DISTINCT ON performant as scores grows.
 --
 -- The base scores table is NOT touched. All history is preserved for the local
 -- board, future v2 anti-cheat/replay validation, and analytics.
 --
 -- How to apply: open the Supabase SQL editor for your project, paste this file,
--- and click Run. The statements are idempotent (CREATE OR REPLACE VIEW).
+-- and click Run. CREATE OR REPLACE VIEW is idempotent; CREATE INDEX IF NOT EXISTS
+-- skips already-existing indexes.
+
+-- ── Indexes ───────────────────────────────────────────────────────────────────
+-- Support the DISTINCT ON (player_id, day_key) query in leaderboard_daily.
+create index if not exists scores_player_day_best
+  on public.scores (player_id, day_key, score desc, played_at asc);
+
+-- Support the DISTINCT ON (player_id) query in leaderboard_alltime.
+create index if not exists scores_player_best
+  on public.scores (player_id, score desc, played_at asc);
 
 -- ── leaderboard_daily ────────────────────────────────────────────────────────
 create or replace view public.leaderboard_daily as
@@ -28,7 +40,7 @@ create or replace view public.leaderboard_daily as
     order by player_id, day_key, score desc, played_at asc
   )
   select
-    row_number() over (partition by day_key order by score desc, played_at asc) as rank,
+    row_number() over (partition by day_key order by score desc, played_at asc, player_id) as rank,
     player_id, handle, score, device, day_key, played_at
   from best_per_player_day;
 
@@ -41,7 +53,7 @@ create or replace view public.leaderboard_alltime as
     order by player_id, score desc, played_at asc
   )
   select
-    row_number() over (order by score desc, played_at asc) as rank,
+    row_number() over (order by score desc, played_at asc, player_id) as rank,
     player_id, handle, score, device, played_at
   from best_per_player;
 
