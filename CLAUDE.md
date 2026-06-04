@@ -50,7 +50,8 @@ src/net/
 ├── config.js        ← Supabase URL + anon key (intentionally committed; anon key is public)
 ├── identity.js      ← UUID v4 player_id + handle in localStorage (arczero.player_id / arczero.handle)
 ├── device.js        ← detectDevice() → 'mobile'|'desktop'
-├── plausibility.js  ← pure plausibility check; mirrors constants in submit_score Edge Function
+├── plausibility.js  ← pure plausibility check; imports constants from plausibility-constants.json
+├── plausibility-constants.json  ← single source of truth for plausibility limits; run `npm run sync-plausibility` after edits, then redeploy Edge Function
 ├── supabase.js      ← singleton Supabase client
 └── leaderboard.js   ← startRun, submitScore, getDailyTop, getAllTimeTop, getPlayerRankToday
 supabase/
@@ -241,7 +242,8 @@ npm run lint:fix  # Auto-fix lint issues
 - Favicon `<link>` hrefs in `index.html` use relative paths (no leading slash) so Vite rewrites them under the base path
 - `initAudio()` is wired to both `keydown` and `touchstart` in `bootstrap()` — both needed for cross-device audio unlock
 - All online leaderboard network calls route through `src/net/leaderboard.js` — never call Supabase directly from `main.js` or game modules
-- Plausibility constants live in two places that must stay in sync: `src/net/plausibility.js` (client, tested) and `supabase/functions/submit_score/index.ts` (server). Change both together; redeploy the Edge Function after server-side changes.
+- Plausibility constants single source of truth: `src/net/plausibility-constants.json`. Client imports it directly. After editing, run `npm run sync-plausibility` to write the constants block into the Edge Function, then redeploy: `supabase functions deploy submit_score --project-ref ntcwsxuzstbplroxswsr`
+- `DEBUG_LEADERBOARD` is controlled by env var `VITE_DEBUG_LEADERBOARD=true` in `.env.local` — never set it in committed env files.
 - Commit format: `type(phaseN): description`
 
 ## AI Agents Available

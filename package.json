@@ -8,6 +8,7 @@
     "build:portal": "yarn generate-og && yarn generate-favicons && vite build --mode portal",
     "generate-og": "yarn node scripts/generate-og.mjs",
     "generate-favicons": "yarn node scripts/generate-favicons.mjs",
+    "sync-plausibility": "node scripts/sync-plausibility.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
