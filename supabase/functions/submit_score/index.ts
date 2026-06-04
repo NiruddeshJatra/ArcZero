@@ -9,10 +9,10 @@ const CORS = {
 // ── Plausibility constants ────────────────────────────────────────────────────
 // Tune these once real run data is available; defaults are generous to avoid
 // rejecting legitimate runs. Mirror logic lives in src/net/plausibility.js.
-const ABSOLUTE_CEILING   = 1_000_000;
-const MIN_DURATION_MS    = 5_000;
-const MAX_SCORE_PER_SEC  = 50;
-const MAX_RUN_DURATION_MS = 30 * 60 * 1000; // 30 minutes
+const ABSOLUTE_CEILING    = 1_000_000;  // 1,000,000
+const MIN_DURATION_MS     = 5_000;       // 5 seconds
+const MAX_SCORE_PER_SEC   = 500;
+const MAX_RUN_DURATION_MS = 1_800_000;  // 30 minutes
 
 type Reason =
   | 'bad_token'
