@@ -1,6 +1,6 @@
 /* global AbortController */
 import { getSupabaseClient } from './supabase.js';
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
+import { SUPABASE_URL, SUPABASE_ANON_KEY, DEBUG_LEADERBOARD } from './config.js';
 
 const TIMEOUT_MS = 5000;
 
@@ -69,7 +69,13 @@ export async function submitScore({ score, token, durationMs, device, handle, se
     seed: String(seed ?? 0),
     player_id: playerId,
   });
-  if (!result.ok) return result;
+  if (!result.ok) {
+    if (DEBUG_LEADERBOARD) console.warn('[leaderboard] submit failed (network):', result.error); // eslint-disable-line no-console
+    return result;
+  }
+  if (DEBUG_LEADERBOARD && result.data && !result.data.accepted) {
+    console.warn('[leaderboard] submit rejected:', result.data.reason); // eslint-disable-line no-console
+  }
   return { ok: true, ...result.data };
 }
 

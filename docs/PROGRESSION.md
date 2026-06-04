@@ -453,6 +453,21 @@ All progression state is persisted via `save.json` in localStorage:
 - JSDoc blocks removed from `src/net/leaderboard.js` and `src/net/plausibility.js` per no-comment convention.
 - `tests/plausibility.test.js` — last test case updated: `100_000 / 1_000_000ms = 100 pts/sec` exceeded user-tuned `MAX_SCORE_PER_SEC = 50`; changed to `10_000` score which passes at `10 pts/sec`.
 
+## Online leaderboard — plausibility constants + dev visibility (2026-06-04)
+**2026-06-04 — Two live-debug bugs fixed; 159 unit tests pass**
+
+Live debug session on Supabase Edge Function logs found two issues blocking all score submissions:
+
+1. **Bad service-role key (dashboard fix):** The `submit_score` Edge Function was running with a manually-set `SUPABASE_SERVICE_ROLE_KEY` secret that held an invalid key. This caused Postgres `permission denied for table scores` → HTTP 500 → zero rows ever saved. Fix: removed the manual secret from the Supabase dashboard so Supabase auto-injects the correct key. No code change required; Edge Function redeploy re-reads secrets.
+
+2. **Misplaced-underscore plausibility constants (code fix):** `MAX_SCORE_PER_SEC` was `50` in both `supabase/functions/submit_score/index.ts` and `src/net/plausibility.js` — should be `500`. Any legitimate run with burst scoring (combo × skill multipliers) that exceeded 50 pts/sec got silently rejected with `implausible_score`. Also clarified `MAX_RUN_DURATION_MS` as the explicit literal `1_800_000` in both files for readability. Both files must stay in sync; see CLAUDE.md convention note. **Edge Function must be redeployed after this fix.**
+
+3. **Added `DEBUG_LEADERBOARD` gated logging:** The client submit path swallows all failures silently (intentional — avoids leaking plausibility checks to cheaters). This made the bugs above invisible during development. Added `DEBUG_LEADERBOARD = false` in `src/net/config.js`; when set to `true`, `submitScore` in `src/net/leaderboard.js` logs network failures and `accepted: false` rejections to `console.warn`. Players in production see no change (flag defaults off).
+
+**Lesson:** Silent production fallbacks are correct, but need a dev-visible escape hatch or failures are invisible. `DEBUG_LEADERBOARD` is that hatch.
+
+---
+
 ## Online leaderboard — bug fixes (auto-mute, token expiry, handle identity)
 **2026-06-03 — Three backend-integration bugs fixed; all 151 unit tests pass**
 
