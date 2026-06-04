@@ -468,6 +468,16 @@ Live debug session on Supabase Edge Function logs found two issues blocking all 
 
 ---
 
+## Online leaderboard — view deduplication (2026-06-04)
+**2026-06-04 — One row per player on online boards; #? rank bug fixed**
+
+- `supabase/schema.sql` — Both `leaderboard_daily` and `leaderboard_alltime` views rewritten with `DISTINCT ON` CTEs to surface one row per player (best score; earliest `played_at` tie-break).
+- `supabase/migrations/0002_dedup_views.sql` — Idempotent migration file ready to apply via Supabase SQL editor. Base `scores` table untouched.
+- **`#?` rank bug fixed** as a side effect: root cause was `.maybeSingle()` receiving `PGRST116` from PostgREST when the view returned >1 rows for a player, even with `.limit(1)` in the chain. Dedup makes each `player_id + day_key` combination return at most 1 row, so `.maybeSingle()` now returns the object correctly. No Edge Function code change needed.
+- LOCAL board untouched. RECORDS tab untouched. Anti-cheat token logic and plausibility constants unchanged.
+- Device filter chip semantics documented in `docs/DECISIONS.md`: chip filters by the device of the player's best run.
+- 152 unit tests pass (1 new test added: null-rank graceful propagation in `leaderboard.test.js`).
+
 ## Online leaderboard — bug fixes (auto-mute, token expiry, handle identity)
 **2026-06-03 — Three backend-integration bugs fixed; all 151 unit tests pass**
 

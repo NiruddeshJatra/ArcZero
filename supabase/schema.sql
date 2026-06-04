@@ -38,18 +38,43 @@ create policy "no anon delete" on public.scores
 
 -- ── Views ────────────────────────────────────────────────────────────────────
 -- Expose only ranked rows; no PII beyond handle + device.
+-- Both views are deduplicated to one row per player (per day for daily, ever for
+-- all-time). The chosen row is the player's best-scoring run for the period;
+-- tie-break by earliest played_at (first to reach that score wins the rank).
+-- The displayed handle and device are those of the best-scoring run.
+-- Device filter chip semantics: a player appears under "Mobile" only when their
+-- best run was on mobile — regardless of other devices they've played on.
 
+-- ── leaderboard_daily ────────────────────────────────────────────────────────
+-- One row per (player_id, day_key). DISTINCT ON picks the highest-score row;
+-- played_at tie-break ensures the earliest run wins on equal scores.
+-- Outer window function ranks the deduplicated set within each day_key.
 create or replace view public.leaderboard_daily as
+  with best_per_player_day as (
+    select distinct on (player_id, day_key)
+      player_id, handle, score, device, day_key, played_at
+    from public.scores
+    order by player_id, day_key, score desc, played_at asc
+  )
   select
     row_number() over (partition by day_key order by score desc, played_at asc) as rank,
     player_id, handle, score, device, day_key, played_at
-  from public.scores;
+  from best_per_player_day;
 
+-- ── leaderboard_alltime ───────────────────────────────────────────────────────
+-- One row per player_id. DISTINCT ON picks the highest-score run ever;
+-- played_at tie-break for equal scores.
 create or replace view public.leaderboard_alltime as
+  with best_per_player as (
+    select distinct on (player_id)
+      player_id, handle, score, device, played_at
+    from public.scores
+    order by player_id, score desc, played_at asc
+  )
   select
     row_number() over (order by score desc, played_at asc) as rank,
     player_id, handle, score, device, played_at
-  from public.scores;
+  from best_per_player;
 
-grant select on public.leaderboard_daily   to anon;
-grant select on public.leaderboard_alltime to anon;
+grant select on public.leaderboard_daily   to anon, authenticated;
+grant select on public.leaderboard_alltime to anon, authenticated;
