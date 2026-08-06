@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="public/og-image.png" alt="ArcZero — Physics-Based Missile Interception" width="800"/>
+<img src="public/og-image.svg" alt="ArcZero — Physics-Based Missile Interception" width="800"/>
 
 <br/>
 
@@ -277,9 +277,9 @@ supabase/
 
 | | |
 |-|-|
-| 🎮 **Live Game** | [arczero.app](https://arczero.app) |
+| 🎮 **Live Game** | [ArcZero on Niruddesh Jatra Space](https://niruddeshjatra.space/games/arczero/) |
 | 🐛 **Bug Reports** | [GitHub Issues](https://github.com/NiruddeshJatra/ArcZero/issues) |
-| 📦 **Repository** | [github.com/NiruddeshJatra/ArcZero](https://github.com/NiruddeshJatra/ArcZero) |
+| 📦 **Repository** | [GitHub](https://github.com/NiruddeshJatra/ArcZero) |
 
 ---
 
