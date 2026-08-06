@@ -120,46 +120,147 @@
       <div id="howto-overlay" class="overlay scrollable" role="dialog" aria-modal="true">
         <div style="font-size:22px;font-weight:700;letter-spacing:0.1em;color:#44aaff;margin-bottom:8px;">HOW TO PLAY</div>
         <div id="howto-list">
+
           <h4>OBJECTIVE</h4>
-          Defend your base by intercepting incoming missiles before they hit the ground. You start with 100 Health, and each missile that hits the ground deals 10 damage. Reach 0 Health, and it's Game Over. Survive waves, rack up points, and clear levels to climb the leaderboards.
+          Enemy missiles are falling from the sky. You control a ground launcher — move it, aim it, charge it, and fire interceptors to destroy missiles before they hit the ground.<br/><br/>
+          You start each level with <strong>100 Health</strong>. Every missile that reaches the ground costs <strong>−10 HP</strong>. Hit zero and it's game over. Intercept everything you can.
 
-          <h4>CONTROLS</h4>
-          <kbd>←</kbd> <kbd>→</kbd> move launcher<br/>
-          <kbd>↑</kbd> <kbd>↓</kbd> aim angle (30° to 70°)<br/>
-          <kbd>Space</kbd> hold to charge power, release to fire<br/>
-          <kbd>Z</kbd> flip launcher facing left/right<br/>
-          <kbd>P</kbd> or <kbd>Esc</kbd> pause · resume<br/>
-          <kbd>M</kbd> mute · unmute audio
+          <div class="howto-warn">Missiles cannot be intercepted below 20 m altitude — don't wait too long to shoot.</div>
 
-          <h4>SCORING & COMBOS</h4>
-          Every intercept above 20m scores base points.<br/>
-          <strong>Combo:</strong> Chain intercepts within 3 seconds to build a multiplier (+0.25× per hit, up to ×10 maximum).<br/>
-          <strong>Bonuses:</strong><br/>
-          • <strong>Altitude:</strong> High-altitude hits scale up to 3× points (maxes at 100m).<br/>
-          • <strong>Clutch:</strong> Low-altitude hits under 35m grant a 1.5× bonus.<br/>
-          • <strong>Long Range:</strong> Hitting a target more than 50m away horizontally gives a 1.2× bonus.<br/>
-          • <strong>Angle:</strong> Shallower angles score more (1.5× at 30°), while steep angles score less (0.75× at 70°).
+          <!-- ── Desktop Controls ── -->
+          <h4 class="howto-desktop-only">CONTROLS — KEYBOARD</h4>
+          <div class="ctrl-grid howto-desktop-only">
+            <kbd>← →</kbd><span class="ctrl-desc">Move launcher left / right</span>
+            <kbd>↑ ↓</kbd><span class="ctrl-desc">Aim angle (30° min · 70° max)</span>
+            <kbd>Space</kbd><span class="ctrl-desc"><strong>Hold</strong> to charge power, <strong>release</strong> to fire</span>
+            <kbd>Z</kbd><span class="ctrl-desc">Flip launcher direction (left ↔ right)</span>
+            <kbd>P</kbd> / <kbd>Esc</kbd><span class="ctrl-desc">Pause / resume</span>
+            <kbd>M</kbd><span class="ctrl-desc">Mute / unmute</span>
+          </div>
+          <div class="howto-tip howto-desktop-only">
+            <strong>Charging:</strong> tap Space for a short, precise shot. Hold longer for a powerful long-range shot. Power ranges from 20 (min) to 60 (max). The HUD shows your current power level at all times.
+          </div>
 
-          <h4>AEGIS RECOVERY PROTOCOL (LEVEL 3+)</h4>
-          From Level 3 onwards, you gain access to the Aegis Defense Gauge (cyan bar below your launcher). Fill it to 100 Energy to trigger an Aegis Payload, restoring health and deploying defenses. Energy is gained exclusively through active, skillful gameplay:<br/>
-          • <strong>Low-Angle Kills:</strong> Intercepts below 45° angle (+10)<br/>
-          • <strong>High-Altitude Kills (L5+):</strong> Intercepts above 70m (+5)<br/>
-          • <strong>Combos:</strong> Hitting 3x and 5x chain milestones (+10/+25)<br/>
-          • <strong>Near-Misses (L4+):</strong> Interceptors flying dangerously close to targets (+5)<br/>
-          • <strong>Scrap Recycling (L8+):</strong> Catch falling Scrap Orbs from 4x combos (+40)<br/>
-          • <strong>Event Missiles:</strong> Courier hits (+35), Medic hits (+100)<br/><br/>
-          <strong>Payloads:</strong> Base heal (+20). At Level 7+, deploying Aegis also activates a global horizontal shield that absorbs one missile impact. At Level 10+, Aegis can overheal you up to 150 (gold health) and acts as an EMP Last Stand to save you from a lethal blow if the gauge is half full.
+          <!-- ── Mobile Controls ── -->
+          <h4 class="howto-mobile-only">CONTROLS — TOUCH</h4>
+          <div class="howto-mobile-only">
+            The control strip at the bottom of the screen has 6 buttons. <strong>Hold</strong> most buttons — they repeat while held.
+          </div>
+          <div class="mc-diagram howto-mobile-only">
+            <div class="mc-group">
+              <div class="mc-row">
+                <div>
+                  <div class="mc-row" style="margin-bottom:4px">
+                    <span class="mc-btn">◄</span>
+                  </div>
+                  <div class="mc-row">
+                    <span class="mc-btn">▼</span>
+                  </div>
+                </div>
+                <div style="display:flex;flex-direction:column;justify-content:flex-end;">
+                  <span class="mc-btn" style="margin-left:4px">▲</span>
+                </div>
+              </div>
+              <div class="mc-label">MOVE &amp; AIM</div>
+            </div>
+            <div class="mc-group">
+              <span class="mc-btn fire">●</span>
+              <div class="mc-label">FIRE</div>
+            </div>
+            <div class="mc-group">
+              <span class="mc-btn flip">⇄</span>
+              <div class="mc-label">FLIP</div>
+            </div>
+          </div>
+          <div class="ctrl-grid howto-mobile-only">
+            <kbd>◄</kbd><span class="ctrl-desc">Hold — move launcher left</span>
+            <kbd>►</kbd><span class="ctrl-desc">Hold — move launcher right</span>
+            <kbd>▲</kbd><span class="ctrl-desc">Hold — aim upward (shallower)</span>
+            <kbd>▼</kbd><span class="ctrl-desc">Hold — aim downward (steeper)</span>
+            <kbd>●</kbd><span class="ctrl-desc"><strong>Hold to charge</strong>, <strong>release to fire</strong></span>
+            <kbd>⇄</kbd><span class="ctrl-desc">Tap — flip launcher direction</span>
+          </div>
+          <div class="howto-tip howto-mobile-only">
+            <strong>Firing on mobile:</strong> Press and hold <kbd>●</kbd> — you'll see the power bar rise in the HUD. Release to launch. A quick tap fires a low-power shot. A long hold fires a powerful long-range shot. Power goes from 20 (min) to 60 (max).
+          </div>
+          <div class="howto-tip howto-mobile-only">
+            <strong>Flip button:</strong> Your launcher fires in the direction it faces. Tap <kbd>⇄</kbd> to switch between firing left and firing right. Use this when missiles approach from the opposite side.
+          </div>
 
-          <h4>LEVEL COMPLETION (CAMPAIGN &amp; DAILY)</h4>
-          To advance, you must hit three thresholds: a minimum Score, a minimum Intercept count, and a minimum number of Waves survived. Once all three are met, a 3-second countdown begins — then the level clears automatically. No need to wait for a specific wave phase.
+          <h4>FIRING — HOW IT WORKS</h4>
+          Your interceptor launches as a <strong>ballistic projectile</strong> — it follows a curved arc under gravity, just like the missiles. There are no guided weapons. You must lead the target and account for the arc.<br/><br/>
+          • <strong>Angle</strong> controls the direction (30° = shallow/flat, 70° = steep/high).<br/>
+          • <strong>Power</strong> controls how fast and far the shot travels.<br/>
+          • <strong>Facing</strong> controls which side you fire toward (flip with <kbd>Z</kbd> or <kbd>⇄</kbd>).<br/><br/>
+          After firing, there is a <strong>1-second cooldown</strong> before you can fire again. Use that second wisely.
 
-          <h4>LEVEL SELECT — ENDLESS SURVIVAL MODE</h4>
-          Level Select works differently from Campaign. You pick an unlocked level and survive <em>indefinitely</em> — there is no advance. Your score climbs as long as you live, and that is your personal best for that level. <strong>To unlock the next level:</strong> meet all three criteria at least once during your run. When you die, the next level unlocks and appears in Level Select. You never need to replay earlier levels just to access a harder one.
+          <div class="howto-tip">
+            <strong>Beginner tip:</strong> Start at 45° angle and medium power. Watch where your shot lands and adjust. Shallow angles reach far horizontally; steep angles hit things directly overhead.
+          </div>
 
-          <h4>MODES</h4>
-          <strong>Campaign</strong> — A full run starting from Level 1 with random spawns. Ranked on the All-Time leaderboard.<br/>
-          <strong>Daily Challenge</strong> — Every player faces the exact same deterministic missile pattern for the day. Features daily modifiers (Speedrun, No Radar, or Precision). You get one ranked attempt per day before it locks to unranked practice. Resets at midnight UTC.<br/>
-          <strong>Level Select</strong> — Endless survival on any unlocked level. Your best survival score per level is tracked on the Level Runs leaderboard. Meeting all criteria unlocks the next level.
+          <h4>SCORING &amp; COMBOS</h4>
+          Base score per intercept: <strong>10 points</strong>, multiplied by everything below.<br/><br/>
+          <strong>Combo chain</strong> — intercept multiple missiles within 3 seconds of each other. Each hit in the chain adds +0.25× (up to ×10 max). Let 3 seconds pass without a hit and the chain resets.<br/><br/>
+          <strong>Skill multipliers</strong> (these stack together):<br/>
+          • <strong>Altitude ×1–3:</strong> The higher the intercept, the more it scores. Max at 100 m.<br/>
+          • <strong>Clutch ×1.5:</strong> Intercept between 20–35 m (last-second save).<br/>
+          • <strong>Shallow angle ×1.5:</strong> Firing at 30° scores more than firing at 70°.<br/>
+          • <strong>Long range ×1.2:</strong> Target more than 50 m from your launcher.<br/>
+          • <strong>Courier ×1.5:</strong> Gold fast missiles are worth more.<br/><br/>
+          <strong>Passive:</strong> +0.25 points every second you stay alive.<br/>
+          <strong>Level clear bonus:</strong> 50 × level number when you advance.
+
+          <div class="howto-tip">
+            <strong>Score tip:</strong> High + shallow + combo = enormous multiplier. Intercept missiles early (high altitude), at a flat angle, in rapid succession.
+          </div>
+
+          <h4>MISSILE TYPES</h4>
+          • <strong style="color:#ff6666">Standard</strong> — red. Falls straight or with drift. The baseline threat.<br/>
+          • <strong style="color:#ffcc44">Courier</strong> — gold. Much faster vertical speed. High score value. Prioritize these.<br/>
+          • <strong style="color:#cc66ff">Splitter</strong> — purple. Splits into 2 missiles at 60 m altitude. Kill it before it splits.<br/>
+          • <strong style="color:#ff88cc">MIRV</strong> — pink. After 1.5 seconds in flight it splits into 3 spread warheads. Destroy early.
+
+          <h4>WAVES</h4>
+          Each level cycles through three wave phases:<br/>
+          • <strong>BUILD</strong> (14 s) — normal spawn rate, missiles arrive steadily.<br/>
+          • <strong>PEAK</strong> (8 s) — faster spawns, heavier pressure. Stay focused.<br/>
+          • <strong>RELEASE</strong> (8 s) — slowest spawns, a brief breather.<br/><br/>
+          The pattern repeats. Each completed cycle counts as one wave toward your level advancement.
+
+          <h4>AEGIS ENERGY SYSTEM (LEVEL 3+)</h4>
+          From Level 3, a <strong style="color:#44ffee">cyan energy bar</strong> appears in your HUD. Fill it to 100 to trigger an Aegis EMP — it clears all missiles on screen and restores health.<br/><br/>
+          <strong>How to build energy:</strong><br/>
+          • Low-angle intercepts (below 45°) → <strong>+10</strong><br/>
+          • Near-misses (interceptor passes very close to a missile) → <strong>+5</strong><br/>
+          • High-altitude kills above 70 m (Level 5+) → <strong>+5</strong><br/>
+          • Reaching a 3× combo milestone → <strong>+10</strong><br/>
+          • Reaching a 5× combo milestone → <strong>+25</strong><br/>
+          • Courier intercepts → <strong>+35</strong><br/><br/>
+          <strong>Aegis EMP effect:</strong> Destroys all current missiles + restores <strong>+20 HP</strong>. At higher levels the EMP also deploys a temporary shield and can overheal beyond 100 HP (gold health bar).
+
+          <div class="howto-tip">
+            Save Aegis for PEAK waves when the screen is crowded. One well-timed EMP can save a run that's about to collapse.
+          </div>
+
+          <h4>LEVEL ADVANCEMENT (CAMPAIGN &amp; DAILY)</h4>
+          To advance to the next level you must meet <strong>all three gates simultaneously</strong>:<br/>
+          • <strong>Score gate</strong> — earn enough points this level (shown in the progress bar).<br/>
+          • <strong>Intercept gate</strong> — destroy a minimum number of missiles.<br/>
+          • <strong>Wave gate</strong> — survive a minimum number of full wave cycles.<br/><br/>
+          Once all three are met, a 3-second countdown starts — then the level clears automatically. You keep your score, health, and Aegis energy going into the next level.
+
+          <div class="howto-warn">Level Select works differently — the level never advances. You play until you die. Your final score is your personal best for that level.</div>
+
+          <h4>UNLOCKING LEVELS</h4>
+          • Play <strong>Campaign</strong> or <strong>Daily</strong> — when you advance past a level, it unlocks for Level Select.<br/>
+          • In <strong>Level Select</strong>, meet all three gates at least once during your run — when you die, the next level unlocks even though you never advanced.<br/><br/>
+          Level Select then lets you start directly from any unlocked level for pure survival scoring and per-level leaderboards.
+
+          <h4>GAME MODES AT A GLANCE</h4>
+          <strong>Campaign</strong> — Start at Level 1, random spawns, advance through all 10 levels. Score ranked on the All-Time global leaderboard.<br/><br/>
+          <strong>Daily Challenge</strong> — Same missile spawns for every player worldwide today. One ranked attempt per day — resets at midnight UTC+6. Compare scores fairly against anyone who played the same day.<br/><br/>
+          <strong>Level Select</strong> — Pick any unlocked level. Survive as long as possible. Score tracked on a per-level leaderboard. No advancement — just pure endurance.
+
         </div>
         <button class="menu-btn back" id="howto-back-btn">← BACK</button>
       </div>

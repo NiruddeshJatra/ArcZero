@@ -253,6 +253,88 @@ body {
   font-family: inherit;
   font-size: 12px;
 }
+#howto-list .howto-tip {
+  background: rgba(68,170,255,0.08);
+  border-left: 2px solid #44aaff;
+  padding: 5px 10px;
+  margin: 8px 0;
+  border-radius: 0 3px 3px 0;
+  color: rgba(255,255,255,0.85);
+}
+#howto-list .howto-warn {
+  background: rgba(255,80,80,0.08);
+  border-left: 2px solid #ff5050;
+  padding: 5px 10px;
+  margin: 8px 0;
+  border-radius: 0 3px 3px 0;
+}
+#howto-list .ctrl-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 12px;
+  margin: 6px 0;
+  align-items: center;
+}
+#howto-list .ctrl-grid kbd { justify-self: start; white-space: nowrap; }
+#howto-list .ctrl-grid .ctrl-desc { color: rgba(255,255,255,0.75); }
+#howto-list .mc-diagram {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 8px;
+  margin: 8px 0 4px;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 4px;
+  font-size: 11px;
+}
+#howto-list .mc-diagram .mc-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+#howto-list .mc-diagram .mc-row {
+  display: flex;
+  gap: 4px;
+}
+#howto-list .mc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 4px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.9);
+  font-family: inherit;
+}
+#howto-list .mc-btn.fire {
+  background: rgba(68,170,255,0.15);
+  border-color: #44aaff;
+  color: #44aaff;
+  font-size: 18px;
+  min-width: 36px;
+  height: 36px;
+}
+#howto-list .mc-btn.flip {
+  background: rgba(255,204,102,0.12);
+  border-color: #ffcc66;
+  color: #ffcc66;
+}
+#howto-list .mc-label {
+  font-size: 10px;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+/* Device-conditional sections */
+body[data-portrait="true"] .howto-desktop-only { display: none; }
+body:not([data-portrait="true"]) .howto-mobile-only { display: none; }
 
 /* ── First-run name prompt ── */
 #first-run-overlay { gap: 14px; }
